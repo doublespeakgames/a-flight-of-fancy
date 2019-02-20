@@ -1,12 +1,14 @@
 version: '3'
+
+volumes:
+  data-volume:
+
 services:
 
   web:
-    build: .
+    build: ./app
     working_dir: /home/app/src
     command: yarn start
-    ports:
-     - "5000:5000"
     depends_on:
       - mongo
 
@@ -15,4 +17,4 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - ./data:/home/app/data
+      - data-volume:/data/db

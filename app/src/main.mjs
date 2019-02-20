@@ -2,6 +2,8 @@ import Logger from './logger';
 import Server from './server';
 import Session from './model/session'
 
+const PORT = process.env.APP_PORT || 5000;
+
 Server.get('/', (req, res) => {
   Session.find((err, sessions) => {
     if (err) {
@@ -13,4 +15,4 @@ Server.get('/', (req, res) => {
   });
 });
 
-Server.listen(5000, () => Logger.info('Server started'));
+Server.listen(PORT, () => Logger.info(`Server started on port ${PORT}`));

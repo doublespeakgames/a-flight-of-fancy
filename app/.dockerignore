@@ -1,0 +1,7 @@
+data
+log
+src/node_modules
+src/.git
+src/.yarn
+src/.cache
+Dockerfile
