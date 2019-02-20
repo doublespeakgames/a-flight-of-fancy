@@ -1,4 +1,13 @@
-const { createLogger, format, transports } = require('winston');
+/**
+ * Logger
+ * @author mtownsend
+ * @since Feb 2019
+ * 
+ * Handles logging configuration
+ */
+import Winston from 'winston';
+
+const { createLogger, format, transports } = Winston;
 
 const logger = createLogger({
   level: 'info',
@@ -34,4 +43,4 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-module.exports = logger;
+export default logger;

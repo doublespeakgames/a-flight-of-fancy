@@ -1,0 +1,121 @@
+{
+  "responseId": "fa4af686-d902-4e7c-9c48-686df1210c31",
+  "queryResult": {
+    "queryText": "go south",
+    "parameters": {
+      "direction": "south"
+    },
+    "allRequiredParamsPresent": true,
+    "outputContexts": [
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H/contexts/actions_capability_screen_output",
+        "parameters": {
+          "direction.original": "south",
+          "direction": "south"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H/contexts/actions_capability_audio_output",
+        "parameters": {
+          "direction.original": "south",
+          "direction": "south"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H/contexts/google_assistant_input_type_keyboard",
+        "parameters": {
+          "direction.original": "south",
+          "direction": "south"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H/contexts/actions_capability_media_response_audio",
+        "parameters": {
+          "direction.original": "south",
+          "direction": "south"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H/contexts/actions_capability_web_browser",
+        "parameters": {
+          "direction.original": "south",
+          "direction": "south"
+        }
+      }
+    ],
+    "intent": {
+      "name": "projects/actions-sandbox-ceabf/agent/intents/17aa6635-de84-4059-9cc3-f69efe48ec60",
+      "displayName": "Move"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "en-us"
+  },
+  "originalDetectIntentRequest": {
+    "source": "google",
+    "version": "2",
+    "payload": {
+      "isInSandbox": true,
+      "surface": {
+        "capabilities": [
+          {
+            "name": "actions.capability.WEB_BROWSER"
+          },
+          {
+            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+          },
+          {
+            "name": "actions.capability.SCREEN_OUTPUT"
+          },
+          {
+            "name": "actions.capability.AUDIO_OUTPUT"
+          }
+        ]
+      },
+      "requestType": "SIMULATOR",
+      "inputs": [
+        {
+          "rawInputs": [
+            {
+              "query": "go south",
+              "inputType": "KEYBOARD"
+            }
+          ],
+          "arguments": [
+            {
+              "rawText": "go south",
+              "textValue": "go south",
+              "name": "text"
+            }
+          ],
+          "intent": "actions.intent.TEXT"
+        }
+      ],
+      "user": {
+        "lastSeen": "2019-02-20T04:18:36Z",
+        "locale": "en-US",
+        "userId": "ABwppHGPMciiAXWxurDVlWT31PWFGJMi-CV9Vxq3H3joK_jgXQn5zZte8fA8osZvEG1GD4gOCLV-cBsRsWsUgZtccdk9"
+      },
+      "conversation": {
+        "conversationId": "ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H",
+        "type": "ACTIVE",
+        "conversationToken": "[]"
+      },
+      "availableSurfaces": [
+        {
+          "capabilities": [
+            {
+              "name": "actions.capability.WEB_BROWSER"
+            },
+            {
+              "name": "actions.capability.SCREEN_OUTPUT"
+            },
+            {
+              "name": "actions.capability.AUDIO_OUTPUT"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "session": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFScqPNkbo191e1jNoAzigMucKOkvUG3EsXuAzdUsHX_rsEqjm6Tlkia_Vz-ow2zLlLf06YAzF0mtkCfQ3KYJ9H"
+}

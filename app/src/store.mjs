@@ -1,6 +1,14 @@
-const Mongoose = require('mongoose');
-const Logger = require('./logger');
-const Config = require('./config');
+/**
+ * Data Store
+ * @author mtownsend
+ * @since Feb 2019
+ * 
+ * Configures Mongoose for speaking with MongoDB
+ */
+
+import Mongoose from 'mongoose';
+import Logger from './logger';
+import Config from './config';
 
 let tries = 0;
 (function tryConnect() {
@@ -19,7 +27,7 @@ let tries = 0;
   });
 })();
 
-module.exports = Mongoose;
+export default Mongoose;
 
 
 
