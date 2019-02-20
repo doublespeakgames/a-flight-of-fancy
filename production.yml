@@ -6,7 +6,7 @@ volumes:
 
 services:
 
-  web:
+  app:
     environment:
       - APP_PORT=8080
     expose:
@@ -25,7 +25,7 @@ services:
     #   - ./data/certbot-conf:/etc/letsencrypt
     #   - ./data/certbot-www:/var/www/certbot
     depends_on:
-      - web
+      - app
 
   certbot:
     image: certbot/certbot

@@ -11,7 +11,7 @@ Server.get('/', (req, res) => {
       res.error('DB ERROR');
       return;
     }
-    res.send({ sessions, msg: 'bar' });
+    res.send({ sessions, msg: 'foo' });
   });
 });
 

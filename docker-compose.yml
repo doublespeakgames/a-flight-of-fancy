@@ -5,7 +5,7 @@ volumes:
 
 services:
 
-  web:
+  app:
     build: ./app
     working_dir: /home/app/src
     command: yarn start
