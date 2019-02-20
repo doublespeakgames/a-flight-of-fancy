@@ -1,0 +1,20 @@
+version: '3'
+services:
+
+  web:
+    build: .
+    command: yarn start
+    ports:
+     - "5000:5000"
+    volumes:
+      - ./src:/app
+      - /src/node_modules
+    depends_on:
+      - mongo
+
+  mongo:
+    image: "mongo:4"
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/db:/data/db
