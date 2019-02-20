@@ -9,7 +9,7 @@ Server.get('/', (req, res) => {
       res.error('DB ERROR');
       return;
     }
-    res.send(sessions);
+    res.send({ sessions, msg: 'bar' });
   });
 });
 
