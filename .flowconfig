@@ -1,0 +1,14 @@
+[ignore]
+.*/build/.*
+.*/log/.*
+
+[include]
+**/*.mjs
+
+[libs]
+
+[lints]
+
+[options]
+
+[strict]

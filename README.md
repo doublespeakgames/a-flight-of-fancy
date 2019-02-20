@@ -14,4 +14,4 @@ The components of the project are defined in Docker containers, and glued togeth
 1. `eval $(docker-machine env voice-adventure)`
 2. If certificates do not yet exist, run `./create-certs`
 3. `./docker-prod build`
-4. `./docker-prod up`
+4. `./docker-prod up -d`

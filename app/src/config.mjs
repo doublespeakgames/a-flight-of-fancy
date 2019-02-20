@@ -1,3 +1,4 @@
+// @flow
 /**
  * Configuration
  * @author mtownsend

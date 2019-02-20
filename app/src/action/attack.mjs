@@ -1,3 +1,4 @@
+// @flow
 /**
  * Attack Action
  * @author mtownsend
@@ -5,7 +6,7 @@
  * 
  * Handles fighting with actors
  */
-export default actor => {
+export default (actor:string) => {
   return {
     message: `You're too scared of ${actor}`
   };

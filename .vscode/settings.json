@@ -1,0 +1,18 @@
+{
+  "flow.pathToFlow": "${workspaceRoot}/app/node_modules/.bin/flow",
+  "flow.fileExtensions": [
+    ".js",
+    ".mjs",
+    ".jsx",
+    ".flow",
+    ".json"
+  ],
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/build": true
+  }
+}

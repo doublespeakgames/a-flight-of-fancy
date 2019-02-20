@@ -1,3 +1,4 @@
+// @flow
 /**
  * Talk Action
  * @author mtownsend
@@ -5,7 +6,7 @@
  * 
  * Handles speaking with actors
  */
-export default actor => {
+export default (actor:string) => {
   return {
     message: `${actor} ignores you. What a jerk.`
   };

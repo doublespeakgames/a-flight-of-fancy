@@ -7,7 +7,7 @@ services:
 
   app:
     build: ./app
-    working_dir: /home/app/src
+    working_dir: /home/app
     command: yarn start
     depends_on:
       - mongo

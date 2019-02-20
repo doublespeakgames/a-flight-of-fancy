@@ -1,3 +1,4 @@
+// @flow
 /**
  * Google Endpoint
  * @author mtownsend

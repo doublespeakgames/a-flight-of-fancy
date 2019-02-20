@@ -1,3 +1,5 @@
+// @flow
+
 /**
  * Main server
  * @author mtownsend

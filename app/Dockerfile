@@ -3,12 +3,13 @@ FROM node:11
 RUN useradd --user-group --create-home --shell /bin/false app
 ENV HOME=/home/app
 
-WORKDIR $HOME/src
+WORKDIR $HOME
 
-COPY src/package.json .
+COPY ./package.json .
 RUN yarn install
 
-COPY ./src .
+COPY src/ ./src
+RUN yarn build
 
 RUN chown -R app:app $HOME/*
 

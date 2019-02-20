@@ -1,3 +1,4 @@
+// @flow
 /**
  * Data Store
  * @author mtownsend

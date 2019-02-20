@@ -62,3 +62,6 @@ typings/
 
 # Persistence data
 /data
+
+# Built javascript
+/app/build

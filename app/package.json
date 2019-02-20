@@ -1,9 +1,10 @@
 {
   "name": "voice-adventure",
   "version": "0.0.1",
-  "main": "main.js",
+  "main": "build/main.mjs",
   "scripts": {
-    "start": "node --experimental-modules main.mjs"
+    "build": "flow-remove-types src/ -d build/",
+    "start": "node --experimental-modules build/main.mjs"
   },
   "repository": "git@github.com:Continuities/voice-adventure.git",
   "author": "Michael Townsend <michael@doublespeakgames.com>",
@@ -12,6 +13,8 @@
   "dependencies": {
     "actions-on-google": "^2.5.0",
     "express": "^4.16.4",
+    "flow-bin": "^0.93.0",
+    "flow-remove-types": "^1.2.3",
     "mongoose": "^5.4.14",
     "winston": "^3.2.1"
   }

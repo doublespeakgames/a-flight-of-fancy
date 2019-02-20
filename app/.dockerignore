@@ -1,7 +1,7 @@
 data
 log
-src/node_modules
-src/.git
-src/.yarn
-src/.cache
+build
+node_modules
+.yarn
+.cache
 Dockerfile

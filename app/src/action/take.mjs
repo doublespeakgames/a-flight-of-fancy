@@ -1,3 +1,4 @@
+// @flow
 /**
  * Take Action
  * @author mtownsend
@@ -5,7 +6,7 @@
  * 
  * Handles the taking of items
  */
-export default item => {
+export default (item:string) => {
   return {
     message: `${item} darts out of your grasp. What?`
   };

@@ -7,5 +7,5 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./app/src:/home/app/src
+      - ./app/build:/home/app/src
       - /home/app/src/node_modules

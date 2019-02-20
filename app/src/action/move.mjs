@@ -1,3 +1,4 @@
+// @flow
 /**
  * Move Action
  * @author mtownsend
@@ -5,7 +6,7 @@
  * 
  * Handles movement between rooms
  */
-export default direction => {
+export default (direction:string) => {
   if (direction.toLowerCase() !== 'north') {
     return {
       message: `You can't go ${direction}`
