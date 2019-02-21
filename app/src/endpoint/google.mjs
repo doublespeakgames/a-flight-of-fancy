@@ -43,5 +43,6 @@ app.intent('Move', fulfill.bind(null, 'move'));
 app.intent('Take', fulfill.bind(null, 'take'));
 app.intent('Attack', fulfill.bind(null, 'attack'));
 app.intent('Talk', fulfill.bind(null, 'talk'));
+app.intent('Look', fulfill.bind(null, 'look'));
 
 export default app;
