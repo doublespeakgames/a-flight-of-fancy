@@ -6,14 +6,23 @@
  * 
  * Handles movement between rooms
  */
-export default (direction:string) => {
-  if (direction.toLowerCase() !== 'north') {
+
+import type { Session, SessionDiff } from '../model/session';
+import type { ActionHandler, Response } from '../action-resolver';
+
+const move:ActionHandler = (session, world, subject) => {
+  const room = world.rooms[session.room];
+  const dir = subject == null ? 'null' : subject.toLowerCase();
+  const nextRoom = room.exits[dir];
+  if (!nextRoom) {
     return {
-      message: `You can't go ${direction}`
+      message: `You can't go that way.`
     };
   }
   return {
-    message: `You go ${direction} and are eaten by a grue.`,
-    close: true
+    message: `You go ${dir}. ${world.rooms[nextRoom].description}`,
+    update: { room: nextRoom }
   };
 };
+
+export default move;

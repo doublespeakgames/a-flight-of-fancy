@@ -1,26 +1,15 @@
 // @flow
-import Store from '../store';
-import Logger from '../logger';
 
-const schema = Store.Schema({
-  id: String
-});
+import type { WorldId } from './world';
+import type { RoomId } from './room';
 
-const Session = Store.model('Session', schema); 
+export type Session = {
+  _id:string,
+  world:WorldId,
+  room:RoomId
+};
 
-// Insert test data, if necessary
-Session.find({ id: /^fhqwhgads$/ }, (err, rows) => {
-  if (rows.length > 0) {
-    return;
-  }
-  const s = new Session({ id: 'fhqwhgads' });
-  s.save(err => {
-    if (err) {
-      Logger.error(`Failed to initialize test session: ${err}`);
-      return;
-    }
-    Logger.info('Initialized test session');
-  })
-});
-
-export default Session;
+export type SessionDiff = {
+  world?:WorldId,
+  room?:RoomId
+};

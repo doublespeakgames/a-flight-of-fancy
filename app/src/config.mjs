@@ -5,5 +5,8 @@
  * @since Feb 2019
  */
 export default {
-  'db': 'mongodb://mongo:27017'
+  'database': {
+    'url': 'mongodb://mongo:27017',
+    'name': 'voice-adventure'
+  }
 };

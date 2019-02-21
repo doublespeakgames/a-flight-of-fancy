@@ -4,7 +4,8 @@
   "main": "build/main.mjs",
   "scripts": {
     "build": "flow-remove-types src/ -d build/",
-    "start": "node --experimental-modules build/main.mjs"
+    "start": "node --experimental-modules build/main.mjs",
+    "debug": "node --inspect=0.0.0.0 --experimental-modules build/main.mjs"
   },
   "repository": "git@github.com:Continuities/voice-adventure.git",
   "author": "Michael Townsend <michael@doublespeakgames.com>",
@@ -15,7 +16,8 @@
     "express": "^4.16.4",
     "flow-bin": "^0.93.0",
     "flow-remove-types": "^1.2.3",
-    "mongoose": "^5.4.14",
+    "mongodb": "^3.1.13",
+    "uuid": "^3.3.2",
     "winston": "^3.2.1"
   }
 }

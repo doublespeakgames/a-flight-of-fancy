@@ -6,8 +6,14 @@
  * 
  * Handles speaking with actors
  */
-export default (actor:string) => {
+
+import type { Session } from '../model/session';
+import type { ActionHandler, Response } from '../action-resolver';
+
+const talk:ActionHandler = (session, world, subject = 'foo') => {
   return {
-    message: `${actor} ignores you. What a jerk.`
+    message: `${subject} ignores you. What a jerk.`
   };
 };
+
+export default talk;

@@ -10,20 +10,14 @@
 
 import Logger from './logger';
 import Server from './server';
-import Session from './model/session'
+import { getSessions } from './store';
 import GoogleEndpoint from './endpoint/google';
 
 const PORT = process.env.APP_PORT || 5000;
 
-Server.get('/test', (req, res) => {
-  Session.find((err, sessions) => {
-    if (err) {
-      Logger.error(`Error reading from MongoDB: ${err}`);
-      res.error('DB ERROR');
-      return;
-    }
-    res.send({ sessions, msg: 'foo' });
-  });
+Server.get('/test', async (req, res) => {
+  const sessions = await getSessions();
+  res.send({ sessions, msg: 'foo' });
 });
 
 Server.post('/google', GoogleEndpoint);

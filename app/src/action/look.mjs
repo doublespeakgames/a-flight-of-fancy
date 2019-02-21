@@ -1,19 +1,19 @@
 // @flow
 /**
- * Attack Action
+ * Look Action
  * @author mtownsend
  * @since Feb 2019
  * 
- * Handles fighting with actors
+ * Handles looking at stuff
  */
 
 import type { Session } from '../model/session';
 import type { ActionHandler, Response } from '../action-resolver';
 
-const attack:ActionHandler = (session, world, target = 'foo') => {
+const look:ActionHandler = (session, world, _) => {
   return {
-    message: `You're too scared of ${target}`
+    message: world.rooms[session.room].description
   };
 };
 
-export default attack;
+export default look;

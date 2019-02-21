@@ -8,12 +8,28 @@
  */
 
 import Actions from 'actions-on-google';
-import Move from '../action/move';
-import Take from '../action/take';
-import Talk from '../action/talk';
-import Attack from '../action/attack';
+import { resolve } from '../action-resolver';
+import uuid from 'uuid/v1';
 
-function fulfill(conv, result) {
+import type { Conversation } from 'actions-on-google';
+import type { Action, ActionType } from '../action-resolver';
+
+const app = Actions.dialogflow();
+
+function getUserId(conv:Conversation):string {
+  if (!('userId' in conv.user.storage)) {
+    conv.user.storage.userId = uuid();
+  }
+  return conv.user.storage.userId;
+}
+
+async function fulfill(actionType:ActionType, conv:Conversation, params:{[string]:string}) {
+  const action:Action = {
+    sessionId: `goog-${getUserId(conv)}`,
+    type: actionType,
+    subject: params['subject']
+  };
+  const result = await resolve(action);
   if (result.close) {
     conv.close(result.message);
   }
@@ -22,10 +38,10 @@ function fulfill(conv, result) {
   }
 }
 
-const app = Actions.dialogflow();
-app.intent('Move', (conv, { direction }) => fulfill(conv, Move(direction)));
-app.intent('Take', (conv, { item }) => fulfill(conv, Take(item)));
-app.intent('Attack', (conv, { actor }) => fulfill(conv, Attack(actor)));
-app.intent('Talk', (conv, { actor }) => fulfill(conv, Talk(actor)));
+app.intent('Default Welcome Intent', fulfill.bind(null, 'look'));
+app.intent('Move', fulfill.bind(null, 'move'));
+app.intent('Take', fulfill.bind(null, 'take'));
+app.intent('Attack', fulfill.bind(null, 'attack'));
+app.intent('Talk', fulfill.bind(null, 'talk'));
 
 export default app;

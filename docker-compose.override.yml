@@ -4,8 +4,11 @@ services:
   app:
     environment:
       - APP_PORT=8080
+    command: yarn debug
     ports:
       - "8080:8080"
+      - "9229:9229"
     volumes:
-      - ./app/build:/home/app/src
-      - /home/app/src/node_modules
+      - ./app/build:/home/app/build
+      - ./app/src:/home/app/src
+      - /home/app/node_modules
