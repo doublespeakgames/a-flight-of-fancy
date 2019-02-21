@@ -8,9 +8,9 @@
  */
 
 import type { Session } from '../model/session';
-import type { ActionHandler, Response } from '../action-resolver';
+import type { RootActionHandler, Response } from '../action-resolver';
 
-const attack:ActionHandler = (session, world, target = 'foo') => {
+const attack:RootActionHandler = (session, world, target = 'foo') => {
   return {
     message: `You're too scared of ${target}`
   };

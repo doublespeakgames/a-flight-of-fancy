@@ -24,9 +24,9 @@ export type Response = {
   close?:boolean
 };
 
-export type ActionHandler = (session:Session, world:World, subject?:string) => Response;
+export type RootActionHandler = (session:Session, world:World, subject?:string) => Response;
 
-const handlers:{[ActionType]:ActionHandler} = {
+const handlers:{[ActionType]:RootActionHandler} = {
   'attack': attack,
   'look': look,
   'move': move,

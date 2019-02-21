@@ -8,12 +8,28 @@
  */
 
 import type { Session } from '../model/session';
-import type { ActionHandler, Response } from '../action-resolver';
+import type { RootActionHandler, Response } from '../action-resolver';
+import { findInRoom } from '../model/thing';
 
-const look:ActionHandler = (session, world, _) => {
+const look:RootActionHandler = (session, world, subject) => {
+  if (!subject) {
+    // Just look at the current room
+    return {
+      message: world.rooms[session.room].description
+    };
+  }
+
+  const thing = findInRoom(world.rooms[session.room], subject);
+  if (!thing) {
+    return {
+      message: `There is no ${subject} here.`
+    };
+  }
+
   return {
-    message: world.rooms[session.room].description
+    message: thing.description
   };
+
 };
 
 export default look;

@@ -8,11 +8,25 @@
  */
 
 import type { Session } from '../model/session';
-import type { ActionHandler, Response } from '../action-resolver';
+import { findInRoom } from '../model/thing';
+import type { RootActionHandler, Response } from '../action-resolver';
 
-const take:ActionHandler = (session, world, subject = 'foo') => {
+const take:RootActionHandler = (session, world, subject) => {
+  if (!subject) {
+    return {
+      message: `Take what?`
+    };
+  }
+
+  const thing = findInRoom(world.rooms[session.room], subject);
+  if (!thing) {
+    return {
+      message: `There is no ${subject} here.`
+    };
+  }
+
   return {
-    message: `${subject} darts out of your grasp. What?`
+    message: `The ${subject} doesn't want to be picked up!`
   };
 };
 

@@ -1,0 +1,132 @@
+{
+  "responseId": "38be4579-bcfc-408e-998d-d90badbb3ce8",
+  "queryResult": {
+    "queryText": "take a apple",
+    "parameters": {
+      "subject": "apple"
+    },
+    "allRequiredParamsPresent": true,
+    "fulfillmentText": "You take the $item",
+    "fulfillmentMessages": [
+      {
+        "text": {
+          "text": [
+            "You take the $item"
+          ]
+        }
+      }
+    ],
+    "outputContexts": [
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_screen_output",
+        "parameters": {
+          "subject.original": "apple",
+          "subject": "apple"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_audio_output",
+        "parameters": {
+          "subject.original": "apple",
+          "subject": "apple"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/google_assistant_input_type_keyboard",
+        "parameters": {
+          "subject.original": "apple",
+          "subject": "apple"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_web_browser",
+        "parameters": {
+          "subject.original": "apple",
+          "subject": "apple"
+        }
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_media_response_audio",
+        "parameters": {
+          "subject.original": "apple",
+          "subject": "apple"
+        }
+      }
+    ],
+    "intent": {
+      "name": "projects/actions-sandbox-ceabf/agent/intents/3eda2638-8060-4024-b07d-e8eb493c5dbf",
+      "displayName": "Take"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "en-us"
+  },
+  "originalDetectIntentRequest": {
+    "source": "google",
+    "version": "2",
+    "payload": {
+      "isInSandbox": true,
+      "surface": {
+        "capabilities": [
+          {
+            "name": "actions.capability.AUDIO_OUTPUT"
+          },
+          {
+            "name": "actions.capability.WEB_BROWSER"
+          },
+          {
+            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+          },
+          {
+            "name": "actions.capability.SCREEN_OUTPUT"
+          }
+        ]
+      },
+      "requestType": "SIMULATOR",
+      "inputs": [
+        {
+          "rawInputs": [
+            {
+              "query": "take a apple",
+              "inputType": "KEYBOARD"
+            }
+          ],
+          "arguments": [
+            {
+              "rawText": "take a apple",
+              "textValue": "take a apple",
+              "name": "text"
+            }
+          ],
+          "intent": "actions.intent.TEXT"
+        }
+      ],
+      "user": {
+        "userStorage": "{\"data\":{\"userId\":\"485cda30-3602-11e9-84c1-d7fd73d1a60c\"}}",
+        "lastSeen": "2019-02-21T20:17:36Z",
+        "locale": "en-US",
+        "userId": "ABwppHGPMciiAXWxurDVlWT31PWFGJMi-CV9Vxq3H3joK_jgXQn5zZte8fA8osZvEG1GD4gOCLV-cBsRsWsUgZtccdk9"
+      },
+      "conversation": {
+        "conversationId": "ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4",
+        "type": "ACTIVE",
+        "conversationToken": "[]"
+      },
+      "availableSurfaces": [
+        {
+          "capabilities": [
+            {
+              "name": "actions.capability.AUDIO_OUTPUT"
+            },
+            {
+              "name": "actions.capability.WEB_BROWSER"
+            },
+            {
+              "name": "actions.capability.SCREEN_OUTPUT"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "session": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4"
+}

@@ -8,9 +8,9 @@
  */
 
 import type { Session, SessionDiff } from '../model/session';
-import type { ActionHandler, Response } from '../action-resolver';
+import type { RootActionHandler, Response } from '../action-resolver';
 
-const move:ActionHandler = (session, world, subject) => {
+const move:RootActionHandler = (session, world, subject) => {
   const room = world.rooms[session.room];
   const dir = subject == null ? 'null' : subject.toLowerCase();
   const nextRoom = room.exits[dir];
