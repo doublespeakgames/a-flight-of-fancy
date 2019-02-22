@@ -1,0 +1,110 @@
+{
+  "responseId": "b3a32bc1-af1b-4a3f-a1c8-9c834fb73b1d",
+  "queryResult": {
+    "queryText": "can we start over?",
+    "parameters": {},
+    "allRequiredParamsPresent": true,
+    "fulfillmentText": "Okay, we'll start over",
+    "fulfillmentMessages": [
+      {
+        "text": {
+          "text": [
+            "Okay, we'll start over"
+          ]
+        }
+      }
+    ],
+    "outputContexts": [
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O/contexts/actions_capability_screen_output"
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O/contexts/actions_capability_audio_output"
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O/contexts/google_assistant_input_type_keyboard"
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O/contexts/actions_capability_media_response_audio"
+      },
+      {
+        "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O/contexts/actions_capability_web_browser"
+      }
+    ],
+    "intent": {
+      "name": "projects/actions-sandbox-ceabf/agent/intents/0857eebe-0ead-4ca5-befe-7f0b1b8a4474",
+      "displayName": "Restart"
+    },
+    "intentDetectionConfidence": 1,
+    "languageCode": "en-us"
+  },
+  "originalDetectIntentRequest": {
+    "source": "google",
+    "version": "2",
+    "payload": {
+      "isInSandbox": true,
+      "surface": {
+        "capabilities": [
+          {
+            "name": "actions.capability.WEB_BROWSER"
+          },
+          {
+            "name": "actions.capability.SCREEN_OUTPUT"
+          },
+          {
+            "name": "actions.capability.MEDIA_RESPONSE_AUDIO"
+          },
+          {
+            "name": "actions.capability.AUDIO_OUTPUT"
+          }
+        ]
+      },
+      "requestType": "SIMULATOR",
+      "inputs": [
+        {
+          "rawInputs": [
+            {
+              "query": "can we start over?",
+              "inputType": "KEYBOARD"
+            }
+          ],
+          "arguments": [
+            {
+              "rawText": "can we start over?",
+              "textValue": "can we start over?",
+              "name": "text"
+            }
+          ],
+          "intent": "actions.intent.TEXT"
+        }
+      ],
+      "user": {
+        "userStorage": "{\"data\":{\"userId\":\"485cda30-3602-11e9-84c1-d7fd73d1a60c\"}}",
+        "lastSeen": "2019-02-21T23:35:18Z",
+        "locale": "en-US",
+        "userId": "ABwppHGPMciiAXWxurDVlWT31PWFGJMi-CV9Vxq3H3joK_jgXQn5zZte8fA8osZvEG1GD4gOCLV-cBsRsWsUgZtccdk9"
+      },
+      "conversation": {
+        "conversationId": "ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O",
+        "type": "ACTIVE",
+        "conversationToken": "[]"
+      },
+      "availableSurfaces": [
+        {
+          "capabilities": [
+            {
+              "name": "actions.capability.WEB_BROWSER"
+            },
+            {
+              "name": "actions.capability.SCREEN_OUTPUT"
+            },
+            {
+              "name": "actions.capability.AUDIO_OUTPUT"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "session": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHFtQcTpW7WK9eDs5FkpgInQVprHAtciQmmWv1mcEmL--vLP1r4075A_9h8YSOnc1Lkvp9QBuWN-RURjcADNyv1O"
+}

@@ -9,9 +9,9 @@
 
 import type { Session } from '../model/session';
 import { findInRoom } from '../model/thing';
-import type { RootActionHandler, ActionResult } from '../action-resolver';
+import type { ActionHandler, ActionResult } from '../action-resolver';
 
-const take:RootActionHandler = (session, world, subject) => {
+const take:ActionHandler = (session, world, subject) => {
   if (!subject) {
     return {
       message: `Take what?`

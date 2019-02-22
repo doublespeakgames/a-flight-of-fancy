@@ -11,12 +11,23 @@ import move from './action/move';
 import take from './action/take';
 import talk from './action/talk';
 import objectTravel from './action/object-travel';
+import use from './action/use';
 
-export type ActionType = 'attack' | 'look' | 'move' | 'take' | 'talk' | 'restart' | 'object-travel';
+export type ActionType = 
+  'attack' | 
+  'look' | 
+  'move' | 
+  'take' | 
+  'talk' | 
+  'restart' | 
+  'object-travel' | 
+  'use';
+
 export type Action = {
   sessionId:string,
   type:ActionType,
-  subject?:string
+  subject?:string,
+  object?:string
 };
 
 export type ActionResult = {|
@@ -25,15 +36,16 @@ export type ActionResult = {|
   close?:boolean
 |};
 
-export type RootActionHandler = (session:Session, world:World, subject?:string) => ActionResult;
+export type ActionHandler = (session:Session, world:World, subject?:string, object?:string) => ActionResult;
 
-const handlers:{[ActionType]:RootActionHandler} = {
+const handlers:{[ActionType]:ActionHandler} = {
   'attack': attack,
   'look': look,
   'move': move,
   'take': take,
   'talk': talk,
-  'object-travel': objectTravel
+  'object-travel': objectTravel,
+  'use': use
 };
 
 async function createSession(id:string):Promise<Session> {
@@ -64,7 +76,7 @@ export async function resolve(action:Action):Promise<ActionResult> {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result = await handlers[action.type](session, world, action.subject);
+  const result = await handlers[action.type](session, world, action.subject, action.object);
   if (result.update) {
     const newSession:Session = Object.assign({}, session, result.update);
     if (result.update && result.update.flags) {

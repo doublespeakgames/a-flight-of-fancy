@@ -27,7 +27,8 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
   const action:Action = {
     sessionId: `goog-${getUserId(conv)}`,
     type: actionType,
-    subject: params['subject']
+    subject: params['subject'],
+    object: params['object']
   };
   const result = await resolve(action);
   if (result.close) {
@@ -46,5 +47,6 @@ app.intent('Take', fulfill.bind(null, 'take'));
 app.intent('Attack', fulfill.bind(null, 'attack'));
 app.intent('Talk', fulfill.bind(null, 'talk'));
 app.intent('Look', fulfill.bind(null, 'look'));
+app.intent('Use', fulfill.bind(null, 'use'));
 
 export default app;

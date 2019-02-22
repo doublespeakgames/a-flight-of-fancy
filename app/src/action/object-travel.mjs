@@ -1,21 +1,21 @@
 // @flow
 /**
- * Look Action
+ * Object Travel Action
  * @author mtownsend
  * @since Feb 2019
  * 
- * Handles looking at stuff
+ * Move in a direction, referenced by an object
  */
 
 import type { Session } from '../model/session';
 import type { ActionHandler, ActionResult } from '../action-resolver';
 import { findInRoom } from '../model/thing';
+import move from './move';
 
-const look:ActionHandler = (session, world, subject) => {
+const objectTravel:ActionHandler = (session, world, subject) => {
   if (!subject) {
-    // Just look at the current room
     return {
-      message: world.rooms[session.room].description
+      message: `Go where?`
     };
   }
 
@@ -26,10 +26,13 @@ const look:ActionHandler = (session, world, subject) => {
     };
   }
 
-  return {
-    message: thing.description
-  };
+  if (thing.exit) {
+    return move(session, world, thing.exit);
+  }
 
+  return {
+    message: `You can't do that.`
+  };
 };
 
-export default look;
+export default objectTravel;

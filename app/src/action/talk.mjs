@@ -8,9 +8,9 @@
  */
 
 import type { Session } from '../model/session';
-import type { RootActionHandler, ActionResult } from '../action-resolver';
+import type { ActionHandler, ActionResult } from '../action-resolver';
 
-const talk:RootActionHandler = (session, world, subject = 'foo') => {
+const talk:ActionHandler = (session, world, subject = 'foo') => {
   return {
     message: `${subject} ignores you. What a jerk.`
   };
