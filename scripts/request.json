@@ -1,0 +1,29 @@
+{
+  "queryResult": {
+    "parameters": {
+      "subject": "${subject}",
+      "object": "${object}"
+    },
+    "intent": {
+      "displayName": "${intent}"
+    }
+  },
+  "originalDetectIntentRequest": {
+    "source": "google",
+    "version": "2",
+    "payload": {
+      "user": {
+        "userStorage": "{\"data\":{\"userId\":\"485cda30-3602-11e9-84c1-d7fd73d1a60c\"}}",
+        "lastSeen": "2019-02-21T20:17:36Z",
+        "locale": "en-US",
+        "userId": "ABwppHGPMciiAXWxurDVlWT31PWFGJMi-CV9Vxq3H3joK_jgXQn5zZte8fA8osZvEG1GD4gOCLV-cBsRsWsUgZtccdk9"
+      },
+      "conversation": {
+        "conversationId": "ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4",
+        "type": "ACTIVE",
+        "conversationToken": "[]"
+      }
+    }
+  },
+  "session": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4"
+}
