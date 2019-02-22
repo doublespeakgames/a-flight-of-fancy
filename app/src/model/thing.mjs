@@ -15,7 +15,8 @@ export type Thing = {|
   take?:ActionHandler|string,
   exit?:Direction,
   useKey?:UseKey,
-  use?:{[ThingId]:ActionHandler}|string
+  use?:{[ThingId]:ActionHandler|string}|string,
+  eat?:ActionHandler|string
 |}
 
 export function fromRoom(room:Room, key?:string):?Thing {

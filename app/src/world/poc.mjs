@@ -23,6 +23,7 @@ const world:World = {
       }, {
         'keys': ['food', 'foodstuffs', 'foodstuff', 'stuff'],
         'description': 'It\'s not very appetizing',
+        'eat': `You don't want to eat that.`,
         'take': session => {
           if (session.inventory.includes('food')) {
             return { message: `You don't want any more.` };
@@ -65,7 +66,14 @@ const world:World = {
         'exit': 'south'
       }, {
         'keys': ['cutting board', 'board'],
-        'description': 'The cutting board is a thick slab of knotted wood, deeply grooved from years of use.'
+        'description': 'The cutting board is a thick slab of knotted wood, deeply grooved from years of use.',
+        'use': {
+          'knife': 'You cut a few more notches into the board'
+        }
+      }, {
+        'keys': ['liquid', 'boiling liquid' ],
+        'description': 'It looks worse than it smells.',
+        'eat': 'It tastes worse than it looks.'
       }]
     }
 
@@ -77,8 +85,8 @@ const world:World = {
       'description': 'The knife is large and pitted, and not very clean.',
       'useKey': 'knife',
       'use': {
-        'self': _ => ({ message: `You don't want to cut yourself.` }),
-        'food': _ => ({ message: `You cut the food into small pieces.` })
+        'self': `You don't want to cut yourself.`,
+        'food': `You cut the food into small pieces.`
       }
     },
     'food': {
@@ -86,7 +94,8 @@ const world:World = {
       'name': 'some mouldy food',
       'description': 'It\'s not very appetizing',
       'useKey': 'food',
-      'use': `You don't want to eat that.`
+      'use': `You don't want to eat that.`,
+      'eat': `You don't want to eat that.`
     }
   }
 };

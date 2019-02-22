@@ -13,6 +13,7 @@ import talk from './action/talk';
 import objectTravel from './action/object-travel';
 import use from './action/use';
 import inventory from './action/inventory';
+import eat from './action/eat';
 
 export type ActionType = 
   'attack' | 
@@ -23,7 +24,8 @@ export type ActionType =
   'restart' | 
   'object-travel' | 
   'use' |
-  'inventory';
+  'inventory' |
+  'eat';
 
 export type Action = {
   sessionId:string,
@@ -48,7 +50,8 @@ const handlers:{[ActionType]:ActionHandler} = {
   'talk': talk,
   'object-travel': objectTravel,
   'use': use,
-  'inventory': inventory
+  'inventory': inventory,
+  'eat': eat
 };
 
 async function createSession(id:string):Promise<Session> {

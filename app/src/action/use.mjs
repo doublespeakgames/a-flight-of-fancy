@@ -39,7 +39,11 @@ const use:ActionHandler = (session, world, subject, object) => {
         };
       }
       if (typeof item.use === 'object' && item.use['self']) {
-        return item.use['self'](session, world);
+        const handler = item.use['self'];
+        if (typeof handler === 'string') {
+          return { message: handler };
+        }
+        return handler(session, world);
       }
       if (item.exit) {
         return move(session, world, item.exit);
@@ -85,7 +89,11 @@ const use:ActionHandler = (session, world, subject, object) => {
 
 function tryUse(session, world, thingOne, thingTwo):?ActionResult {
   if (typeof thingOne.use === 'object' && thingTwo.useKey && thingOne.use[thingTwo.useKey]) {
-    return thingOne.use[thingTwo.useKey](session, world);
+    const handler = thingOne.use[thingTwo.useKey];
+    if (typeof handler === 'string') {
+      return { message: handler };
+    }
+    return handler(session, world);
   }
   return null;
 }
