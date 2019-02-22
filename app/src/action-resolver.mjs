@@ -52,6 +52,9 @@ const handlers:{[ActionType]:ActionHandler} = {
   'talk': interact('talk'),
   'use': interact('use', { exits: true }),
   'look': interact('look', { 
+    subjectless: (session, world) => ({
+      message: world.rooms[session.room].description
+    }),
     override: [{
       keys: new Set([
         'inventory', 

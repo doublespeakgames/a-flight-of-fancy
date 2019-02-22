@@ -51,7 +51,7 @@ const world:World = {
     //#region Kitchen
     'kitchen': {
       'name': 'Kitchen',
-      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cutting board, and a large pot bubbles over an open fire. There is a rickety pantry to the south.',
+      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cutting board, and a large pot bubbles over an open fire. There is a small cage hanging in the corner, and a rickety pantry to the south.',
       'exits': {
         'south': 'pantry'
       },
@@ -100,6 +100,32 @@ const world:World = {
         'verbs': {
           'look': 'It looks worse than it smells.',
           'eat': 'It tastes worse than it looks.'
+        }
+      }, {
+        'keys': ['cage', 'small cage'],
+        'verbs': {
+          'look': 'Inside the cage, a strange creature huddles furtively.',
+          'open': 'The cage is held shut by a sturdy lock.'
+        }
+      }, {
+        'keys': ['lock', 'sturdy lock'],
+        'verbs': {
+          'look': `The lock is as big as your fist.`,
+          'open': `It won't open`
+        }
+      },{
+        'keys': ['creature', 'strange creature'],
+        'verbs': {
+          'look': 'The creature is cat-like, but covered in dull scales. Its face is unnervingly human, and it watches you with keen eyes.',
+          'talk': (session, world) => {
+            if (session.flags['it_spoke']) {
+              return { message: 'It just watches you, expectantly.' }
+            }
+            return {
+              message: `"Still alive?' the creature hisses. "Let it out! It doesn't want to be dinner."`,
+              update: { flags: { 'it_spoke': 'true' }}
+            };
+          }
         }
       }]
     }

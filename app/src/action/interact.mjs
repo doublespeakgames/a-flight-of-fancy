@@ -11,6 +11,7 @@ type Override = {|
 
 type Options = {
   exits?:boolean,
+  subjectless?:ActionHandler,
   override?:Array<Override>
 };
 
@@ -21,6 +22,12 @@ const o:Options = {
 export default (verb:string, options:Options = {}):ActionHandler => 
   (session, world, subject, object) => {
     if (!subject) {
+      if (typeof options.subjectless === 'string') {
+        return { message: options.subjectless };
+      }
+      if (typeof options.subjectless === 'function') {
+        return options.subjectless(session, world);
+      }
       return { message: `You can't do that.` };
     }
     
