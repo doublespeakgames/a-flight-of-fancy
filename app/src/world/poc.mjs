@@ -26,6 +26,8 @@ const world:World = {
         'exit': 'north',
         'verbs': {
           'look': 'The door hangs slightly off its hinges, letting in a bit of feeble light.',
+          'open': 'The door swings loosely',
+          'close': 'The door swings loosely'
         }
       }, {
         'keys': ['food', 'foodstuffs', 'foodstuff', 'stuff'],
@@ -82,6 +84,8 @@ const world:World = {
         'exit': 'south',
         'verbs': {
           'look': 'The pantry door hangs open, revealing a space just large enough for a person to enter.',
+          'open': 'The pantry door swings loosely.',
+          'close': 'The pantry door swings loosely.'
         }
       }, {
         'keys': ['cutting board', 'board'],

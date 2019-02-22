@@ -21,7 +21,9 @@ export type ActionType =
   'object-travel' | 
   'use' |
   'inventory' |
-  'eat';
+  'eat' |
+  'open' |
+  'close';
 
 export type Action = {
   sessionId:string,
@@ -43,6 +45,8 @@ const handlers:{[ActionType]:ActionHandler} = {
   'move': move,
   'object-travel': objectTravel,
   'inventory': inventory,
+  'open': interact('open'),
+  'close': interact('close'),
   'take': interact('take'),
   'eat': interact('eat'),
   'talk': interact('talk'),

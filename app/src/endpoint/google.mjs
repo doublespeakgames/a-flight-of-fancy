@@ -50,5 +50,7 @@ app.intent('Look', fulfill.bind(null, 'look'));
 app.intent('Use', fulfill.bind(null, 'use'));
 app.intent('Inventory', fulfill.bind(null, 'inventory'));
 app.intent('Consume', fulfill.bind(null, 'eat'));
+app.intent('Open', fulfill.bind(null, 'open'));
+app.intent('Close', fulfill.bind(null, 'close'));
 
 export default app;
