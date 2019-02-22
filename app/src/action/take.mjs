@@ -9,7 +9,7 @@
 
 import type { Session } from '../model/session';
 import { findInRoom } from '../model/thing';
-import type { RootActionHandler, Response } from '../action-resolver';
+import type { RootActionHandler, ActionResult } from '../action-resolver';
 
 const take:RootActionHandler = (session, world, subject) => {
   if (!subject) {
@@ -25,8 +25,18 @@ const take:RootActionHandler = (session, world, subject) => {
     };
   }
 
+  if (typeof thing.take === 'string') {
+    return {
+      message: thing.take
+    };
+  }
+
+  if (typeof thing.take === 'function') {
+    return thing.take(session, world);
+  }
+
   return {
-    message: `The ${subject} doesn't want to be picked up!`
+    message: `You can't carry that.`
   };
 };
 

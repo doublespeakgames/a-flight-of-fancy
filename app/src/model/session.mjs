@@ -6,10 +6,12 @@ import type { RoomId } from './room';
 export type Session = {
   _id:string,
   world:WorldId,
-  room:RoomId
+  room:RoomId,
+  flags:{[string]:string}
 };
 
-export type SessionDiff = {
+export type SessionDiff = {|
   world?:WorldId,
-  room?:RoomId
-};
+  room?:RoomId,
+  flags?:{[string]:string}
+|};

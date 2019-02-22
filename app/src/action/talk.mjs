@@ -8,7 +8,7 @@
  */
 
 import type { Session } from '../model/session';
-import type { RootActionHandler, Response } from '../action-resolver';
+import type { RootActionHandler, ActionResult } from '../action-resolver';
 
 const talk:RootActionHandler = (session, world, subject = 'foo') => {
   return {

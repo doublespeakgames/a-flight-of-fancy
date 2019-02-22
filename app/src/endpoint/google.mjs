@@ -39,7 +39,9 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
 }
 
 app.intent('Default Welcome Intent', fulfill.bind(null, 'look'));
+app.intent('Restart', fulfill.bind(null, 'restart'));
 app.intent('Move', fulfill.bind(null, 'move'));
+app.intent('Object Travel', fulfill.bind(null, 'object-travel'));
 app.intent('Take', fulfill.bind(null, 'take'));
 app.intent('Attack', fulfill.bind(null, 'attack'));
 app.intent('Talk', fulfill.bind(null, 'talk'));

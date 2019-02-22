@@ -2,14 +2,16 @@
 
 import type { Session } from './session';
 import type { World } from './world';
-import type { Room } from './room';
+import type { Direction, Room } from './room';
+import type { ActionResult } from '../action-resolver'
 
-export type ActionHandler = (session:Session, world:World) => Response;
+export type ActionHandler = (session:Session, world:World) => ActionResult;
 
 export type Thing = {|
   keys:Array<string>,
   description:string,
-  take?:ActionHandler
+  take?:ActionHandler|string,
+  exit?:Direction
 |}
 
 export function findInRoom(room:Room, key:string):?Thing {

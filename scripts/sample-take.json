@@ -1,9 +1,9 @@
 {
   "responseId": "38be4579-bcfc-408e-998d-d90badbb3ce8",
   "queryResult": {
-    "queryText": "take a apple",
+    "queryText": "take a knife",
     "parameters": {
-      "subject": "apple"
+      "subject": "knife"
     },
     "allRequiredParamsPresent": true,
     "fulfillmentText": "You take the $item",
@@ -20,36 +20,36 @@
       {
         "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_screen_output",
         "parameters": {
-          "subject.original": "apple",
-          "subject": "apple"
+          "subject.original": "knife",
+          "subject": "knife"
         }
       },
       {
         "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_audio_output",
         "parameters": {
-          "subject.original": "apple",
-          "subject": "apple"
+          "subject.original": "knife",
+          "subject": "knife"
         }
       },
       {
         "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/google_assistant_input_type_keyboard",
         "parameters": {
-          "subject.original": "apple",
-          "subject": "apple"
+          "subject.original": "knife",
+          "subject": "knife"
         }
       },
       {
         "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_web_browser",
         "parameters": {
-          "subject.original": "apple",
-          "subject": "apple"
+          "subject.original": "knife",
+          "subject": "knife"
         }
       },
       {
         "name": "projects/actions-sandbox-ceabf/agent/sessions/ABwppHGkURNMssCu5sjyHWfZ76zqhWEr0v500tSoPJPY9goIDtjOEL9WbJWx1E6qqKPOvAjMCFIERuHFNGmk8IlnOAv4/contexts/actions_capability_media_response_audio",
         "parameters": {
-          "subject.original": "apple",
-          "subject": "apple"
+          "subject.original": "knife",
+          "subject": "knife"
         }
       }
     ],
@@ -86,14 +86,14 @@
         {
           "rawInputs": [
             {
-              "query": "take a apple",
+              "query": "take a knife",
               "inputType": "KEYBOARD"
             }
           ],
           "arguments": [
             {
-              "rawText": "take a apple",
-              "textValue": "take a apple",
+              "rawText": "take a knife",
+              "textValue": "take a knife",
               "name": "text"
             }
           ],

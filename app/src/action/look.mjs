@@ -8,7 +8,7 @@
  */
 
 import type { Session } from '../model/session';
-import type { RootActionHandler, Response } from '../action-resolver';
+import type { RootActionHandler, ActionResult } from '../action-resolver';
 import { findInRoom } from '../model/thing';
 
 const look:RootActionHandler = (session, world, subject) => {

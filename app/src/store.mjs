@@ -35,6 +35,11 @@ export async function writeSession(session:Session):Promise<Session> {
   return db.collection('session').save(session);
 }
 
+export async function deleteSession(id:string):Promise<empty> {
+  const db = await dbPromise;
+  return db.collection('session').deleteOne({ _id: id });
+}
+
 export async function getWorld(id:string):Promise<World> {
   // Stub
   const m = await import('./world/poc');
