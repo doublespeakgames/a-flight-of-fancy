@@ -8,15 +8,16 @@ import type { ActionHandler } from '../action-resolver'
 export type ThingId = string;
 export type UseKey = string;
 
+type SimplePhrase = ActionHandler|string;
+type ComplexPhrase = {[ThingId]:SimplePhrase};
+type Verb = string;
+
 export type Thing = {|
   keys:Array<string>,
-  description:string,
   name?:string,
-  take?:ActionHandler|string,
   exit?:Direction,
   useKey?:UseKey,
-  use?:{[ThingId]:ActionHandler|string}|string,
-  eat?:ActionHandler|string
+  verbs?:{ [Verb]: SimplePhrase|ComplexPhrase }
 |}
 
 export function fromRoom(room:Room, key?:string):?Thing {

@@ -6,14 +6,10 @@ import type { World } from './model/world';
 import { getSession, writeSession, deleteSession, getWorld } from './store';
 
 import attack from './action/attack';
-import look from './action/look';
 import move from './action/move';
-import take from './action/take';
-import talk from './action/talk';
 import objectTravel from './action/object-travel';
-import use from './action/use';
 import inventory from './action/inventory';
-import eat from './action/eat';
+import interact from './action/interact';
 
 export type ActionType = 
   'attack' | 
@@ -44,14 +40,27 @@ export type ActionHandler = (session:Session, world:World, subject?:string, obje
 
 const handlers:{[ActionType]:ActionHandler} = {
   'attack': attack,
-  'look': look,
   'move': move,
-  'take': take,
-  'talk': talk,
   'object-travel': objectTravel,
-  'use': use,
   'inventory': inventory,
-  'eat': eat
+  'take': interact('take'),
+  'eat': interact('eat'),
+  'talk': interact('talk'),
+  'use': interact('use', { exits: true }),
+  'look': interact('look', { 
+    override: [{
+      keys: new Set([
+        'inventory', 
+        'my inventory', 
+        'bag', 
+        'my bag', 
+        'pocket', 
+        'pockets', 
+        'my pocket', 
+        'my pockets']),
+      handler: inventory
+    }]
+  })
 };
 
 async function createSession(id:string):Promise<Session> {
