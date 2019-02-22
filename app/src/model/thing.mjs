@@ -11,6 +11,7 @@ export type UseKey = string;
 export type Thing = {|
   keys:Array<string>,
   description:string,
+  name?:string,
   take?:ActionHandler|string,
   exit?:Direction,
   useKey?:UseKey,

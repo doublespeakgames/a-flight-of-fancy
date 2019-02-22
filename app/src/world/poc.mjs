@@ -73,6 +73,7 @@ const world:World = {
   'items': {
     'knife': {
       'keys': ['knife', 'crude knife'],
+      'name': 'a knife',
       'description': 'The knife is large and pitted, and not very clean.',
       'useKey': 'knife',
       'use': {
@@ -82,6 +83,7 @@ const world:World = {
     },
     'food': {
       'keys': ['food', 'mouldy food', 'mould'],
+      'name': 'some mouldy food',
       'description': 'It\'s not very appetizing',
       'useKey': 'food',
       'use': `You don't want to eat that.`
