@@ -23,13 +23,13 @@ const world:World = {
       }, {
         'keys': ['food', 'foodstuffs', 'foodstuff', 'stuff'],
         'description': 'It\'s not very appetizing',
-        'take': (session, world) => {
-          if (session.flags['took_food']) {
+        'take': session => {
+          if (session.inventory.includes('food')) {
             return { message: `You don't want any more.` };
           }
           return {
             message: 'You take some mouldy food',
-            update: { flags: { 'took_food': 'true' } }
+            update: { inventory: [...session.inventory, 'food'] }
           };
         }
       }]
@@ -44,13 +44,13 @@ const world:World = {
       'things': [{
         'keys': ['knife', 'knives', 'crude knife', 'crude knives'],
         'description': 'The knives are large and pitted, and not very clean.',
-        'take': (session, world) => {
-          if (session.flags['took_knife']) {
+        'take': session => {
+          if (session.inventory.includes('knife')) {
             return { message: 'You already have a knife' };
           }
           return {
             message: 'You take one of the knives',
-            update: { flags: { 'took_knife': 'true' } }
+            update: { inventory: [...session.inventory, 'knife'] }
           };
         }
       }, {
@@ -69,6 +69,23 @@ const world:World = {
       }]
     }
 
+  },
+  'items': {
+    'knife': {
+      'keys': ['knife', 'crude knife'],
+      'description': 'The knife is large and pitted, and not very clean.',
+      'useKey': 'knife',
+      'use': {
+        'self': _ => ({ message: `You don't want to cut yourself.` }),
+        'food': _ => ({ message: `You cut the food into small pieces.` })
+      }
+    },
+    'food': {
+      'keys': ['food', 'mouldy food', 'mould'],
+      'description': 'It\'s not very appetizing',
+      'useKey': 'food',
+      'use': `You don't want to eat that.`
+    }
   }
 };
 

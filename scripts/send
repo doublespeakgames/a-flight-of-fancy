@@ -1,4 +1,4 @@
 #!/bin/bash
 
-cat request.json | sed "s/\${intent}/$1/" | sed "s/\${subject}/$2/" | sed "s/\${object}/$3/" | curl -X POST -H "Content-Type: application/json" -d @- http://localhost:8080/google
+cat "${BASH_SOURCE%/*}/request.json" | sed "s/\${intent}/$1/" | sed "s/\${subject}/$2/" | sed "s/\${object}/$3/" | curl -X POST -H "Content-Type: application/json" -d @- http://localhost:8080/google
 echo

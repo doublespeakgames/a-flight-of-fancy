@@ -27,7 +27,8 @@ export async function getSessions():Promise<Array<Session>> {
 
 export async function getSession(id:string):Promise<Session> {
   const db = await dbPromise;
-  return db.collection('session').findOne({ _id: id });
+  var sess = await db.collection('session').findOne({ _id: id });
+  return sess;
 }
 
 export async function writeSession(session:Session):Promise<Session> {

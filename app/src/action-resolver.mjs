@@ -54,10 +54,19 @@ async function createSession(id:string):Promise<Session> {
     _id: id,
     world: world.id,
     room: world.start,
-    flags: {}
+    flags: {},
+    inventory: []
   };
   writeSession(session);
   return session;
+}
+
+function processUpdate(oldSession:Session, update:SessionDiff):Session {
+  const newSession:Session = Object.assign({}, oldSession, update);
+  if (update.flags) {
+    newSession.flags = Object.assign({}, oldSession.flags, update.flags);
+  }
+  return newSession;
 }
 
 export async function resolve(action:Action):Promise<ActionResult> {
@@ -78,11 +87,7 @@ export async function resolve(action:Action):Promise<ActionResult> {
   const world = await getWorld(session.world);
   const result = await handlers[action.type](session, world, action.subject, action.object);
   if (result.update) {
-    const newSession:Session = Object.assign({}, session, result.update);
-    if (result.update && result.update.flags) {
-      newSession.flags = Object.assign({}, session.flags, result.update.flags);
-    }
-    writeSession(newSession);
+    writeSession(processUpdate(session, result.update));
   }
   return result;
 }

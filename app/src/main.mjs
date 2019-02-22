@@ -17,7 +17,7 @@ const PORT = process.env.APP_PORT || 5000;
 
 Server.get('/test', async (req, res) => {
   const sessions = await getSessions();
-  res.send({ sessions, msg: 'foo' });
+  res.send(sessions);
 });
 
 Server.post('/google', GoogleEndpoint);

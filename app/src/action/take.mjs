@@ -8,7 +8,7 @@
  */
 
 import type { Session } from '../model/session';
-import { findInRoom } from '../model/thing';
+import { fromRoom } from '../model/thing';
 import type { ActionHandler, ActionResult } from '../action-resolver';
 
 const take:ActionHandler = (session, world, subject) => {
@@ -18,7 +18,7 @@ const take:ActionHandler = (session, world, subject) => {
     };
   }
 
-  const thing = findInRoom(world.rooms[session.room], subject);
+  const thing = fromRoom(world.rooms[session.room], subject);
   if (!thing) {
     return {
       message: `There is no ${subject} here.`
