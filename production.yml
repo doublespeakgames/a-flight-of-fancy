@@ -12,6 +12,10 @@ services:
     expose:
       - 8080
 
+  mongo:
+    expose:
+      - 27017
+
   nginx:
     build: ./nginx
     restart: unless-stopped
@@ -21,9 +25,6 @@ services:
     volumes:
       - certbot-conf:/etc/letsencrypt
       - certbot-www:/var/www/certbot
-    # volumes:
-    #   - ./data/certbot-conf:/etc/letsencrypt
-    #   - ./data/certbot-www:/var/www/certbot
     depends_on:
       - app
 
@@ -33,8 +34,4 @@ services:
     volumes:
       - certbot-conf:/etc/letsencrypt
       - certbot-www:/var/www/certbot
-    # volumes:
-    #   - ./data/certbot-conf:/etc/letsencrypt
-    #   - ./data/certbot-www:/var/www/certbot
-    #   - ./data/certbot-log:/var/log/letsencrypt
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"

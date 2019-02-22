@@ -12,3 +12,7 @@ services:
       - ./app/build:/home/app/build
       - ./app/src:/home/app/src
       - /home/app/node_modules
+
+  mongo:
+    ports:
+      - "27017:27017"
