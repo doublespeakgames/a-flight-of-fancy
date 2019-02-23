@@ -19,6 +19,17 @@ const move:ActionHandler = (session, world, subject) => {
       message: `You can't go that way.`
     };
   }
+
+  const locks = room.locks;
+  if (locks && locks[dir]) {
+    const lock = locks[dir](session);
+    if (lock) {
+      return {
+        message: lock
+      };
+    }
+  }
+
   return {
     message: `You go ${dir}. ${world.rooms[nextRoom].description}`,
     update: { room: nextRoom }

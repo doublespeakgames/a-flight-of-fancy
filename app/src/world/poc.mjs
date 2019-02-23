@@ -11,7 +11,7 @@ const world:World = {
 
     //#region Pantry
     'pantry': {
-      'name': 'Pantry',
+      'name': 'The pantry',
       'description': 'You are in a very small space. Shelves line the walls, and dim light seeps through a door to the north.',
       'exits': {
         'north': 'kitchen'
@@ -50,10 +50,11 @@ const world:World = {
 
     //#region Kitchen
     'kitchen': {
-      'name': 'Kitchen',
-      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cutting board, and a large pot bubbles over an open fire. There is a small cage hanging in the corner, and a rickety pantry to the south.',
+      'name': 'The kitchen',
+      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cutting board, and a large pot bubbles over an open fire. There is a pantry on the southern wall, next to a small cage. A doorway leads east.',
       'exits': {
-        'south': 'pantry'
+        'south': 'pantry',
+        'east': 'great-room'
       },
       'things': [{
         'keys': ['knife', 'knives', 'crude knife', 'crude knives'],
@@ -88,6 +89,12 @@ const world:World = {
           'close': 'The pantry door swings loosely.'
         }
       }, {
+        'keys': ['door', 'doorway'],
+        'exit': 'east',
+        'verbs': {
+          'look': `It's less a door, and more an absence of wall.`
+        }
+      },{
         'keys': ['cutting board', 'board'],
         'verbs': {
           'look': 'The cutting board is a thick slab of knotted wood, deeply grooved from years of use.',
@@ -128,8 +135,66 @@ const world:World = {
           }
         }
       }]
-    }
+    },
     //#endregion
+
+    //#region Dining Room
+    'great-room': {
+      name: 'The great room',
+      description: 'This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound squats in the corner. There are doors to the west and south and, behind the hound, a hall stretches north. ',
+      exits: {
+        'west': 'kitchen',
+        'south': 'locked-room',
+        'north': 'todo'
+      },
+      locks: {
+        'south': _ => `The door won't open.`,
+        'north': _ => `The hound snaps at you, and you reconsider.`
+      },
+      things: [{
+        'keys': [ 'ceiling' ],
+        'verbs': {
+          'look': 'The ceiling has been roughly chiseled our of natural rock.'
+        }
+      }, {
+        'keys': ['table', 'large table'],
+        'verbs': {
+          'look': 'The table stands as high as your chest and looks to have been made from a single slab of wood.'
+        }
+      }, {
+        'keys': ['hound', 'beastly hound', 'beast', 'dog', 'wolf'],
+        'useKey': 'hound',
+        'verbs': {
+          'look': 'The hound is twice the size it should be, with mangey bristling fur and yellowed teeth. It is chained to the wall with a short loop of iron links, but watches you hungrily.',
+        }
+      }, {
+        'keys': ['chain', 'links'],
+        'verbs': {
+          'look': 'The chain looks secure'
+        }
+      }]
+    },
+    //#endregion
+
+    //#region Locked Room
+    'locked-room': {
+      name: 'A locked room',
+      description: `You shouldn't be able to get in here. You can leave via the north.`,
+      exits: {
+        'north': 'great-room'
+      }
+    },
+    //#endregion
+
+    //#region TODO
+    'todo': {
+      name: 'TODO',
+      description: 'TODO',
+      exits: {
+        'south': 'great-room'
+      }
+    }
+    //#endregion TODO
 
   },
   //#endregion
