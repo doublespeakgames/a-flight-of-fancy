@@ -6,7 +6,8 @@
     },
     "intent": {
       "displayName": "${intent}"
-    }
+    },
+    "intentDetectionConfidence": 1
   },
   "originalDetectIntentRequest": {
     "source": "google",

@@ -65,3 +65,6 @@ typings/
 
 # Built javascript
 /app/build
+
+# Michael-specific deploy script
+deploy

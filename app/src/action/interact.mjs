@@ -1,6 +1,7 @@
 // @flow
 
 import type { ActionHandler } from '../action-resolver';
+import { Synonym } from '../action-resolver';
 import { fromRoom, fromInventory } from '../model/thing';
 import move from './move';
 
@@ -13,10 +14,6 @@ type Options = {
   exits?:boolean,
   subjectless?:ActionHandler,
   override?:Array<Override>
-};
-
-const o:Options = {
-  id:'foo'
 };
 
 export default (verb:string, options:Options = {}):ActionHandler => 
@@ -67,6 +64,9 @@ export default (verb:string, options:Options = {}):ActionHandler =>
         }
         if (typeof handler === 'string') {
           return { message: handler };
+        }
+        if (handler instanceof Synonym) {
+          return simpleHandler(session, world, handler.value, subject, options);
         }
         if (typeof handler === 'object') {
           const inner = handler['self'];
@@ -133,6 +133,9 @@ export default (verb:string, options:Options = {}):ActionHandler =>
     const verbs = subject.verbs;
     if (!verbs) {
       return null;
+    }
+    if (verbs[verb] instanceof Synonym) {
+      return tryApply(session, world, verbs[verb].value, subject, object);
     }
     if (typeof verbs[verb] === 'object' && object.useKey && verbs[verb][object.useKey]) {
       const handler = verbs[verb][object.useKey];

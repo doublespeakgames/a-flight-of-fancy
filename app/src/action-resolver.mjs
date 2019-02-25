@@ -5,25 +5,11 @@ import type { World } from './model/world';
 
 import { getSession, writeSession, deleteSession, getWorld } from './store';
 
-import attack from './action/attack';
+import fallback from './action/fallback'
 import move from './action/move';
 import objectTravel from './action/object-travel';
 import inventory from './action/inventory';
 import interact from './action/interact';
-
-export type ActionType = 
-  'attack' | 
-  'look' | 
-  'move' | 
-  'take' | 
-  'talk' | 
-  'restart' | 
-  'object-travel' | 
-  'use' |
-  'inventory' |
-  'eat' |
-  'open' |
-  'close';
 
 export type Action = {
   sessionId:string,
@@ -40,11 +26,20 @@ export type ActionResult = {|
 
 export type ActionHandler = (session:Session, world:World, subject?:string, object?:string) => ActionResult;
 
-const handlers:{[ActionType]:ActionHandler} = {
-  'attack': attack,
+export class Synonym {
+  value:string;
+  constructor(verb:string) {
+    this.value = verb;
+  }
+}
+
+const handlers:{[string]:ActionHandler} = {
+  'fallback': fallback,
   'move': move,
   'object-travel': objectTravel,
   'inventory': inventory,
+  'attack': interact('attack'),
+  'give': interact('give'),
   'open': interact('open'),
   'close': interact('close'),
   'take': interact('take'),
@@ -52,9 +47,10 @@ const handlers:{[ActionType]:ActionHandler} = {
   'talk': interact('talk'),
   'use': interact('use', { exits: true }),
   'look': interact('look', { 
-    subjectless: (session, world) => ({
-      message: world.rooms[session.room].description
-    }),
+    subjectless: (session, world) => {
+      const desc = world.rooms[session.room].description;
+      return { message: typeof desc === 'string' ? desc : desc(session) }
+    },
     override: [{
       keys: new Set([
         'inventory', 
@@ -69,6 +65,8 @@ const handlers:{[ActionType]:ActionHandler} = {
     }]
   })
 };
+
+export type ActionType = $Keys<typeof handlers>;
 
 async function createSession(id:string):Promise<Session> {
   const world = await getWorld('poc');

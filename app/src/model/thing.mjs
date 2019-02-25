@@ -3,7 +3,7 @@
 import type { Session } from './session';
 import type { World } from './world';
 import type { Direction, Room } from './room';
-import type { ActionHandler } from '../action-resolver'
+import type { Synonym, ActionHandler } from '../action-resolver'
 
 export type ThingId = string;
 export type UseKey = string;
@@ -17,7 +17,7 @@ export type Thing = {|
   name?:string,
   exit?:Direction,
   useKey?:UseKey,
-  verbs?:{ [Verb]: SimplePhrase|ComplexPhrase }
+  verbs?:{ [Verb]: Synonym|SimplePhrase|ComplexPhrase }
 |}
 
 export function fromRoom(room:Room, key?:string):?Thing {

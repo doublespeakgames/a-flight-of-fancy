@@ -8,7 +8,7 @@ export type Direction = string;
 export type RoomId = string;
 export type Room = {|
   name: string,
-  description: string,
+  description: string|(Session => string),
   exits: { [Direction]:RoomId },
   locks?: { [Direction]:Lock},
   things?: Array<Thing>

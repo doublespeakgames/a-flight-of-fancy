@@ -29,9 +29,9 @@ const move:ActionHandler = (session, world, subject) => {
       };
     }
   }
-
+  const desc = world.rooms[nextRoom].description;
   return {
-    message: `You go ${dir}. ${world.rooms[nextRoom].description}`,
+    message: `You go ${dir}. ${typeof desc === 'string' ? desc : desc(session)}`,
     update: { room: nextRoom }
   };
 };

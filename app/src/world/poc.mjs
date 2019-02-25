@@ -1,6 +1,7 @@
 // @flow
 
 import type { World } from '../model/world';
+import { Synonym } from '../action-resolver';
 
 const world:World = {
   'id': 'poc',
@@ -138,10 +139,13 @@ const world:World = {
     },
     //#endregion
 
-    //#region Dining Room
+    //#region Dining Room 
     'great-room': {
       name: 'The great room',
-      description: 'This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound squats in the corner. There are doors to the west and south and, behind the hound, a hall stretches north. ',
+      description: session => {
+        const hound = session.flags.hound ? 'lies' : 'squats';
+        return `This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound ${hound} in the corner. There are doors to the west and south and, behind the hound, a hall stretches north.`;
+      },
       exits: {
         'west': 'kitchen',
         'south': 'locked-room',
@@ -149,7 +153,7 @@ const world:World = {
       },
       locks: {
         'south': _ => `The door won't open.`,
-        'north': _ => `The hound snaps at you, and you reconsider.`
+        'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
       things: [{
         'keys': [ 'ceiling' ],
@@ -163,9 +167,41 @@ const world:World = {
         }
       }, {
         'keys': ['hound', 'beastly hound', 'beast', 'dog', 'wolf'],
-        'useKey': 'hound',
         'verbs': {
-          'look': 'The hound is twice the size it should be, with mangey bristling fur and yellowed teeth. It is chained to the wall with a short loop of iron links, but watches you hungrily.',
+          'look': session => {
+            if (session.flags.hound === 'dead') {
+              return { message: `The hound lies, unmoving, on the floor. Its fur is matted with dark blood.` }
+            }
+            if (session.flags.hound === 'fed') {
+              return { message: `The hound looks back at you, adoringly.`}
+            }
+            return { message: 'The hound is twice the size it should be, with mangey bristling fur and yellowed teeth. It is chained to the wall with a short loop of iron links, but watches you hungrily.' }
+          },
+          'use': {
+            'knife': session => {
+              if (session.flags.hound === 'dead') {
+                return { message: 'The hound is already dead.' };
+              }
+              return {
+                message: `The hound is massive but chained, and you easily out-maneuver it. Your knife slips between its ribs, and its life pours hotly onto the floor.`,
+                update: { flags: { 'hound': 'dead' } }
+              }
+            },
+            'food': session => { 
+              if (session.flags.hound === 'dead') {
+                return { message: `The hound doesn't react.` }
+              }
+              if (session.flags.hound === 'fed' ) {
+                return { message: 'The hound is already sated.' };
+              }
+              return {
+                message: `The hound snaps up the food greedily. Its demeanor softens.`,
+                update: { flags: { 'hound': 'fed' } }
+              }
+            }
+          },
+          'attack': new Synonym('use'),
+          'give': new Synonym('use')
         }
       }, {
         'keys': ['chain', 'links'],
@@ -187,9 +223,11 @@ const world:World = {
     //#endregion
 
     //#region TODO
-    'todo': {
-      name: 'TODO',
-      description: 'TODO',
+    'bedroom': {
+      name: 'The bedroom',
+      description: session => {
+        return 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.';
+      },
       exits: {
         'south': 'great-room'
       }

@@ -14,6 +14,8 @@ import uuid from 'uuid/v1';
 import type { Conversation } from 'actions-on-google';
 import type { Action, ActionType } from '../action-resolver';
 
+const CONFIDENCE_THRESHOLD = 0.6;
+
 const app = Actions.dialogflow();
 
 function getUserId(conv:Conversation):string {
@@ -23,10 +25,13 @@ function getUserId(conv:Conversation):string {
   return conv.user.storage.userId;
 }
 
-async function fulfill(actionType:ActionType, conv:Conversation, params:{[string]:string}) {
+async function fulfill(actionType:ActionType, conv:Conversation, params:{[string]:string}) {  
+
+  const confidence = conv.body.queryResult.intentDetectionConfidence;
+
   const action:Action = {
     sessionId: `goog-${getUserId(conv)}`,
-    type: actionType,
+    type: confidence >= CONFIDENCE_THRESHOLD ? actionType : 'fallback',
     subject: params['subject'],
     object: params['object']
   };
@@ -39,7 +44,8 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
   }
 }
 
-app.intent('Default Welcome Intent', fulfill.bind(null, 'look'));
+app.intent('Fallback', fulfill.bind(null, 'fallback'));
+app.intent('Welcome', fulfill.bind(null, 'look'));
 app.intent('Restart', fulfill.bind(null, 'restart'));
 app.intent('Move', fulfill.bind(null, 'move'));
 app.intent('Object Travel', fulfill.bind(null, 'object-travel'));
@@ -52,5 +58,6 @@ app.intent('Inventory', fulfill.bind(null, 'inventory'));
 app.intent('Consume', fulfill.bind(null, 'eat'));
 app.intent('Open', fulfill.bind(null, 'open'));
 app.intent('Close', fulfill.bind(null, 'close'));
+app.intent('Give', fulfill.bind(null, 'give'));
 
 export default app;
