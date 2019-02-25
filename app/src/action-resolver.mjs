@@ -75,14 +75,16 @@ async function createSession(id:string):Promise<Session> {
     world: world.id,
     room: world.start,
     flags: {},
-    inventory: []
+    inventory: [],
+    failures: 0
   };
   writeSession(session);
   return session;
 }
 
 function processUpdate(oldSession:Session, update:SessionDiff):Session {
-  const newSession:Session = Object.assign({}, oldSession, update);
+  const newSession:Session = Object.assign({}, oldSession, { failures: 0 }, update);
+
   if (update.flags) {
     newSession.flags = Object.assign({}, oldSession.flags, update.flags);
   }

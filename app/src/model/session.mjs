@@ -9,12 +9,14 @@ export type Session = {
   world:WorldId,
   room:RoomId,
   flags:{[string]:string},
-  inventory:Array<ThingId>
+  inventory:Array<ThingId>,
+  failures:number
 };
 
 export type SessionDiff = {|
   world?:WorldId,
   room?:RoomId,
   flags?:{[string]:string},
-  inventory?:Array<ThingId>
+  inventory?:Array<ThingId>,
+  failures?:number
 |};
