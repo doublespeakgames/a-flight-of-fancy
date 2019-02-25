@@ -11,5 +11,6 @@ export type Room = {|
   description: string|(Session => string),
   exits: { [Direction]:RoomId },
   locks?: { [Direction]:Lock},
-  things?: Array<Thing>
+  things?: Array<Thing>,
+  phrases?: Array<{keys:Array<string>, action:string}>
 |};

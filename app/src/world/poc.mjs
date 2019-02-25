@@ -160,6 +160,10 @@ const world:World = {
             };
           }
         }
+      }],
+      'phrases': [{
+        keys: ['free the creature', 'let the creature out', 'let it out'],
+        action: 'open cage'
       }]
     },
     //#endregion

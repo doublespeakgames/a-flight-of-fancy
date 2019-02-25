@@ -8,7 +8,7 @@
  */
 
 import type { Session, SessionDiff } from '../model/session';
-import type { ActionHandler, ActionResult } from '../action-resolver';
+import type { Action, ActionHandler, ActionResult } from '../action-resolver';
 
 function getMessage(tries:number):string {
   if (tries >= 2) {
@@ -21,6 +21,24 @@ function getMessage(tries:number):string {
 }
 
 const fallback:ActionHandler = (session, world, subject) => {
+
+  const phrases = world.rooms[session.room].phrases;
+  if (phrases) {
+    for (let phrase of phrases) {
+      // subject is the raw instruction, in this handler
+      if (!phrase.keys.includes(subject)) {
+        continue;
+      }
+      const i = phrase.action.split(' ');
+      return {
+        sessionId: session._id,
+        type: i[0],
+        subject: i[1],
+        object: i[2]
+      };
+    }
+  }
+
   return { 
     message: getMessage(session.failures),
     update: { failures: Math.min(session.failures + 1, 2) }

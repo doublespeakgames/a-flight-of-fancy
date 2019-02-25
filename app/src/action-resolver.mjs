@@ -11,12 +11,12 @@ import objectTravel from './action/object-travel';
 import inventory from './action/inventory';
 import interact from './action/interact';
 
-export type Action = {
+export type Action = {|
   sessionId:string,
   type:ActionType,
   subject?:string,
   object?:string
-};
+|};
 
 export type ActionResult = {|
   message:string,
@@ -24,7 +24,7 @@ export type ActionResult = {|
   close?:boolean
 |};
 
-export type ActionHandler = (session:Session, world:World, subject?:string, object?:string) => ActionResult;
+export type ActionHandler = (session:Session, world:World, subject?:string, object?:string) => ActionResult | Action;
 
 export class Synonym {
   value:string;
@@ -109,9 +109,14 @@ export async function resolve(action:Action):Promise<ActionResult> {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result = await handlers[action.type](session, world, action.subject, action.object);
-  if (result.update) {
-    writeSession(processUpdate(session, result.update));
+  const result = handlers[action.type](session, world, action.subject, action.object);
+  if (result.message) { // This is an ActionResult
+    if (result.update) {
+      writeSession(processUpdate(session, result.update)); // flow-fix-me
+    }
+    return result;
   }
-  return result;
+
+  // $FlowFixMe This is obviously an Action now. Stupid Flow.
+  return resolve(result);
 }

@@ -28,11 +28,13 @@ function getUserId(conv:Conversation):string {
 async function fulfill(actionType:ActionType, conv:Conversation, params:{[string]:string}) {  
 
   const confidence = conv.body.queryResult.intentDetectionConfidence;
+  const queryText = conv.body.queryResult.queryText;
+  const isFallback = actionType === 'fallback' || confidence < CONFIDENCE_THRESHOLD;
 
   const action:Action = {
     sessionId: `goog-${getUserId(conv)}`,
-    type: confidence >= CONFIDENCE_THRESHOLD ? actionType : 'fallback',
-    subject: params['subject'],
+    type: !isFallback ? actionType : 'fallback',
+    subject: !isFallback ? params['subject'] : queryText,
     object: params['object']
   };
   const result = await resolve(action);

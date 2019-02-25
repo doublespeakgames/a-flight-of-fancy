@@ -1,5 +1,6 @@
 {
   "queryResult": {
+    "queryText": "random query text",
     "parameters": {
       "subject": "${subject}",
       "object": "${object}"
