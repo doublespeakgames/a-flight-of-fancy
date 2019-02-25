@@ -12,12 +12,13 @@ import Logger from './logger';
 import Server from './server';
 import { getSessions } from './store';
 import GoogleEndpoint from './endpoint/google';
+import { serialize } from './model/session';
 
 const PORT = process.env.APP_PORT || 5000;
 
 Server.get('/test', async (req, res) => {
   const sessions = await getSessions();
-  res.send(sessions);
+  res.send(sessions.map(serialize));
 });
 
 Server.post('/google', GoogleEndpoint);

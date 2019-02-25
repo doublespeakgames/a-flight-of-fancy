@@ -110,7 +110,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
     for (let subjectThing of subjectThings) {
       const verbs = subjectThing.verbs;
-      if (!subjectThing.useKey && (!verbs || typeof verbs.use != 'object')) {
+      if (!subjectThing.id && (!verbs || typeof verbs.use != 'object')) {
         // Subject can neither use nor be used, so short-circuit
         continue;
       }
@@ -137,8 +137,8 @@ export default (verb:string, options:Options = {}):ActionHandler =>
     if (verbs[verb] instanceof Synonym) {
       return tryApply(session, world, verbs[verb].value, subject, object);
     }
-    if (typeof verbs[verb] === 'object' && object.useKey && verbs[verb][object.useKey]) {
-      const handler = verbs[verb][object.useKey];
+    if (typeof verbs[verb] === 'object' && object.id && verbs[verb][object.id]) {
+      const handler = verbs[verb][object.id];
       if (typeof handler === 'string') {
         return { message: handler };
       }

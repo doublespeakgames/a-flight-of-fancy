@@ -75,7 +75,8 @@ async function createSession(id:string):Promise<Session> {
     world: world.id,
     room: world.start,
     flags: {},
-    inventory: [],
+    inventory: new Set(),
+    gone: new Set(),
     failures: 0
   };
   writeSession(session);

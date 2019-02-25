@@ -35,12 +35,12 @@ const world:World = {
         'verbs': {
           'look': 'It\'s not very appetizing',          
           'take': session => {
-            if (session.inventory.includes('food')) {
+            if (session.inventory.has('food')) {
               return { message: `You don't want any more.` };
             }
             return {
               message: 'You take some mouldy food',
-              update: { inventory: [...session.inventory, 'food'] }
+              update: { inventory: new Set([...session.inventory, 'food']) }
             };
           },
           'eat': `You don't want to eat that.`
@@ -62,12 +62,12 @@ const world:World = {
         'verbs': {
           'look': 'The knives are large and pitted, and not very clean.',
           'take': session => {
-            if (session.inventory.includes('knife')) {
+            if (session.inventory.has('knife')) {
               return { message: 'You already have a knife' };
             }
             return {
               message: 'You take one of the knives',
-              update: { inventory: [...session.inventory, 'knife'] }
+              update: { inventory: new Set([...session.inventory, 'knife']) }
             };
           }
         }
@@ -170,12 +170,12 @@ const world:World = {
         'verbs': {
           'look': session => {
             if (session.flags.hound === 'dead') {
-              return { message: `The hound lies, unmoving, on the floor. Its fur is matted with dark blood.` }
+              return { message: `The hound lies, unmoving, on the floor next to a gnawed bone. Its fur is matted with dark blood.` }
             }
             if (session.flags.hound === 'fed') {
-              return { message: `The hound looks back at you, adoringly.`}
+              return { message: `The hound looks back at you adoringly, its bone forgotten.`}
             }
-            return { message: 'The hound is twice the size it should be, with mangey bristling fur and yellowed teeth. It is chained to the wall with a short loop of iron links, but watches you hungrily.' }
+            return { message: 'The hound is twice the size it should be, and knaws erratically on a long bone. It is chained to the wall with a short loop of iron links, but watches you hungrily.' }
           },
           'use': {
             'knife': session => {
@@ -207,6 +207,21 @@ const world:World = {
         'keys': ['chain', 'links'],
         'verbs': {
           'look': 'The chain looks secure'
+        }
+      }, {
+        'keys': ['bone', 'long bone', 'gnawed bone', 'femur', 'long femur', 'gnawed femur', `hound's bone`, `dog's bone`],
+        'id': 'bone',
+        'verbs': {
+          'look': 'The bone looks like a human femur. Small scraps of meat still cling to it.',
+          'take': session => {
+            return {
+              message: 'You take the bone',
+              update: { 
+                flags: { 'bone': 'taken' },
+                inventory: new Set([...session.inventory, 'bone'])
+              }
+            };
+          }
         }
       }]
     },
@@ -243,7 +258,7 @@ const world:World = {
     'knife': {
       'keys': ['knife', 'crude knife'],
       'name': 'a knife',
-      'useKey': 'knife',
+      'id': 'knife',
       'verbs': {
         'look': 'The knife is large and pitted, and not very clean.',
         'use': {
@@ -256,7 +271,7 @@ const world:World = {
     'food': {
       'keys': ['food', 'mouldy food', 'mould'],
       'name': 'some mouldy food',
-      'useKey': 'food',
+      'id': 'food',
       'verbs': {
         'look': 'It\'s not very appetizing',
         'eat': `You don't want to eat that.`,

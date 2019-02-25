@@ -19,7 +19,7 @@ const inventory:ActionHandler = (session, world, subject) => {
     };
   }
 
-  const list = session.inventory.map(k => {
+  const list = [...session.inventory].map(k => {
     const item = world.items[k];
     return item.name || item.keys[0];
   });
