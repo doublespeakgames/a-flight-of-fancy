@@ -1,6 +1,7 @@
 // @flow
 
 import type { ActionHandler } from '../action-resolver';
+import type { Thing } from '../model/thing';
 import { Synonym } from '../action-resolver';
 import { fromRoom, fromInventory } from '../model/thing';
 import move from './move';
@@ -36,6 +37,19 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
   };
 
+  function getThings(session, world, subject):Array<Thing> {
+    const invThing = fromInventory(session.inventory, subject, world);
+    const roomThing = fromRoom(world.rooms[session.room], subject);
+    const things:Array<Thing> = [];
+    if (invThing) { 
+      things.push(invThing); 
+    }
+    if (roomThing && (!roomThing.id || !session.gone.has(roomThing.id))) {
+      things.push(roomThing);
+    }
+    return things;
+  }
+
   function simpleHandler(session, world, verb, subject, options) {
 
     if (options.override) {
@@ -45,11 +59,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       }
     }
 
-    const things = [
-      fromRoom(world.rooms[session.room], subject),
-      fromInventory(session.inventory, subject, world)
-    ].filter(Boolean);
-
+    const things = getThings(session, world, subject);
     if (!things.length) {
       return {
         message: `There is no ${subject} here.`
@@ -88,20 +98,14 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
   function complexHandler(session, world, verb, subject, object, options) {
 
-    const subjectThings = [
-      fromRoom(world.rooms[session.room], subject),
-      fromInventory(session.inventory, subject, world)
-    ].filter(Boolean);
+    const subjectThings = getThings(session, world, subject);
     if (!subjectThings.length) {
       return {
         message: `There is no ${subject} here.`
       };
     }
 
-    const objectThings = [
-      fromRoom(world.rooms[session.room], object),
-      fromInventory(session.inventory, object, world)
-    ].filter(Boolean);
+    const objectThings = getThings(session, world, object);
     if (!objectThings.length) {
       return {
         message: `There is no ${object} here.`

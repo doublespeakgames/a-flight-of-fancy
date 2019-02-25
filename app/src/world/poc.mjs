@@ -2,6 +2,7 @@
 
 import type { World } from '../model/world';
 import { Synonym } from '../action-resolver';
+import { add, remove, mutate } from '../immutable-set';
 
 const world:World = {
   'id': 'poc',
@@ -40,7 +41,7 @@ const world:World = {
             }
             return {
               message: 'You take some mouldy food',
-              update: { inventory: new Set([...session.inventory, 'food']) }
+              update: { inventory: add(session.inventory, 'food') }
             };
           },
           'eat': `You don't want to eat that.`
@@ -67,7 +68,7 @@ const world:World = {
             }
             return {
               message: 'You take one of the knives',
-              update: { inventory: new Set([...session.inventory, 'knife']) }
+              update: { inventory: add(session.inventory, 'knife') }
             };
           }
         }
@@ -79,7 +80,15 @@ const world:World = {
       }, {
         'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
         'verbs': {
-          'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.'
+          'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.',
+          'use': {
+            'torch': session => ({
+              message: 'You hold your improvised torch in the fire until it catches',
+              update: {
+                inventory: mutate(session.inventory, ['lit-torch'], ['torch'])
+              }
+            })
+          }
         }
       }, {
         'keys': ['pantry', 'rickety pantry'],
@@ -98,10 +107,26 @@ const world:World = {
       },{
         'keys': ['cutting board', 'board'],
         'verbs': {
-          'look': 'The cutting board is a thick slab of knotted wood, deeply grooved from years of use.',
+          'look': session => {
+            const rag = session.gone.has('rag') ? '' : ' A greasy rag hangs from the corner.';
+            return { message: `The cutting board is a thick slab of knotted wood, deeply grooved from years of use.${rag}` };
+          },
           'use': {
             'knife': 'You cut a few more notches into the board'
           }
+        }
+      }, {
+        'id': 'rag',
+        'keys': ['rag', 'greasy rag', 'cloth', 'greasy cloth'],
+        'verbs': {
+          'look': 'The rag is a rough burlap, smeared with rancid fat.',
+          'take': session => ({
+            message: 'You take the rag',
+            update: {
+              inventory: add(session.inventory, 'rag'),
+              gone: add(session.gone, 'rag')
+            }
+          })
         }
       }, {
         'keys': ['liquid', 'boiling liquid' ],
@@ -149,7 +174,7 @@ const world:World = {
       exits: {
         'west': 'kitchen',
         'south': 'locked-room',
-        'north': 'todo'
+        'north': 'bedroom'
       },
       locks: {
         'south': _ => `The door won't open.`,
@@ -170,12 +195,23 @@ const world:World = {
         'verbs': {
           'look': session => {
             if (session.flags.hound === 'dead') {
-              return { message: `The hound lies, unmoving, on the floor next to a gnawed bone. Its fur is matted with dark blood.` }
+              const bone = session.gone.has('dog-bone') ? '' : ' next to a gnawed bone';
+              return { message: `The hound lies, unmoving, on the floor${bone}. Its fur is matted with dark blood.` }
             }
             if (session.flags.hound === 'fed') {
-              return { message: `The hound looks back at you adoringly, its bone forgotten.`}
+              const bone = session.gone.has('dog-bone') ? '' : ', its bone forgotten';
+              return { message: `The hound looks back at you adoringly${bone}.`}
             }
-            return { message: 'The hound is twice the size it should be, and knaws erratically on a long bone. It is chained to the wall with a short loop of iron links, but watches you hungrily.' }
+            return { message: 'The hound is twice the size it should be, and gnaws erratically on a long bone. It is chained to the wall with a short loop of iron links, but watches you hungrily.' }
+          },
+          'talk': session => {
+            if (session.flags.hound === 'dead') {
+              return { message: `The hound doesn't respond.` };
+            }
+            if (session.flags.hound === 'fed') {
+              return { message: `The hound yips in response.` };
+            }
+            return { message: 'The hound snarls in response.' };
           },
           'use': {
             'knife': session => {
@@ -196,7 +232,10 @@ const world:World = {
               }
               return {
                 message: `The hound snaps up the food greedily. Its demeanor softens.`,
-                update: { flags: { 'hound': 'fed' } }
+                update: { 
+                  inventory: remove(session.inventory, 'food'),
+                  flags: { 'hound': 'fed' } 
+                }
               }
             }
           },
@@ -210,15 +249,18 @@ const world:World = {
         }
       }, {
         'keys': ['bone', 'long bone', 'gnawed bone', 'femur', 'long femur', 'gnawed femur', `hound's bone`, `dog's bone`],
-        'id': 'bone',
+        'id': 'dog-bone',
         'verbs': {
           'look': 'The bone looks like a human femur. Small scraps of meat still cling to it.',
           'take': session => {
+            if (!session.flags.hound) {
+              return { message: `The hound snaps at you, and you reconsider.` };
+            }
             return {
               message: 'You take the bone',
               update: { 
-                flags: { 'bone': 'taken' },
-                inventory: new Set([...session.inventory, 'bone'])
+                gone: add(session.gone, 'dog-bone'),
+                inventory: add(session.inventory, 'bone')
               }
             };
           }
@@ -240,7 +282,10 @@ const world:World = {
     //#region TODO
     'bedroom': {
       name: 'The bedroom',
-      description: session => {
+      description: ({ inventory }) => {
+        if (inventory.has('lit-torch')) {
+          return `Your torch illuminates the room, but Michael hasn't written the description yet. You can still go south.`;
+        }
         return 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.';
       },
       exits: {
@@ -276,6 +321,51 @@ const world:World = {
         'look': 'It\'s not very appetizing',
         'eat': `You don't want to eat that.`,
         'use': `You don't want to eat that.`
+      }
+    },
+
+    'bone': {
+      'keys': ['bone', 'femur', 'long bone', 'long femur'],
+      'name': 'a long bone',
+      'id': 'bone',
+      'verbs': {
+        'look': 'The bone looks like a human femur. Small scraps of meat still cling to it.'
+      }
+    },
+    
+    'rag': {
+      'id': 'rag',
+      'keys': ['rag', 'greasy rag', 'cloth', 'greasy cloth'],
+      'name': 'a greasy rag',
+      'verbs': {
+        'look': 'The rag is a rough bulap, smeared with rancid fat.',
+        'tie': new Synonym('use'),
+        'use': {
+          'bone': session => ({
+            message: 'You wrap the rag tightly around one end of the bone',
+            update: {
+              inventory: mutate(session.inventory, ['torch'], ['rag', 'bone'])
+            }
+          })
+        }
+      }
+    },
+
+    'torch': {
+      'id': 'torch',
+      'keys': ['torch', 'bone'],
+      'name': 'an improvised torch',
+      'verbs': {
+        'look': 'A greasy rag is secured to the end of a long bone. It is not lit.'
+      }
+    },
+    
+    'lit-torch': {
+      'id': 'lit-torch',
+      'keys': ['torch', 'bone', 'lit torch', 'lit bone'],
+      'name': 'a lit torch',
+      'verbs': {
+        'look': 'Flames sputter from a greasy rag atop a long bone.'
       }
     }
   }

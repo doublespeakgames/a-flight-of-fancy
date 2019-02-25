@@ -46,6 +46,7 @@ const handlers:{[string]:ActionHandler} = {
   'eat': interact('eat'),
   'talk': interact('talk'),
   'use': interact('use', { exits: true }),
+  'tie': interact('tie'),
   'look': interact('look', { 
     subjectless: (session, world) => {
       const desc = world.rooms[session.room].description;

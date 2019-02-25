@@ -59,5 +59,6 @@ app.intent('Consume', fulfill.bind(null, 'eat'));
 app.intent('Open', fulfill.bind(null, 'open'));
 app.intent('Close', fulfill.bind(null, 'close'));
 app.intent('Give', fulfill.bind(null, 'give'));
+app.intent('Tie', fulfill.bind(null, 'tie'));
 
 export default app;
