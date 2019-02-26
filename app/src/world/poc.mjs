@@ -53,7 +53,7 @@ const world:World = {
     //#region Kitchen
     'kitchen': {
       'name': 'The kitchen',
-      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cutting board, and a large pot bubbles over an open fire. There is a pantry on the southern wall, next to a small cage. A doorway leads east.',
+      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cuttingboard, and a large pot bubbles over an open fire. There is a pantry on the southern wall, next to a small cage. A doorway leads east.',
       'exits': {
         'south': 'pantry',
         'east': 'great-room'
@@ -105,26 +105,26 @@ const world:World = {
           'look': `It's less a door, and more an absence of wall.`
         }
       },{
-        'keys': ['cutting board', 'board'],
+        'keys': ['cutting board', 'cuttingboard', 'board'],
         'verbs': {
           'look': session => {
-            const rag = session.gone.has('rag') ? '' : ' A greasy rag hangs from the corner.';
-            return { message: `The cutting board is a thick slab of knotted wood, deeply grooved from years of use.${rag}` };
+            const cloth = session.gone.has('cloth') ? '' : ' A greasy cloth hangs from the corner.';
+            return { message: `The cuttingboard is a thick slab of knotted wood, deeply grooved from years of use.${cloth}` };
           },
           'use': {
             'knife': 'You cut a few more notches into the board'
           }
         }
       }, {
-        'id': 'rag',
-        'keys': ['rag', 'greasy rag', 'cloth', 'greasy cloth'],
+        'id': 'cloth',
+        'keys': ['cloth', 'greasy cloth'],
         'verbs': {
-          'look': 'The rag is a rough burlap, smeared with rancid fat.',
+          'look': 'The cloth is a rough burlap, smeared with rancid fat.',
           'take': session => ({
-            message: 'You take the rag',
+            message: 'You take the cloth',
             update: {
-              inventory: add(session.inventory, 'rag'),
-              gone: add(session.gone, 'rag')
+              inventory: add(session.inventory, 'cloth'),
+              gone: add(session.gone, 'cloth')
             }
           })
         }
@@ -155,7 +155,7 @@ const world:World = {
               return { message: 'It just watches you, expectantly.' }
             }
             return {
-              message: `"Still alive?' the creature hisses. "Let it out! It doesn't want to be dinner."`,
+              message: `<speak><prosody pitch="+6st">"Still alive?"</prosody> the creature hisses. <prosody pitch="+6st">"Let it out! It doesn't want to be dinner."</prosody></speak>`,
               update: { flags: { 'it_spoke': 'true' }}
             };
           }
@@ -170,24 +170,35 @@ const world:World = {
 
     //#region Dining Room 
     'great-room': {
-      name: 'The great room',
-      description: session => {
+      'name': 'The great room',
+      'description': session => {
         const hound = session.flags.hound ? 'lies' : 'squats';
         return `This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound ${hound} in the corner. There are doors to the west and south and, behind the hound, a hall stretches north.`;
       },
-      exits: {
+      'exits': {
         'west': 'kitchen',
         'south': 'locked-room',
         'north': 'bedroom'
       },
-      locks: {
+      'locks': {
         'south': _ => `The door won't open.`,
         'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
-      things: [{
+      'things': [{
         'keys': [ 'ceiling' ],
         'verbs': {
-          'look': 'The ceiling has been roughly chiseled our of natural rock.'
+          'look': 'The ceiling has been roughly chiseled out of natural rock.'
+        }
+      }, {
+        'keys': [ 'hall', 'hallway' ],
+        'exit': 'north',
+        'verbs': {
+          'look': ({ flags: { hound }}) => {
+            if (!hound) {
+              return { message: 'Your vision of the hallway is blocked by the massive hound.' }
+            }
+            return { message: 'The hallway is unlit, leading into total darkness.' }
+          }
         }
       }, {
         'keys': ['table', 'large table'],
@@ -269,34 +280,45 @@ const world:World = {
             };
           }
         }
+      }],
+      'phrases': [{
+        keys: ['feed the dog', 'feed the hound', 'feed dog', 'feed hound'],
+        action: 'give food dog'
       }]
     },
     //#endregion
 
     //#region Locked Room
     'locked-room': {
-      name: 'A locked room',
-      description: `You shouldn't be able to get in here. You can leave via the north.`,
-      exits: {
+      'name': 'A locked room',
+      'description': `You shouldn't be able to get in here. You can leave via the north.`,
+      'exits': {
         'north': 'great-room'
       }
     },
     //#endregion
 
-    //#region TODO
+    //#region Bedroom
     'bedroom': {
-      name: 'The bedroom',
-      description: ({ inventory }) => {
+      'name': 'The bedroom',
+      'description': ({ inventory }) => {
         if (inventory.has('lit-torch')) {
           return `Your torch illuminates the room, but Michael hasn't written the description yet. You can still go south.`;
         }
         return 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.';
       },
-      exits: {
+      'things': [{
+        'keys': ['hall', 'hallway'],
+        'exit': 'south',
+        'verbs': {
+          'look': 'The hall leads south.'
+        }
+      }],
+      'exits': {
         'south': 'great-room'
       }
     }
-    //#endregion TODO
+    //#endregion Bedroom
 
   },
   //#endregion
@@ -337,18 +359,18 @@ const world:World = {
       }
     },
     
-    'rag': {
-      'id': 'rag',
-      'keys': ['rag', 'greasy rag', 'cloth', 'greasy cloth'],
-      'name': 'a greasy rag',
+    'cloth': {
+      'id': 'cloth',
+      'keys': ['cloth', 'greasy cloth'],
+      'name': 'a greasy cloth',
       'verbs': {
-        'look': 'The rag is a rough bulap, smeared with rancid fat.',
+        'look': 'The cloth is a rough burlap, smeared with rancid fat.',
         'tie': new Synonym('use'),
         'use': {
           'bone': session => ({
-            message: 'You wrap the rag tightly around one end of the bone',
+            message: 'You wrap the cloth tightly around one end of the bone, making an improvised torch',
             update: {
-              inventory: mutate(session.inventory, ['torch'], ['rag', 'bone'])
+              inventory: mutate(session.inventory, ['torch'], ['cloth', 'bone'])
             }
           })
         }
@@ -357,19 +379,19 @@ const world:World = {
 
     'torch': {
       'id': 'torch',
-      'keys': ['torch', 'bone'],
+      'keys': ['torch', 'bone', 'cloth'],
       'name': 'an improvised torch',
       'verbs': {
-        'look': 'A greasy rag is secured to the end of a long bone. It is not lit.'
+        'look': 'A greasy cloth is secured to the end of a long bone. It is not lit.'
       }
     },
     
     'lit-torch': {
       'id': 'lit-torch',
-      'keys': ['torch', 'bone', 'lit torch', 'lit bone'],
+      'keys': ['torch', 'bone', 'cloth', 'lit torch', 'lit bone', 'lit cloth'],
       'name': 'a lit torch',
       'verbs': {
-        'look': 'Flames sputter from a greasy rag atop a long bone.'
+        'look': 'Flames sputter from a greasy cloth atop a long bone.'
       }
     }
   }
