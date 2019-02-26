@@ -1,0 +1,8 @@
+#!/bin/bash
+
+while true
+do
+  read -a input
+  cat "${BASH_SOURCE%/*}/request.json" | sed "s/\${intent}/${input[0]}/" | sed "s/\${subject}/${input[1]}/" | sed "s/\${object}/${input[2]}/" | curl -X POST -H "Content-Type: application/json" -d @- http://localhost:8080/google
+  echo
+done

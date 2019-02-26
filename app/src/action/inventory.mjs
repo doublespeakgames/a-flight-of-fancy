@@ -29,7 +29,7 @@ const inventory:ActionHandler = (session, world, subject) => {
   }
 
   return {
-    message: `You are carrying ${list.join(', ')}`
+    message: `You are carrying ${list.join(', ')}.`
   };
 
 };

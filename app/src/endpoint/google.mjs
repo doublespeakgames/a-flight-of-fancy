@@ -63,6 +63,7 @@ app.intent('Open', fulfill.bind(null, 'open'));
 app.intent('Close', fulfill.bind(null, 'close'));
 app.intent('Give', fulfill.bind(null, 'give'));
 app.intent('Tie', fulfill.bind(null, 'tie'));
+app.intent('Untie', fulfill.bind(null, 'untie'));
 app.intent('Light', fulfill.bind(null, 'light'));
 
 export default app;

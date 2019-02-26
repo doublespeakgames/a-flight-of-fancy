@@ -86,8 +86,7 @@ const world:World = {
             'torch': session => ({
               message: 'You hold your improvised torch in the fire until it catches',
               update: {
-                inventory: mutate(session.inventory, ['lit-torch'], ['torch']),
-                seen: remove(session.seen, 'bedroom')
+                inventory: mutate(session.inventory, ['lit-torch'], ['torch'])
               }
             }),
             'lit-torch': `It's already lit.`
@@ -118,7 +117,7 @@ const world:World = {
         'verbs': {
           'look': session => {
             const cloth = session.gone.has('cloth') ? '' : ' A greasy cloth hangs from the corner.';
-            return { message: `The cuttingboard is a thick slab of knotted wood, deeply grooved from years of use.${cloth}` };
+            return { message: `The cuttingboard is a thick piece of knotted wood, deeply grooved from years of use.${cloth}` };
           },
           'use': {
             'knife': 'You cut a few more notches into the board'
@@ -177,17 +176,19 @@ const world:World = {
     },
     //#endregion
 
-    //#region Dining Room 
+    //#region Greatroom 
     'great-room': {
       'name': 'the greatroom',
       'description': session => {
         const hound = session.flags.hound ? 'lies' : 'squats';
         return `This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound ${hound} in the corner. There are doors to the west and south and, behind the hound, a hall stretches north.`;
       },
-      'exits': {
-        'west': 'kitchen',
-        'south': 'locked-room',
-        'north': 'bedroom'
+      'exits': session => { 
+        return {
+          'west': 'kitchen',
+          'south': 'locked-room',
+          'north': session.inventory.has('lit-torch') ? 'bedroom-lit' : 'bedroom'
+        }; 
       },
       'locks': {
         'south': _ => `The door won't open.`,
@@ -212,7 +213,7 @@ const world:World = {
       }, {
         'keys': ['table', 'large table'],
         'verbs': {
-          'look': 'The table stands as high as your chest and looks to have been made from a single slab of wood.'
+          'look': 'The table stands as high as your chest and looks to have been made from a single slab of wood. It is bare.'
         }
       }, {
         'keys': ['hound', 'beastly hound', 'beast', 'dog', 'wolf'],
@@ -309,43 +310,118 @@ const world:World = {
 
     //#region Bedroom
     'bedroom': {
-      'name': session => session.inventory.has('lit-torch') ? 'the bedroom' : 'the dark',
-      'description': ({ inventory }) => {
-        if (inventory.has('lit-torch')) {
-          return `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. A closet stands against the western wall, and a hallway leads south.`;
+      'name': 'the dark',
+      'description': 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.',
+      'things': [{
+        'keys': ['hall', 'hallway'],
+        'exit': 'south',
+        'verbs': {
+          'look': 'The hall leads south.'
         }
-        return 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.';
-      },
-      'things': session => {
-        const things = [{
-          'keys': ['hall', 'hallway'],
-          'exit': 'south',
-          'verbs': {
-            'look': 'The hall leads south.'
-          }
-        }];
-        if (session.inventory.has('lit-torch')) {
-          things.push({
-            'keys': ['closet', 'wardrobe'],
-            'exit': 'west',
-            'verbs': {
-              'look': `It's a closet.`
-            }
-          });
-        }
-        return things;
-      },
-      'exits': session => {
-        const exits:Object = {
-          'south': 'great-room'
-        };
-        if (session.inventory.has('lit-torch')) {
-          exits['west'] = 'closet';
-        }
-        return exits;
+      }],
+      'exits': {
+        'south': 'great-room'
       }
     },
     //#endregion Bedroom
+
+    //#region Bedroom-lit
+    'bedroom-lit': {
+      'name': 'the bedroom',
+      'description': `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. Its huge, rusted axe lies nearby. A closet stands against the western wall, and a hallway leads south.`,
+      'things': [{
+        'keys': ['hall', 'hallway'],
+        'exit': 'south',
+        'verbs': {
+          'look': 'The hall leads south.'
+        }
+      }, {
+        'keys': ['closet', 'wardrobe'],
+          'exit': 'west',
+          'verbs': {
+            'look': `It's a closet.`
+          }
+      }, {
+        'keys': ['straw', 'bed', 'bed of straw', 'straw bed', `giant's bed`, 'filthy straw', 'bed of filthy straw'],
+        'verbs': {
+          'look': session => {
+            const keys = session.flags.belt && !session.gone.has('keys') ? ' A large keyring is nestled amongst the filth.' : '';
+            return { message: `The straw smells awful but the giant, sprawled in the center, doesn't seem to care.${keys}` };
+          }
+        }
+      }, {
+        'keys': ['giant', 'bog giant'],
+        'verbs': {
+          'look': session => {
+            const belt = session.flags['belt'] ? '' : ` Around its waist is tied a belt of rough twine, from which hangs a large keyring.`;
+            return { message: `The giant is enormous, with wide drooping features and a ponderous girth. Its hide is the texture of waterlogged driftwood, and is stippled with patches of multicoloured lichens.${belt}` };
+          },
+          'use': {
+            'knife': `You're quite certain that the giant would kill you.`
+          },
+          'attack': new Synonym('use')
+        }
+      }, {
+        'keys': ['belt', 'twine', 'twine belt'],
+        'verbs': {
+          'look': session => ({ message: session.flags['belt'] 
+              ? 'The belt has been split, but remains trapped beneath the giant.' 
+              : `A length of hempen twine loops around the giant's waist, supporting a large keyring.` }),
+          'take': session => ({ message: session.flags['belt'] 
+              ? `The sleeping giant's bulk holds it in place.` 
+              : `The belt is tied securely around the giant's waist.` }),
+          'untie': 'The knot is tied too tightly for human hands.',
+          'use': {
+            'knife': session => {
+              if (session.flags['belt']) {
+                return { message: `It's already been cut.` };
+              }
+              return {
+                message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the keyring onto the floor.',
+                update: { flags: { 'belt': 'cut' } }
+              };
+            }
+          }
+        }
+      }, {
+        'keys': ['keyring', 'large keyring', 'keys', `giant's keyring`, `giant's keys`],
+        'id': 'keys',
+        'verbs': {
+          'look': session => {
+            const belt = session.flags['belt'] ? '' : ` The keyring is threaded onto the giant's belt.`;
+            return { message: `An iron ring holds a handful of misshapen keys.${belt}` };
+          },
+          'take': session => {
+            if (session.flags['belt']) {
+              return {
+                message: 'You take the keys.',
+                update: {
+                  inventory: add(session.inventory, 'keys'),
+                  gone: add(session.gone, 'keys')
+                }
+              }
+            }
+            return { message: `The giant's belt loops through the keyring, holding it in place.` };
+          }
+        }
+      }, {
+        'keys': ['lichen', 'lichens', 'multicoloured lichens', 'multicolored lichens', 'multicoloured lichen', 'multicolored lichen'],
+        'verbs': {
+          'look': 'The lichens are numerous and varied, ranging in colour from dull green to brilliant crimson.'
+        }
+      }, {
+        'keys': ['axe', 'huge axe', 'rusted axe', 'rusty axe', `giant's axe`],
+        'verbs': {
+          'look': 'The axe head is made of chipped stone, and is lashed to a haft nearly six feet long. It looks heavy.',
+          'take': `You can't lift it.`
+        }
+      }],
+      'exits': {
+        'south': 'great-room',
+        'west': 'closet'
+      }
+    },
+    //#endregion Bedroom-lit
 
     //#region Closet
     'closet': {
@@ -429,6 +505,15 @@ const world:World = {
       'name': 'a lit torch',
       'verbs': {
         'look': 'Flames sputter from a greasy cloth atop a long bone.'
+      }
+    },
+
+    'keys': {
+      'id': 'keys',
+      'keys': ['keys', 'keyring', 'key', `giant's keys`, `giant's keyring`, `giant's key`],
+      'name': 'a ring of keys',
+      'verbs': {
+        'look': 'An iron ring holds a handful of misshapen keys.'
       }
     }
   }

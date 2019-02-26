@@ -70,6 +70,7 @@ const handlers:{[string]:ActionHandler} = {
   'talk': interact('talk'),
   'use': interact('use', { exits: true }),
   'tie': interact('tie'),
+  'untie': interact('untie'),
   'light': interact('light'),
   'look': interact('look', { 
     subjectless: (session, world) => {
@@ -128,7 +129,7 @@ function formatThing(thing:?string):string {
 }
 
 function processUpdate(oldSession:Session, update:SessionDiff):Session {
-  // $FlowFixMe Object.assign({}, oldSession) is *obsiously* of type Session, idiot
+  // $FlowFixMe Object.assign({}, oldSession) is *obviously* of type Session, idiot
   const newSession:Session = Object.assign({}, oldSession, { failures: 0 }, update);
 
   if (update.flags) {
