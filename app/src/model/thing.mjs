@@ -19,17 +19,20 @@ export type Thing = {|
   verbs?:{ [Verb]: Synonym|SimplePhrase|ComplexPhrase }
 |}
 
-export function fromRoom(room:Room, key?:string):?Thing {
+function getThings(session:Session, room:Room):Array<Thing> {
+  if (typeof room.things === 'function') {
+    return room.things(session);
+  }
+  return room.things || [];
+}
+
+export function fromRoom(session:Session, room:Room, key?:string):?Thing {
   if (!key) {
     return null;
   }
   
-  var k = key.toLowerCase();
-  if (room.things != null) {
-    return room.things.find(t => t.keys.includes(k));
-  }
-
-  return null;
+  const k = key.toLowerCase();
+  return getThings(session, room).find(t => t.keys.includes(k));
 }
 
 export function fromInventory(inventory:Set<ThingId>, key:string, world:World):?Thing {

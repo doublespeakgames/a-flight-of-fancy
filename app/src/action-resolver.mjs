@@ -9,6 +9,7 @@ import fallback from './action/fallback'
 import move from './action/move';
 import objectTravel from './action/object-travel';
 import inventory from './action/inventory';
+import exits from './action/exits';
 import interact from './action/interact';
 
 export type Action = {|
@@ -33,11 +34,33 @@ export class Synonym {
   }
 }
 
+const INV_LOOK_KEYS = new Set([
+  'inventory', 
+  'my inventory', 
+  'bag', 
+  'my bag', 
+  'pocket', 
+  'pockets', 
+  'my pocket', 
+  'my pockets'
+]);
+
+const EXIT_LOOK_KEYS = new Set([
+  'exits', 
+  'exit', 
+  'doors', 
+  'door', 
+  'ways out', 
+  'way out', 
+  'directions'
+]);
+
 const handlers:{[string]:ActionHandler} = {
   'fallback': fallback,
   'move': move,
   'object-travel': objectTravel,
   'inventory': inventory,
+  'exits': exits,
   'attack': interact('attack'),
   'give': interact('give'),
   'open': interact('open'),
@@ -47,23 +70,35 @@ const handlers:{[string]:ActionHandler} = {
   'talk': interact('talk'),
   'use': interact('use', { exits: true }),
   'tie': interact('tie'),
+  'light': interact('light'),
   'look': interact('look', { 
     subjectless: (session, world) => {
       const desc = world.rooms[session.room].description;
       return { message: typeof desc === 'string' ? desc : desc(session) }
     },
-    override: [{
-      keys: new Set([
-        'inventory', 
-        'my inventory', 
-        'bag', 
-        'my bag', 
-        'pocket', 
-        'pockets', 
-        'my pocket', 
-        'my pockets']),
-      handler: inventory
-    }]
+    custom:(session, world, subject) => {
+      if (INV_LOOK_KEYS.has(subject)) {
+        // Check your inventory
+        return inventory;
+      }
+      if (EXIT_LOOK_KEYS.has(subject)) {
+        // Enumerate possible exits
+        return exits;
+      }
+      const room = world.rooms[session.room];
+      const roomExits = typeof room.exits === 'function' ? room.exits(session) : room.exits;
+      const lookRoomId = roomExits[subject];
+      if (lookRoomId) {
+        // Check an exit
+        if (session.seen.has(lookRoomId)) {
+          const lookRoom = world.rooms[lookRoomId];
+          const name = typeof lookRoom.name === 'function' ? lookRoom.name(session) : lookRoom.name;
+          return () => ({ message: `It leads to ${name}` });
+        }
+        return () => ({ message: `You don't know where it leads.` });
+      }
+      return null;
+    }
   })
 };
 
@@ -78,6 +113,7 @@ async function createSession(id:string):Promise<Session> {
     flags: {},
     inventory: new Set(),
     gone: new Set(),
+    seen: new Set([world.start]),
     failures: 0
   };
   writeSession(session);
@@ -85,6 +121,7 @@ async function createSession(id:string):Promise<Session> {
 }
 
 function processUpdate(oldSession:Session, update:SessionDiff):Session {
+  // $FlowFixMe Object.assign({}, oldSession) is *obsiously* of type Session, idiot
   const newSession:Session = Object.assign({}, oldSession, { failures: 0 }, update);
 
   if (update.flags) {

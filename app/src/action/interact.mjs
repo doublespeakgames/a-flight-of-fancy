@@ -1,20 +1,24 @@
 // @flow
+/**
+ * Interact action
+ * @author mtownsend
+ * @since Feb 2019
+ * 
+ * Executes verbs on things
+ */
 
 import type { ActionHandler } from '../action-resolver';
-import type { Thing } from '../model/thing';
+import type { ThingId, Thing } from '../model/thing';
+import type { World } from '../model/world';
+import type { Session } from '../model/session';
 import { Synonym } from '../action-resolver';
 import { fromRoom, fromInventory } from '../model/thing';
 import move from './move';
 
-type Override = {|
-  keys: Set<string>,
-  handler:ActionHandler
-|};
-
 type Options = {
   exits?:boolean,
   subjectless?:ActionHandler,
-  override?:Array<Override>
+  custom?:(session:Session, world:World, subject:string) => ?ActionHandler
 };
 
 export default (verb:string, options:Options = {}):ActionHandler => 
@@ -37,9 +41,9 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
   };
 
-  function getThings(session, world, subject):Array<Thing> {
+  export function getThings(session:Session, world:World, subject:ThingId):Array<Thing> {
     const invThing = fromInventory(session.inventory, subject, world);
-    const roomThing = fromRoom(world.rooms[session.room], subject);
+    const roomThing = fromRoom(session, world.rooms[session.room], subject);
     const things:Array<Thing> = [];
     if (invThing) { 
       things.push(invThing); 
@@ -52,15 +56,16 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
   function simpleHandler(session, world, verb, subject, options) {
 
-    if (options.override) {
-      const override = options.override.find(o => o.keys.has(subject));
-      if (override) {
-        return override.handler(session, world);
-      }
-    }
-
     const things = getThings(session, world, subject);
     if (!things.length) {
+
+      if (options.custom) {
+        const handler = options.custom(session, world, subject);
+        if (handler) {
+          return handler(session, world);
+        }
+      }
+
       return {
         message: `There is no ${subject} here.`
       };

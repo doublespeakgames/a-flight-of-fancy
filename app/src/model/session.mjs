@@ -4,15 +4,16 @@ import type { WorldId } from './world';
 import type { RoomId } from './room';
 import type { ThingId } from './thing';
 
-export type Session = {
+export type Session = {|
   _id:string,
   world:WorldId,
   room:RoomId,
   flags:{[string]:string},
   inventory:Set<ThingId>,
   gone:Set<ThingId>,
+  seen:Set<RoomId>,
   failures:number
-};
+|};
 
 export type SessionDiff = {|
   world?:WorldId,
@@ -20,6 +21,7 @@ export type SessionDiff = {|
   flags?:{[string]:string},
   inventory?:Set<ThingId>,
   gone?:Set<ThingId>,
+  seen?:Set<RoomId>,
   failures?:number
 |};
 
@@ -34,7 +36,8 @@ export function deserialize(json:?Object):?Session {
     flags: json.flags,
     inventory: new Set(json.inventory),
     gone: new Set(json.gone),
-    failures: json.failures
+    failures: json.failures,
+    seen: new Set(json.seen)
   };
 }
 
@@ -46,6 +49,7 @@ export function serialize(ss:Session):any {
     flags: ss.flags,
     inventory: [...ss.inventory],
     gone: [...ss.gone],
+    seen: [...ss.seen],
     failures: ss.failures
   };
 }

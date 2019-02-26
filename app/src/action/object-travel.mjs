@@ -4,7 +4,7 @@
  * @author mtownsend
  * @since Feb 2019
  * 
- * Move in a direction, referenced by an object
+ * Moves in a direction, referenced by an object
  */
 
 import type { Session } from '../model/session';
@@ -19,7 +19,7 @@ const objectTravel:ActionHandler = (session, world, subject) => {
     };
   }
 
-  const thing = fromRoom(world.rooms[session.room], subject);
+  const thing = fromRoom(session, world.rooms[session.room], subject);
   if (!thing) {
     return {
       message: `There is no ${subject} here.`

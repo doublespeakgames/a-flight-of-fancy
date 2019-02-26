@@ -13,18 +13,18 @@ const world:World = {
 
     //#region Pantry
     'pantry': {
-      'name': 'The pantry',
-      'description': 'You are in a very small space. Shelves line the walls, and dim light seeps through a door to the north.',
+      'name': 'the pantry',
+      'description': 'You are in a cramped, dark space. Shelves line the walls, and dim light seeps through a door to the north.',
       'exits': {
         'north': 'kitchen'
       },
       'things': [{
-        'keys': ['shelf', 'shelves', 'shelving'],
+        'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls'],
         'verbs': {
           'look': 'The shelves are littered with moldering foodstuffs.'
         }
       }, {
-        'keys': ['door', 'north', 'light'],
+        'keys': ['door', 'light'],
         'exit': 'north',
         'verbs': {
           'look': 'The door hangs slightly off its hinges, letting in a bit of feeble light.',
@@ -52,7 +52,7 @@ const world:World = {
 
     //#region Kitchen
     'kitchen': {
-      'name': 'The kitchen',
+      'name': 'the kitchen',
       'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cuttingboard, and a large pot bubbles over an open fire. There is a pantry on the southern wall, next to a small cage. A doorway leads east.',
       'exits': {
         'south': 'pantry',
@@ -81,14 +81,23 @@ const world:World = {
         'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
         'verbs': {
           'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.',
+          'light': new Synonym('use'),
           'use': {
             'torch': session => ({
               message: 'You hold your improvised torch in the fire until it catches',
               update: {
-                inventory: mutate(session.inventory, ['lit-torch'], ['torch'])
+                inventory: mutate(session.inventory, ['lit-torch'], ['torch']),
+                seen: remove(session.seen, 'bedroom')
               }
-            })
+            }),
+            'lit-torch': `It's already lit.`
           }
+        }
+      }, {
+        'keys': ['wood', 'rotten wood', 'log', 'stick', 'logs', 'sticks'],
+        'verbs': {
+          'look': `It's burning.`,
+          'take': `It's too hot to pick up.`
         }
       }, {
         'keys': ['pantry', 'rickety pantry'],
@@ -170,7 +179,7 @@ const world:World = {
 
     //#region Dining Room 
     'great-room': {
-      'name': 'The great room',
+      'name': 'the greatroom',
       'description': session => {
         const hound = session.flags.hound ? 'lies' : 'squats';
         return `This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound ${hound} in the corner. There are doors to the west and south and, behind the hound, a hall stretches north.`;
@@ -290,7 +299,7 @@ const world:World = {
 
     //#region Locked Room
     'locked-room': {
-      'name': 'A locked room',
+      'name': 'a locked room',
       'description': `You shouldn't be able to get in here. You can leave via the north.`,
       'exits': {
         'north': 'great-room'
@@ -300,25 +309,53 @@ const world:World = {
 
     //#region Bedroom
     'bedroom': {
-      'name': 'The bedroom',
+      'name': session => session.inventory.has('lit-torch') ? 'the bedroom' : 'the dark',
       'description': ({ inventory }) => {
         if (inventory.has('lit-torch')) {
-          return `Your torch illuminates the room, but Michael hasn't written the description yet. You can still go south.`;
+          return `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. A closet stands against the western wall, and a hallway leads south.`;
         }
         return 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.';
       },
-      'things': [{
-        'keys': ['hall', 'hallway'],
-        'exit': 'south',
-        'verbs': {
-          'look': 'The hall leads south.'
+      'things': session => {
+        const things = [{
+          'keys': ['hall', 'hallway'],
+          'exit': 'south',
+          'verbs': {
+            'look': 'The hall leads south.'
+          }
+        }];
+        if (session.inventory.has('lit-torch')) {
+          things.push({
+            'keys': ['closet', 'wardrobe'],
+            'exit': 'west',
+            'verbs': {
+              'look': `It's a closet.`
+            }
+          });
         }
-      }],
+        return things;
+      },
+      'exits': session => {
+        const exits:Object = {
+          'south': 'great-room'
+        };
+        if (session.inventory.has('lit-torch')) {
+          exits['west'] = 'closet';
+        }
+        return exits;
+      }
+    },
+    //#endregion Bedroom
+
+    //#region Closet
+    'closet': {
+      'name': 'the closet',
+      'description': `It's a closet.`,
       'exits': {
-        'south': 'great-room'
+        'east': 'bedroom'
       }
     }
-    //#endregion Bedroom
+    //#endregion
 
   },
   //#endregion

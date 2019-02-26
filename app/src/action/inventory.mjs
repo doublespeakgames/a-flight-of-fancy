@@ -4,7 +4,7 @@
  * @author mtownsend
  * @since Feb 2019
  * 
- * Handles checking your inventory
+ * Checks your inventory
  */
 
 import type { Session } from '../model/session';
