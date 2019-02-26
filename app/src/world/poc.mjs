@@ -143,28 +143,65 @@ const world:World = {
           'eat': 'It tastes worse than it looks.'
         }
       }, {
-        'keys': ['cage', 'small cage'],
+        'keys': ['cage', 'small cage', 'lock', 'sturdy lock'],
         'verbs': {
-          'look': 'Inside the cage, a strange creature huddles furtively.',
-          'open': 'The cage is held shut by a sturdy lock.'
+          'look': session => ({ message: session.flags.it !== 'freed' 
+            ? 'Inside the cage, a strange creature huddles furtively.' 
+            : 'The cage is empty.' }),
+          'open': session => {
+            if (session.flags.cage === 'open') {
+              return { message: 'The cage is already open.' };
+            }
+            if (!session.flags.cage) {
+              return { message: 'The cage is secured with a sturdy lock, and will not open.' };
+            }
+            if (session.flags.it === 'freed' ) {
+              return { 
+                message: 'You open the cage.',
+                update: { flags: { 'cage': 'open' } }
+              };
+            }
+            return {
+              message: `You lift the latch and open the cage door. The cat-thing inside leaps deftly out, landing atop the pantry. It watches you for a moment, before hopping down and disappearing around a corner.`,
+              update: {
+                flags: { 'it': 'freed', 'cage': 'open' },
+                gone: add(session.gone, 'creature')
+              }
+            };
+          },
+          'close': session => {
+            if (session.flags.cage !== 'open') {
+              return { message: 'The cage is already closed.' };
+            }
+            return {
+              message: 'You close the cage.',
+              update: { flags: { 'cage': 'unlocked' } }
+            };
+          },
+          'use': {
+            'keys': session => {
+              if (session.flags.cage) {
+                return { message: 'The cage is already unlocked.' };
+              }
+              return {
+                message: `You try three keys before one turns in the lock with a loud click. The creature's ears perk.`,
+                update: { flags: { 'cage': 'unlocked' } }
+              };
+            }
+          }
         }
       }, {
-        'keys': ['lock', 'sturdy lock'],
-        'verbs': {
-          'look': `The lock is as big as your fist.`,
-          'open': `It won't open`
-        }
-      },{
+        'id': 'creature',
         'keys': ['creature', 'strange creature'],
         'verbs': {
           'look': 'The creature is cat-like, but covered in dull scales. Its face is unnervingly human, and it watches you with keen eyes.',
           'talk': (session, world) => {
-            if (session.flags['it_spoke']) {
+            if (session.flags['it']) {
               return { message: 'It just watches you, expectantly.' }
             }
             return {
               message: `<speak><prosody pitch="+6st">"Still alive?"</prosody> the creature hisses. <prosody pitch="+6st">"Let it out! It doesn't want to be dinner."</prosody></speak>`,
-              update: { flags: { 'it_spoke': 'true' }}
+              update: { flags: { 'it': 'spoke' }}
             };
           }
         }
@@ -172,6 +209,9 @@ const world:World = {
       'phrases': [{
         keys: ['free the creature', 'let the creature out', 'let it out'],
         action: 'open cage'
+      }, {
+        keys: ['unlock cage', 'unlock the cage', 'unlock lock', 'unlock the lock'],
+        action: 'use keys lock'
       }]
     },
     //#endregion
