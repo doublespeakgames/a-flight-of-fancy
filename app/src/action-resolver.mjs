@@ -77,6 +77,7 @@ const handlers:{[string]:ActionHandler} = {
       return { message: typeof desc === 'string' ? desc : desc(session) }
     },
     custom:(session, world, subject) => {
+      subject = subject.toLowerCase();
       if (INV_LOOK_KEYS.has(subject)) {
         // Check your inventory
         return inventory;
@@ -120,6 +121,12 @@ async function createSession(id:string):Promise<Session> {
   return session;
 }
 
+const determiner = /^(a|the|my) /i;
+function formatThing(thing:?string):string {
+  if (!thing) { return ''; }
+  return thing.toLowerCase().replace(determiner, '');
+}
+
 function processUpdate(oldSession:Session, update:SessionDiff):Session {
   // $FlowFixMe Object.assign({}, oldSession) is *obsiously* of type Session, idiot
   const newSession:Session = Object.assign({}, oldSession, { failures: 0 }, update);
@@ -146,7 +153,7 @@ export async function resolve(action:Action):Promise<ActionResult> {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result = handlers[action.type](session, world, action.subject, action.object);
+  const result = handlers[action.type](session, world, formatThing(action.subject), formatThing(action.object));
   if (result.message) { // This is an ActionResult
     if (result.update) {
       writeSession(processUpdate(session, result.update)); // flow-fix-me
