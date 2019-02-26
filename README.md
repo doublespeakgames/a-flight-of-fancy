@@ -15,3 +15,6 @@ The components of the project are defined in Docker containers, and glued togeth
 2. If certificates do not yet exist, run `./create-certs`
 3. `./docker-prod build`
 4. `./docker-prod up -d`
+
+### DialogFlow
+`Voice-Adventure.zip` is a DialogFlow export file. You can import it into a DialogFlow agent to make this whole thing work.
