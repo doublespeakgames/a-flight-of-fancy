@@ -208,10 +208,10 @@ const world:World = {
       }],
       'phrases': [{
         keys: ['free the creature', 'let the creature out', 'let it out'],
-        action: 'open cage'
+        action: 'open:cage'
       }, {
         keys: ['unlock cage', 'unlock the cage', 'unlock lock', 'unlock the lock'],
-        action: 'use keys lock'
+        action: 'use:keys:lock'
       }]
     },
     //#endregion
@@ -231,13 +231,33 @@ const world:World = {
         }; 
       },
       'locks': {
-        'south': _ => `The door won't open.`,
+        'south': session => session.flags.door ? null : `The door won't open.`,
         'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
       'things': [{
         'keys': [ 'ceiling' ],
         'verbs': {
           'look': 'The ceiling has been roughly chiseled out of natural rock.'
+        }
+      }, {
+        'keys': [ 'door', 'locked door', 'south door', 'southern door', 'door to the south', 'stone door' ],
+        'exit': 'south',
+        'verbs': {
+          'look': session => {
+            const lock = session.flags.door ? 'unlocked' : 'locked';
+            return { message: `The southern door is made of heavy stone. It is ${lock}.` }
+          },
+          'use': {
+            'keys': session => {
+              if (session.flags.door) {
+                return { message: 'The door is already unlocked.' };
+              }
+              return {
+                message: 'The second key on the ring turns, and the door unlocks.',
+                update: { flags: { 'door':'unlocked' } }
+              };
+            }
+          }
         }
       }, {
         'keys': [ 'hall', 'hallway' ],
@@ -333,15 +353,18 @@ const world:World = {
       }],
       'phrases': [{
         keys: ['feed the dog', 'feed the hound', 'feed dog', 'feed hound'],
-        action: 'give food dog'
+        action: 'give:food:dog'
+      }, {
+        keys: ['unlock door', 'unlock the door', 'unlock south door', 'unlock the south door', 'unlock the southern door'],
+        action: 'use:key:south door'
       }]
     },
     //#endregion
 
     //#region Locked Room
     'locked-room': {
-      'name': 'a locked room',
-      'description': `You shouldn't be able to get in here. You can leave via the north.`,
+      'name': 'an empty room',
+      'description': `You're at the end of the content. Go play outside.`,
       'exits': {
         'north': 'great-room'
       }

@@ -29,7 +29,7 @@ const fallback:ActionHandler = (session, world, subject) => {
       if (!phrase.keys.includes(subject)) {
         continue;
       }
-      const i = phrase.action.split(' ');
+      const i = phrase.action.split(':');
       return {
         sessionId: session._id,
         type: i[0],
