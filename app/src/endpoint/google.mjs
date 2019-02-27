@@ -15,6 +15,7 @@ import type { Conversation } from 'actions-on-google';
 import type { Action, ActionType } from '../action-resolver';
 
 const CONFIDENCE_THRESHOLD = 0.6;
+const LAST_RESPONSE = 'last-response';
 
 const app = Actions.dialogflow();
 
@@ -38,6 +39,7 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
     object: params['object']
   };
   const result = await resolve(action);
+  conv.contexts.set(LAST_RESPONSE, 1, result);
   if (result.close) {
     conv.close(result.message);
   }

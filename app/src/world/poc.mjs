@@ -226,7 +226,7 @@ const world:World = {
       'exits': session => { 
         return {
           'west': 'kitchen',
-          'south': 'locked-room',
+          'south': 'tunnel',
           'north': session.inventory.has('lit-torch') ? 'bedroom-lit' : 'bedroom'
         }; 
       },
@@ -356,18 +356,8 @@ const world:World = {
         action: 'give:food:dog'
       }, {
         keys: ['unlock door', 'unlock the door', 'unlock south door', 'unlock the south door', 'unlock the southern door'],
-        action: 'use:key:south door'
+        action: 'use:key:door'
       }]
-    },
-    //#endregion
-
-    //#region Locked Room
-    'locked-room': {
-      'name': 'an empty room',
-      'description': `You're at the end of the content. Go play outside.`,
-      'exits': {
-        'north': 'great-room'
-      }
     },
     //#endregion
 
@@ -494,6 +484,25 @@ const world:World = {
       'exits': {
         'east': 'bedroom'
       }
+    },
+    //#endregion
+
+    //#region Tunnel
+    'tunnel': {
+      'name': 'a long tunnel',
+      'description': `You are in a long tunnel. A light breeze flows from an opening to the south, and there is a door to the north.`,
+      'exits': {
+        'north': 'great-room',
+        'south': 'outside'
+      }
+    },
+    //#endregion
+
+    //#region Outside
+    'outside': {
+      'name': 'outside',
+      'description': 'You are outside. Hooray. Game over.',
+      'exits': {}
     }
     //#endregion
 
