@@ -2,7 +2,8 @@
 
 import type { World } from '../model/world';
 import { Synonym } from '../action-resolver';
-import { add, remove, mutate } from '../immutable-set';
+import { setAdd, setRemove, setMutate, mapSet } from '../immutable';
+import locked from '../model/locked';
 
 const world:World = {
   'id': 'poc',
@@ -41,11 +42,15 @@ const world:World = {
             }
             return {
               message: 'You take some mouldy food',
-              update: { inventory: add(session.inventory, 'food') }
+              update: { inventory: setAdd(session.inventory, 'food') }
             };
           },
           'eat': `You don't want to eat that.`
         }
+      }],
+      'phrases': [{
+        'keys': ['leave pantry', 'leave the pantry', 'exit pantry', 'exit the pantry'],
+        'action': 'move:north'
       }]
     },
     //#endregion
@@ -68,12 +73,12 @@ const world:World = {
             }
             return {
               message: 'You take one of the knives',
-              update: { inventory: add(session.inventory, 'knife') }
+              update: { inventory: setAdd(session.inventory, 'knife') }
             };
           }
         }
       }, {
-        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot'],
+        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron'],
         'verbs': {
           'look': 'The pot is huge and rusted. A foul-smelling liquid boils violently inside.'
         }
@@ -86,7 +91,7 @@ const world:World = {
             'torch': session => ({
               message: 'You hold your improvised torch in the fire until it catches',
               update: {
-                inventory: mutate(session.inventory, ['lit-torch'], ['torch'])
+                inventory: setMutate(session.inventory, ['lit-torch'], ['torch'])
               }
             }),
             'lit-torch': `It's already lit.`
@@ -131,8 +136,8 @@ const world:World = {
           'take': session => ({
             message: 'You take the cloth',
             update: {
-              inventory: add(session.inventory, 'cloth'),
-              gone: add(session.gone, 'cloth')
+              inventory: setAdd(session.inventory, 'cloth'),
+              gone: setAdd(session.gone, 'cloth')
             }
           })
         }
@@ -142,12 +147,13 @@ const world:World = {
           'look': 'It looks worse than it smells.',
           'eat': 'It tastes worse than it looks.'
         }
-      }, {
+      }, locked({
         'keys': ['cage', 'small cage', 'lock', 'sturdy lock'],
+        'name': 'the cage',
         'verbs': {
           'look': session => ({ message: session.flags.it !== 'freed' 
             ? 'Inside the cage, a strange creature huddles furtively.' 
-            : 'The cage is empty.' }),
+            : `The cage is empty. Its door is ${session.flags.cage === 'open' ? 'open' : 'closed'}.` }),
           'open': session => {
             if (session.flags.cage === 'open') {
               return { message: 'The cage is already open.' };
@@ -158,39 +164,19 @@ const world:World = {
             if (session.flags.it === 'freed' ) {
               return { 
                 message: 'You open the cage.',
-                update: { flags: { 'cage': 'open' } }
+                update: { flags: mapSet(session.flags, 'cage', 'open') }
               };
             }
             return {
               message: `You lift the latch and open the cage door. The cat-thing inside leaps deftly out, landing atop the pantry. It watches you for a moment, before hopping down and disappearing around a corner.`,
               update: {
-                flags: { 'it': 'freed', 'cage': 'open' },
-                gone: add(session.gone, 'creature')
+                flags: mapSet(session.flags, { 'it': 'freed', 'cage': 'open' }),
+                gone: setAdd(session.gone, 'creature')
               }
             };
-          },
-          'close': session => {
-            if (session.flags.cage !== 'open') {
-              return { message: 'The cage is already closed.' };
-            }
-            return {
-              message: 'You close the cage.',
-              update: { flags: { 'cage': 'unlocked' } }
-            };
-          },
-          'use': {
-            'keys': session => {
-              if (session.flags.cage) {
-                return { message: 'The cage is already unlocked.' };
-              }
-              return {
-                message: `You try three keys before one turns in the lock with a loud click. The creature's ears perk.`,
-                update: { flags: { 'cage': 'unlocked' } }
-              };
-            }
           }
         }
-      }, {
+      }, { stateKey: 'cage', keyId: 'keys', unlockMessage: `You try three keys before one turns in the lock with a loud click. The creature's ears perk.`}), {
         'id': 'creature',
         'keys': ['creature', 'strange creature'],
         'verbs': {
@@ -200,8 +186,8 @@ const world:World = {
               return { message: 'It just watches you, expectantly.' }
             }
             return {
-              message: `<speak><prosody pitch="+6st">"Still alive?"</prosody> the creature hisses. <prosody pitch="+6st">"Let it out! It doesn't want to be dinner."</prosody></speak>`,
-              update: { flags: { 'it': 'spoke' }}
+              message: `<speak><prosody pitch="+6st">"Meat is alive?"</prosody> the creature hisses. <prosody pitch="+6st">"Meat lets it out! It doesn't want to be dinner."</prosody></speak>`,
+              update: { flags: mapSet(session.flags, 'it', 'spoke') }
             };
           }
         }
@@ -239,27 +225,17 @@ const world:World = {
         'verbs': {
           'look': 'The ceiling has been roughly chiseled out of natural rock.'
         }
-      }, {
-        'keys': [ 'door', 'locked door', 'south door', 'southern door', 'door to the south', 'stone door' ],
+      }, locked({
+        'keys': [ 'door', 'locked door', 'south door', 'southern door', 'door to the south', 'stone door', 'south' ],
+        'name': 'the door',
         'exit': 'south',
         'verbs': {
           'look': session => {
             const lock = session.flags.door ? 'unlocked' : 'locked';
             return { message: `The southern door is made of heavy stone. It is ${lock}.` }
-          },
-          'use': {
-            'keys': session => {
-              if (session.flags.door) {
-                return { message: 'The door is already unlocked.' };
-              }
-              return {
-                message: 'The second key on the ring turns, and the southern door unlocks.',
-                update: { flags: { 'door':'unlocked' } }
-              };
-            }
           }
         }
-      }, {
+      }, { stateKey: 'door', keyId: 'keys', unlockMessage: 'The second key on the ring turns, and the southern door unlocks.' }), {
         'keys': [ 'hall', 'hallway' ],
         'exit': 'north',
         'verbs': {
@@ -305,7 +281,7 @@ const world:World = {
               }
               return {
                 message: `The hound is massive but chained, and you easily out-maneuver it. Your knife slips between its ribs, and its life pours hotly onto the floor.`,
-                update: { flags: { 'hound': 'dead' } }
+                update: { flags: mapSet(session.flags, 'hound', 'dead') }
               }
             },
             'food': session => { 
@@ -318,8 +294,8 @@ const world:World = {
               return {
                 message: `The hound snaps up the food greedily. Its demeanor softens.`,
                 update: { 
-                  inventory: remove(session.inventory, 'food'),
-                  flags: { 'hound': 'fed' } 
+                  inventory: setRemove(session.inventory, 'food'),
+                  flags: mapSet(session.flags, 'hound', 'fed')
                 }
               }
             }
@@ -344,8 +320,8 @@ const world:World = {
             return {
               message: 'You take the bone',
               update: { 
-                gone: add(session.gone, 'dog-bone'),
-                inventory: add(session.inventory, 'bone')
+                gone: setAdd(session.gone, 'dog-bone'),
+                inventory: setAdd(session.inventory, 'bone')
               }
             };
           }
@@ -363,7 +339,7 @@ const world:World = {
 
     //#region Bedroom
     'bedroom': {
-      'name': 'the dark',
+      'name': 'darkness',
       'description': 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.',
       'things': [{
         'keys': ['hall', 'hallway'],
@@ -381,19 +357,41 @@ const world:World = {
     //#region Bedroom-lit
     'bedroom-lit': {
       'name': 'the bedroom',
-      'description': `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. Its huge, rusted axe lies nearby. A closet stands against the western wall, and a hallway leads south.`,
+      'description': `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. Its huge, doubleheaded axe lies nearby. Against the back wall is a heavy wooden trunk. A hallway leads south.`,
       'things': [{
         'keys': ['hall', 'hallway'],
         'exit': 'south',
         'verbs': {
           'look': 'The hall leads south.'
         }
-      }, {
-        'keys': ['closet', 'wardrobe'],
-          'exit': 'west',
+      }, locked({
+        'name': 'the trunk',
+        'keys': ['trunk', 'wooden trunk', 'heavy wooden trunk', 'chest', 'wooden chest', 'heavy wooden chest'],
           'verbs': {
-            'look': `It's a closet.`
+            'look': session => ({ message: session.flags.trunk === 'open' 
+                ? 'The trunk is filled with sparkling red gems.' 
+                : `The trunk is made from thick wooden boards, banded with rusting iron. The wood is swollen from moisture, and bits of moss are growing in the seams.` })
           }
+      }, { stateKey: 'trunk', keyId: 'keys', unlockMessage: 'The lock fits the first key you try, and clicks open.' }), {
+        'keys': [ 'moss' ],
+        'verbs': {
+          'look': 'The moss grows in the seams of a large wooden trunk.'
+        }
+      }, {
+        'keys': ['gem', 'gems', 'sparkling gem', 'sparkling red gem', 'ruby', 'rubies', 'all the gems', 'all of the gems', 'more gems', 'another gem'],
+        'visibility': session => session.flags.trunk === 'open',
+        'verbs': {
+          'look': 'The gems are walnut-sized, and glitter brilliantly in the torchlight.',
+          'take': session => {
+            if (session.inventory.has('gem')) {
+              return { message: 'You already have a gem.' };
+            }
+            return {
+              message: 'You take a gem.',
+              update: { inventory: setAdd(session.inventory, 'gem') }
+            };
+          }
+        }
       }, {
         'keys': ['straw', 'bed', 'bed of straw', 'straw bed', `giant's bed`, 'filthy straw', 'bed of filthy straw'],
         'verbs': {
@@ -432,7 +430,7 @@ const world:World = {
               }
               return {
                 message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the keyring onto the floor.',
-                update: { flags: { 'belt': 'cut' } }
+                update: { flags: mapSet(session.flags, 'belt', 'cut') }
               };
             }
           }
@@ -450,8 +448,8 @@ const world:World = {
               return {
                 message: 'You take the keys.',
                 update: {
-                  inventory: add(session.inventory, 'keys'),
-                  gone: add(session.gone, 'keys')
+                  inventory: setAdd(session.inventory, 'keys'),
+                  gone: setAdd(session.gone, 'keys')
                 }
               }
             }
@@ -464,48 +462,87 @@ const world:World = {
           'look': 'The lichens are numerous and varied, ranging in colour from dull green to brilliant crimson.'
         }
       }, {
-        'keys': ['axe', 'huge axe', 'rusted axe', 'rusty axe', `giant's axe`],
+        'keys': ['axe', 'huge axe', 'doubleheaded axe', `giant's axe`],
         'verbs': {
           'look': 'The axe head is made of chipped stone, and is lashed to a haft nearly six feet long. It looks heavy.',
           'take': `You can't lift it.`
         }
       }],
+      'phrases': [{
+        'keys': [ 'unlock the trunk', 'unlock the wooden trunk', 'unlock the heavy trunk', 'unlock the heavy wooden trunk', 'unlock the chest', 'unlock the wooden chest', 'unlock the heavy chest', 'unlock the heavy wooden chest'],
+        'action': 'use:key:trunk'
+      }],
       'exits': {
-        'south': 'great-room',
-        'west': 'closet'
+        'south': 'great-room'
       }
     },
     //#endregion Bedroom-lit
 
-    //#region Closet
-    'closet': {
-      'name': 'the closet',
-      'description': `It's a closet.`,
-      'exits': {
-        'east': 'bedroom'
-      }
-    },
-    //#endregion
-
     //#region Tunnel
     'tunnel': {
-      'name': 'a long tunnel',
-      'description': `You are in a long tunnel. A light breeze flows from an opening to the south, and there is a door to the north.`,
+      'name': 'a tunnel',
+      'description': `You are in a cavernous tunnel. On the walls, biolouminescent moss glows faintly. There is a door to the north, and the passage continues to the south. Tiny goblins dart about your feet, visible only for a moment before vanishing deeper into darkness.`,
       'exits': {
         'north': 'great-room',
-        'south': 'outside'
-      }
+        'south': 'maze'
+      },
+      'entryEffect': session => {
+        if (!session.inventory.has('gem') || session.effects.has('goblin')) {
+          return null;
+        }
+        return {
+          message: 'The goblins appear entranced by your sparkling gem.',
+          update: { effects: setAdd(session.effects, 'goblin') }
+        };
+      },
+      'things': [{
+        'keys': [ 'goblin', 'goblins', 'tiny goblin', 'tiny goblins', 'small goblin', 'small goblins' ],
+        'verbs': {
+          'look': 'The goblins are no larger than rats, and are in constant motion. They carry small bags, and appear to be collecting bits of gravel.',
+          'take': 'The goblins easily avoid your attempts at capture.',
+          'attack': new Synonym('use'),
+          'use': {
+            'knife': 'The goblins easily avoid your attempts at violence.'
+          }
+        }
+      }, {
+        'keys': [ 'moss', 'bioluminscent moss', 'bioluminescence', 'walls', 'wall', 'moss on the wall', 'moss on the walls' ],
+        'verbs': {
+          'look': 'The moss covers large swaths of the rock walls, and emits a soft green light.'
+        }
+      }]
     },
     //#endregion
 
-    //#region Outside
-    'outside': {
-      'name': 'outside',
-      'description': 'You are outside. Hooray. Game over.',
-      'exits': {}
+    //#region Maze
+    'maze': {
+      'name': 'maze',
+      'description': 'You in the maze. Hooray. Game over.',
+      'exits': { 
+        'north': 'tunnel'
+      }
     }
     //#endregion
 
+  },
+  //#endregion
+
+  //#region Global Effects
+  'effects': {
+    'goblin': {
+      'description': 'A tiny goblin is following you.',
+      'things': [{
+        'keys': [ 'goblin', 'tiny goblin' ],
+        'verbs': {
+          'look': 'The goblin stays well out of reach, but remains fixated on the gem you are carrying.',
+          'take': 'The goblin easily avoids your attempts at capture.',
+          'attack': new Synonym('use'),
+          'use': {
+            'knife': 'The goblin easily avoids your attempts at violence.'
+          }
+        }
+      }] 
+    }
   },
   //#endregion
 
@@ -556,7 +593,7 @@ const world:World = {
           'bone': session => ({
             message: 'You wrap the cloth tightly around one end of the bone, making an improvised torch',
             update: {
-              inventory: mutate(session.inventory, ['torch'], ['cloth', 'bone'])
+              inventory: setMutate(session.inventory, ['torch'], ['cloth', 'bone'])
             }
           })
         }
@@ -587,6 +624,15 @@ const world:World = {
       'name': 'a ring of keys',
       'verbs': {
         'look': 'An iron ring holds a handful of misshapen keys.'
+      }
+    },
+
+    'gem': {
+      'id': 'gem',
+      'keys': [ 'gem', 'ruby', 'sparkling gem', 'sparkling ruby' ],
+      'name': 'a sparkling gem',
+      'verbs': {
+        'look': 'The gem is walnut-sized and sparkles enticingly.'
       }
     }
   }

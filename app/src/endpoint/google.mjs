@@ -8,7 +8,7 @@
  */
 
 import Actions from 'actions-on-google';
-import { resolve } from '../action-resolver';
+import { resolveAction } from '../action-resolver';
 import uuid from 'uuid/v1';
 
 import type { Conversation } from 'actions-on-google';
@@ -38,8 +38,8 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
     subject: !isFallback ? params['subject'] : queryText,
     object: params['object']
   };
-  const result = await resolve(action);
-  conv.contexts.set(LAST_RESPONSE, 1, result);
+  const result = await resolveAction(action);
+  conv.contexts.set(LAST_RESPONSE, 1, { message: result.message });
   if (result.close) {
     conv.close(result.message);
   }

@@ -19,6 +19,10 @@ const inventory:ActionHandler = (session, world, subject) => {
     };
   }
 
+  if (session.inventory.size === 0) {
+    return { message: `You aren't carrying anything.` };
+  }
+
   const list = [...session.inventory].map(k => {
     const item = world.items[k];
     return item.name || item.keys[0];

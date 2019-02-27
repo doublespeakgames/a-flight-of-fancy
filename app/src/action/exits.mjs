@@ -10,10 +10,11 @@
 import type { Session } from '../model/session';
 import type { Room } from '../model/room';
 import type { ActionHandler, ActionResult } from '../action-resolver';
-import { join } from '../list.mjs';
+import { join } from '../list';
+import { resolve } from '../value';
 
 export function getExitText(session:Session, room:Room):string {
-  const exits = Object.keys(typeof room.exits === 'function' ? room.exits(session) : room.exits);
+  const exits = Object.keys(resolve(session, room.exits));
   const num = exits.length;
   if (num > 1) {
     return `There are exits to the ${join(exits, ', ', ', and ')}.`;

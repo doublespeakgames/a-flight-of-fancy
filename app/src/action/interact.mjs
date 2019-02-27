@@ -12,7 +12,7 @@ import type { ThingId, Thing } from '../model/thing';
 import type { World } from '../model/world';
 import type { Session } from '../model/session';
 import { Synonym } from '../action-resolver';
-import { fromRoom, fromInventory } from '../model/thing';
+import { fromEffects, fromRoom, fromInventory } from '../model/thing';
 import move from './move';
 
 type Options = {
@@ -42,16 +42,11 @@ export default (verb:string, options:Options = {}):ActionHandler =>
   };
 
   export function getThings(session:Session, world:World, subject:ThingId):Array<Thing> {
-    const invThing = fromInventory(session.inventory, subject, world);
-    const roomThing = fromRoom(session, world.rooms[session.room], subject);
-    const things:Array<Thing> = [];
-    if (invThing) { 
-      things.push(invThing); 
-    }
-    if (roomThing && (!roomThing.id || !session.gone.has(roomThing.id))) {
-      things.push(roomThing);
-    }
-    return things;
+    return [
+      fromEffects(session, subject, world),
+      fromInventory(session.inventory, subject, world),
+      fromRoom(session, world.rooms[session.room], subject)
+    ].filter(Boolean);
   }
 
   function simpleHandler(session, world, verb, subject, options) {

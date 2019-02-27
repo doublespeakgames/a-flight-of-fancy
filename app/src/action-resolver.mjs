@@ -4,6 +4,7 @@ import type { Session, SessionDiff } from './model/session';
 import type { World } from './model/world';
 
 import { getSession, writeSession, deleteSession, getWorld } from './store';
+import { describe } from './model/room';
 
 import fallback from './action/fallback'
 import move from './action/move';
@@ -11,6 +12,7 @@ import objectTravel from './action/object-travel';
 import inventory from './action/inventory';
 import exits from './action/exits';
 import interact from './action/interact';
+import { resolve } from './value';
 
 export type Action = {|
   sessionId:string,
@@ -73,10 +75,7 @@ const handlers:{[string]:ActionHandler} = {
   'untie': interact('untie'),
   'light': interact('light'),
   'look': interact('look', { 
-    subjectless: (session, world) => {
-      const desc = world.rooms[session.room].description;
-      return { message: typeof desc === 'string' ? desc : desc(session) }
-    },
+    subjectless: (session, world) => ({ message: describe(session, world, world.rooms[session.room]) }),
     custom:(session, world, subject) => {
       subject = subject.toLowerCase();
       if (INV_LOOK_KEYS.has(subject)) {
@@ -88,14 +87,11 @@ const handlers:{[string]:ActionHandler} = {
         return exits;
       }
       const room = world.rooms[session.room];
-      const roomExits = typeof room.exits === 'function' ? room.exits(session) : room.exits;
-      const lookRoomId = roomExits[subject];
+      const lookRoomId = resolve(session, room.exits)[subject];
       if (lookRoomId) {
         // Check an exit
         if (session.seen.has(lookRoomId)) {
-          const lookRoom = world.rooms[lookRoomId];
-          const name = typeof lookRoom.name === 'function' ? lookRoom.name(session) : lookRoom.name;
-          return () => ({ message: `It leads to ${name}` });
+          return () => ({ message: `It leads to ${resolve(session, world.rooms[lookRoomId].name)}` });
         }
         return () => ({ message: `You don't know where it leads.` });
       }
@@ -116,6 +112,7 @@ async function createSession(id:string):Promise<Session> {
     inventory: new Set(),
     gone: new Set(),
     seen: new Set([world.start]),
+    effects: new Set(),
     failures: 0
   };
   writeSession(session);
@@ -131,14 +128,10 @@ function formatThing(thing:?string):string {
 function processUpdate(oldSession:Session, update:SessionDiff):Session {
   // $FlowFixMe Object.assign({}, oldSession) is *obviously* of type Session, idiot
   const newSession:Session = Object.assign({}, oldSession, { failures: 0 }, update);
-
-  if (update.flags) {
-    newSession.flags = Object.assign({}, oldSession.flags, update.flags);
-  }
   return newSession;
 }
 
-export async function resolve(action:Action):Promise<ActionResult> {
+export async function resolveAction(action:Action):Promise<ActionResult> {
 
   if (action.type === 'restart') {
     // TODO: This needs confirmation

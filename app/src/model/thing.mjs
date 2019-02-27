@@ -16,8 +16,9 @@ export type Thing = {|
   id?:ThingId,
   name?:string,
   exit?:Direction,
-  verbs?:{ [Verb]: Synonym|SimplePhrase|ComplexPhrase }
-|}
+  verbs?:{ [Verb]: Synonym|SimplePhrase|ComplexPhrase },
+  visibility?:Session => boolean
+|};
 
 function getThings(session:Session, room:Room):Array<Thing> {
   if (typeof room.things === 'function') {
@@ -32,11 +33,25 @@ export function fromRoom(session:Session, room:Room, key?:string):?Thing {
   }
   
   const k = key.toLowerCase();
-  return getThings(session, room).find(t => t.keys.includes(k));
+  return getThings(session, room)
+    .filter(t => !(t.id && session.gone.has(t.id)))
+    .filter(t => !t.visibility || t.visibility(session))
+    .find(t => t.keys.includes(k));
 }
 
 export function fromInventory(inventory:Set<ThingId>, key:string, world:World):?Thing {
   return [...inventory]
     .map(itemKey => world.items[itemKey])
     .find(item => item.keys.includes(key));
+}
+
+export function fromEffects(session:Session, key:string, world:World):?Thing {
+  for (let effect of session.effects) {
+    for (let thing of world.effects[effect].things) {
+      if (thing.keys.includes(key)) {
+        return thing;
+      }
+    }
+  }
+  return null;
 }
