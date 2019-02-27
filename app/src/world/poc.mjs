@@ -231,7 +231,7 @@ const world:World = {
         }; 
       },
       'locks': {
-        'south': session => session.flags.door ? null : `The door won't open.`,
+        'south': session => session.flags.door ? null : `The door is locked, and won't open.`,
         'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
       'things': [{
@@ -253,7 +253,7 @@ const world:World = {
                 return { message: 'The door is already unlocked.' };
               }
               return {
-                message: 'The second key on the ring turns, and the door unlocks.',
+                message: 'The second key on the ring turns, and the southern door unlocks.',
                 update: { flags: { 'door':'unlocked' } }
               };
             }
@@ -425,7 +425,7 @@ const world:World = {
           'attack': new Synonym('use')
         }
       }, {
-        'keys': ['belt', 'twine', 'twine belt'],
+        'keys': ['belt', 'twine', 'twine belt', `giant's belt`],
         'verbs': {
           'look': session => ({ message: session.flags['belt'] 
               ? 'The belt has been split, but remains trapped beneath the giant.' 
@@ -434,6 +434,7 @@ const world:World = {
               ? `The sleeping giant's bulk holds it in place.` 
               : `The belt is tied securely around the giant's waist.` }),
           'untie': 'The knot is tied too tightly for human hands.',
+          'attack': new Synonym('use'),
           'use': {
             'knife': session => {
               if (session.flags['belt']) {
