@@ -4,7 +4,7 @@ import type { Session, SessionDiff } from './model/session';
 import type { World } from './model/world';
 
 import { getSession, writeSession, deleteSession, getWorld } from './store';
-import { describe } from './model/room';
+import { lookAt } from './model/room';
 
 import fallback from './action/fallback'
 import move from './action/move';
@@ -75,7 +75,7 @@ const handlers:{[string]:ActionHandler} = {
   'untie': interact('untie'),
   'light': interact('light'),
   'look': interact('look', { 
-    subjectless: (session, world) => ({ message: describe(session, world, world.rooms[session.room]) }),
+    subjectless: (session, world) => lookAt(session, world, session.room),
     custom:(session, world, subject) => {
       subject = subject.toLowerCase();
       if (INV_LOOK_KEYS.has(subject)) {
@@ -150,11 +150,13 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
   const result = handlers[action.type](session, world, formatThing(action.subject), formatThing(action.object));
   if (result.message) { // This is an ActionResult
     if (result.update) {
-      writeSession(processUpdate(session, result.update)); // flow-fix-me
+      writeSession(processUpdate(session, result.update));
     }
     return result;
   }
 
-  // $FlowFixMe This is obviously an Action now. Stupid Flow.
-  return resolve(result);
+  // $FlowFixMe This is obviously an Action at this point =/
+  const r:Action = result;
+  
+  return resolveAction(r);
 }

@@ -12,3 +12,7 @@ export function join<T>(list:Array<T>, sep:string = '', last:string = sep):strin
     return `${acc}${s}${String(cur)}`;
   }, '');
 }
+
+export function random<T>(list:Array<T>):T {
+  return list[Math.floor(Math.random() * list.length)];
+}

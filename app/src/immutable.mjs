@@ -18,7 +18,25 @@ export function setMutate<T>(set:Set<T>, add:Array<T> = [], remove:Array<T> = []
   return s;
 }
 
-export function mapSet<T>(map:{[string]:T}, key:string|{[string]:T}, val?:T):{[string]:T} {
-  const update = typeof key === 'string' ? { [key]: val } : key;
-  return Object.assign({}, map, update);
+export function mapSet<T>(map:{[string]:T}, key:string|{[string]:?T}, val?:?T):{[string]:T} {
+  const update:{[string]:?T} = typeof key === 'string' ? { [key]: val } : key;
+  const clone:{[string]:T} = Object.assign({}, map);
+
+  for (let key of Object.keys(update)) {
+    const val = update[key];
+    if (val != null) {
+      clone[key] = val;
+    }
+    else {
+      delete clone[key];
+    }
+  }
+
+  return clone;
+}
+
+export function mapRemove<T>(map:{[string]:T}, key:string):{[string]:T} {
+  const ret = Object.assign({}, map);
+  delete ret[key];
+  return ret;
 }

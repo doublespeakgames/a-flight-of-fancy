@@ -19,14 +19,32 @@ export type Room = {|
   locks?: { [Direction]:Lock},
   things?: Value<Array<Thing>>,
   phrases?: Array<{keys:Array<string>, action:string}>,
-  entryEffect?: (session:Session, world:World) => ?ActionResult
+  effect?: RoomEffect
 |};
 
-export function describe(session:Session, world:World, room:Room, short:boolean = false):string {
-  const desc = short ? `You are in ${resolve(session, room.name)}.` : resolve(session, room.description);
-  const effects = [...session.effects]
-    .map(effectId => resolve(session, world.effects[effectId].description))
-    .filter(Boolean).join(' ');
+export type RoomEffect = (session:Session, world:World, roomId:RoomId) => ?ActionResult;
 
-  return effects ? `${desc} ${effects}` : desc;
+export function lookAt(session:Session, world:World, roomId:RoomId, short:boolean = false):ActionResult {
+
+  const room = world.rooms[roomId];
+
+  const finalResult:ActionResult = {
+    message: short ? `You are in ${resolve(session, room.name)}.` : resolve(session, room.description),
+    update: {}
+  };
+
+  const effects = [
+    room.effect,
+    ...[...session.effects].map(id => world.effects[id].roomEffect)
+  ].filter(Boolean);
+
+  return effects
+    .map(effect => effect(session, world, roomId))
+    .filter(Boolean)
+    .reduce((result, effect) => {
+      return {
+        message: `${result.message} ${effect.message}`,
+        update: Object.assign({}, result.update, effect.update)
+      }
+    }, finalResult);
 }

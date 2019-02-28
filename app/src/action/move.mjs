@@ -11,13 +11,25 @@ import type { Session, SessionDiff } from '../model/session';
 import type { ActionHandler, ActionResult } from '../action-resolver';
 import { getExitText } from './exits';
 import { setAdd } from '../immutable';
-import { describe } from '../model/room';
+import { lookAt } from '../model/room';
 import { resolve } from '../value';
 
 const move:ActionHandler = (session, world, subject) => {
   const room = world.rooms[session.room];
-  const dir = subject == null ? 'null' : subject.toLowerCase();
-  const nextRoomId = resolve(session, room.exits)[dir];
+  const exits = resolve(session, room.exits);
+
+  let dir = subject;
+  if (!dir) {
+    const dirs = Object.keys(exits);
+    if (dirs.length === 1) {
+      dir = dirs[0];
+    }
+    else {
+      return { message: getExitText(session, room) };
+    }
+  }
+
+  const nextRoomId = exits[dir];
   if (!nextRoomId) {
     return {
       message: `You can't go that way.`
@@ -34,24 +46,18 @@ const move:ActionHandler = (session, world, subject) => {
     }
   }
   const nextRoom = world.rooms[nextRoomId];
-  const desc = describe(session, world, nextRoom, session.seen.has(nextRoomId));
+  const roomResult = lookAt(session, world, nextRoomId, session.seen.has(nextRoomId));
   const exitText = session.seen.has(nextRoomId) ? getExitText(session, nextRoom) : '';
 
-  const response:ActionResult = {
-    message: `You go ${dir}. ${desc} ${exitText}`,
-    update: { 
-      room: nextRoomId,
-      seen: setAdd(session.seen, nextRoomId)
-    }
+  const update:SessionDiff = {
+    room: nextRoomId,
+    seen: setAdd(session.seen, nextRoomId)
   };
 
-  const entryEffect = nextRoom.entryEffect ? nextRoom.entryEffect(session, world) : null;
-  if (entryEffect) {
-    response.message = `${response.message} ${entryEffect.message}`;
-    response.update = Object.assign({}, response.update, entryEffect.update);
-  }
-
-  return response;
+  return {
+    message: `You go ${dir}. ${roomResult.message} ${exitText}`,
+    update: Object.assign(update, roomResult.update)
+  };
 };
 
 export default move;
