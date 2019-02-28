@@ -378,7 +378,7 @@ const world:World = {
           'look': 'The moss grows in the seams of a large wooden trunk.'
         }
       }, {
-        'keys': ['gem', 'gems', 'sparkling gem', 'sparkling red gem', 'ruby', 'rubies', 'all the gems', 'all of the gems', 'more gems', 'another gem'],
+        'keys': ['gem', 'gym', 'gems', 'sparkling gem', 'sparkling red gem', 'ruby', 'rubies', 'all the gems', 'all of the gems', 'more gems', 'another gem'],
         'visibility': session => session.flags.trunk === 'open',
         'verbs': {
           'look': 'The gems are walnut-sized, and glitter brilliantly in the torchlight.',
@@ -436,7 +436,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': ['keyring', 'large keyring', 'keys', `giant's keyring`, `giant's keys`],
+        'keys': ['keyring', 'key ring', 'large keyring', 'keys', 'key', `giant's keyring`, `giant's keys`],
         'id': 'keys',
         'verbs': {
           'look': session => {
@@ -462,7 +462,7 @@ const world:World = {
           'look': 'The lichens are numerous and varied, ranging in colour from dull green to brilliant crimson.'
         }
       }, {
-        'keys': ['axe', 'huge axe', 'doubleheaded axe', `giant's axe`],
+        'keys': ['axe', 'acts', 'huge axe', 'huge acts', 'doubleheaded axe', `giant's axe`],
         'verbs': {
           'look': 'The axe head is made of chipped stone, and is lashed to a haft nearly six feet long. It looks heavy.',
           'take': `You can't lift it.`
@@ -481,7 +481,7 @@ const world:World = {
     //#region Tunnel
     'tunnel': {
       'name': 'a tunnel',
-      'description': `You are in a cavernous tunnel. On the walls, biolouminescent moss glows faintly. There is a door to the north, and the passage continues to the south. Tiny goblins dart about your feet, visible only for a moment before vanishing deeper into darkness.`,
+      'description': `You are in a cavernous tunnel. On the walls, bioluminescent moss glows faintly. There is a door to the north, and the passage continues to the south. Tiny goblins dart about your feet, visible only for a moment before vanishing deeper into darkness.`,
       'exits': {
         'north': 'great-room',
         'south': 'maze'
@@ -506,7 +506,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'moss', 'bioluminscent moss', 'bioluminescence', 'walls', 'wall', 'moss on the wall', 'moss on the walls' ],
+        'keys': [ 'moss', 'bioluminescent moss', 'bioluminescence', 'walls', 'wall', 'moss on the wall', 'moss on the walls' ],
         'verbs': {
           'look': 'The moss covers large swaths of the rock walls, and emits a soft green light.'
         }
@@ -563,7 +563,7 @@ const world:World = {
     },
 
     'food': {
-      'keys': ['food', 'mouldy food', 'mould'],
+      'keys': ['food', 'moldy food', 'mouldy food', 'mould', 'mold'],
       'name': 'some mouldy food',
       'id': 'food',
       'verbs': {
@@ -620,7 +620,7 @@ const world:World = {
 
     'keys': {
       'id': 'keys',
-      'keys': ['keys', 'keyring', 'key', `giant's keys`, `giant's keyring`, `giant's key`],
+      'keys': ['keys', 'keyring', 'key ring', 'key', `giant's keys`, `giant's keyring`, `giant's key`],
       'name': 'a ring of keys',
       'verbs': {
         'look': 'An iron ring holds a handful of misshapen keys.'
@@ -629,7 +629,7 @@ const world:World = {
 
     'gem': {
       'id': 'gem',
-      'keys': [ 'gem', 'ruby', 'sparkling gem', 'sparkling ruby' ],
+      'keys': [ 'gem', 'gym', 'ruby', 'sparkling gem', 'sparkling ruby' ],
       'name': 'a sparkling gem',
       'verbs': {
         'look': 'The gem is walnut-sized and sparkles enticingly.'
