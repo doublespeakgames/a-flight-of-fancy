@@ -546,7 +546,7 @@ const world:World = {
                 return { message: `It's already been cut.` };
               }
               return {
-                message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the keyring onto the floor.',
+                message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the keyring into the straw.',
                 update: { flags: mapSet(session.flags, 'belt', 'cut') }
               };
             }
