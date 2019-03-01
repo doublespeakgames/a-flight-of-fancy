@@ -302,9 +302,11 @@ const world:World = {
         }
       }, { stateKey: 'cage', keyId: 'keys', unlockMessage: `You try three keys before one turns in the lock with a loud click. The caged creature's ears perk.`}), {
         'id': 'creature',
-        'keys': ['creature', 'strange creature'],
+        'keys': ['creature', 'strange creature', 'it'],
         'verbs': {
           'look': 'The creature is cat-like, but covered in dull scales. Its face is unnervingly human, and it watches you with keen eyes.',
+          'use': 'The cage imprisoning it is closed.',
+          'untie': new Synonym('use'),
           'talk': (session, world) => {
             if (session.flags['it']) {
               return { message: 'It just watches you, expectantly.' }
@@ -317,9 +319,6 @@ const world:World = {
         }
       }],
       'phrases': [{
-        keys: ['free the creature', 'let the creature out', 'let it out'],
-        action: 'open:cage'
-      }, {
         keys: ['unlock cage', 'unlock the cage', 'unlock lock', 'unlock the lock'],
         action: 'use:keys:lock'
       }]
@@ -674,18 +673,70 @@ const world:World = {
         'north': 'maze',
         'south': 'maze',
         'east': 'maze',
-        'west': 'outside'
+        'west': 'mouth'
       }
     },
     //#endregion
 
-    'outside': {
-      'name': 'outside',
-      'description': 'You made it through the maze. Go you. North goes back to the kitchen.',
+    //#region Cave Mouth
+    'mouth': {
+      'name': 'the mouth of a cave',
+      'description': session => {
+        const goblin = session.flags.goblin ? '' : ' Just ahead, a tiny goblin struggles at the end of a thread extending back into darkness.';
+        return `Before you, the tunnel ends abruptly in a verdant bloom of flora. Daylight streams between hanging vines, casting long shadows on the rocky terrain.${goblin} The cave opens to the west, and a tunnel leads east.`;
+      },
       'exits': {
-        'north': 'kitchen'
+        'east': 'tunnel',
+        'west': 'swamp-dream'
+      },
+      'things': [{
+        'keys': ['goblin', 'tiny goblin', 'sruggling goblin', 'thread', 'string', 'tether', 'knot'],
+        'visibility': session => !session.flags.goblin,
+        'verbs': {
+          'look': 'The goblin thrashes about at the end of its tether.',
+          'untie': new Synonym('use'),
+          'take': new Synonym('use'),
+          'talk': 'The goblin chitters angrily.',
+          'use': session => ({
+            message: 'You untie the squirming goblin, and it sprints off into the underbrush.',
+            update: { flags: mapSet(session.flags, 'goblin', 'freed') }
+          })
+        }
+      }, {
+        'keys': ['vines', 'hanging vines', 'flora', 'plants', 'ferns', 'underbrush', 'exit', 'mouth', 'mouth of the cave', 'cave mouth', 'sunlight', 'light', 'daylight', 'sun', 'outside'],
+        'exit': 'west',
+        'verbs': {
+          'look': 'The mouth of the cave is choked with hanging vines and large-leafed ferns, rustling gently with the inward current.'
+        }
+      }]
+    },
+    //#region Cave Mouth
+
+    //#region Swamp
+    'swamp-dream': {
+      'name': 'a swamp',
+      'effect': session => ({
+        message: `You start in your sleeping bag, briefly disoriented. The heat of the day is already upon you, and large insects drone outside the tent walls. Yes, the swamp. You're finally here.`,
+        update: { room: 'tent', inventory: new Set() }
+      }),
+      'description': `You emerge from the cave into a dense swamp. Behind you, its roots framing the mouth of the cave, a huge gnarled tree rises above the canopy. Sunlight flickers through the tree's branches, and you squint against the sudden brightness. Defiantly, the light continues to fill your vision until the image of the swamp is just a memory. Until the memory, too, is gone. And then you wake. The same dream, every night, for the past twenty-eight weeks.`,
+      'things': [],
+      'exits': {}
+    },
+    //#endregion
+
+    //#region Tent
+    'tent': {
+      'name': 'your tent',
+      'description': `The tent is close and stifling. Your expedition pack sits in one corner, and a zippered flap opens to the east.`,
+      'things': [
+        // TODO
+      ],
+      'exits': {
+        // TODO
       }
-    }
+    },
+    //#endregion
   },
   //#endregion
 
