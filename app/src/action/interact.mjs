@@ -18,7 +18,8 @@ import move from './move';
 type Options = {
   exits?:boolean,
   subjectless?:ActionHandler,
-  custom?:(session:Session, world:World, subject:string) => ?ActionHandler
+  custom?:(session:Session, world:World, subject:string) => ?ActionHandler,
+  failure?: (subject:string, object:string) => string
 };
 
 export default (verb:string, options:Options = {}):ActionHandler => 
@@ -93,7 +94,8 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       }
     }
 
-    return { message: `You can't ${verb} the ${subject}` };
+    const fail = options.failure ? options.failure(subject, '') : `You can't ${verb} the ${subject}`;
+    return { message: fail };
   }
 
   function complexHandler(session, world, verb, subject, object, options) {
@@ -128,9 +130,8 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       }
     }
 
-    return {
-      message: `You can't ${verb} those together.`
-    };
+    const fail = options.failure ? options.failure(subject, object) : `You can't ${verb} those together.`;
+    return { message: fail };
   }
 
   function tryApply(session, world, verb:string, subject, object) {

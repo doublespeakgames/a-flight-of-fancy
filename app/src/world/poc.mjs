@@ -13,12 +13,36 @@ const goblins = {
     'look': 'The goblins are no larger than rats, and are in constant motion. They carry small bags, and appear to be collecting bits of gravel.',
     'take': 'The goblins easily avoid your attempts at capture.',
     'talk': 'The goblins chitter unintelligibly.',
+    'give': new Synonym('use'),
     'attack': new Synonym('use'),
     'use': {
-      'knife': 'The goblins easily avoid your attempts at violence.'
+      'stone': session => ({
+        message: `As soon as you produce the stone, it is gone.`,
+        update: { inventory: setRemove(session.inventory, 'stone') }
+      }),
+      'knife': 'The goblins easily avoid your attempts at violence.',
+      'food': `The goblins chitter disgustedly`,
     }
   }
 };
+const walls = {
+  'keys': [ 'wall', 'walls' ],
+  'verbs': {
+    'look': 'The walls are unremarkable.'
+  }
+};
+const floor = {
+  'keys': [ 'floor', 'terrain' ],
+  'verbs': {
+    'look': 'The floor is unremarkable.'
+  }
+};
+const ceiling = {
+  'keys': [ 'ceiling', 'roof' ],
+  'verbs': {
+    'look': 'The ceiling is unremarkable'
+  }
+}
 //#endregion
 
 const world:World = {
@@ -35,7 +59,7 @@ const world:World = {
       'exits': {
         'north': 'kitchen'
       },
-      'things': [{
+      'things': [floor, ceiling, {
         'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls'],
         'verbs': {
           'look': session => {
@@ -59,7 +83,7 @@ const world:World = {
           'look': 'The spool looks to contain several yards of thread.'
         }
       }, 'thread', true), takeable({
-        'keys': ['food', 'foodstuffs', 'foodstuff', 'stuff'],
+        'keys': ['food', 'foodstuffs', 'foodstuff', 'food stuff', 'food stuffs', 'stuff'],
         'name': 'some mouldy food',
         'verbs': {
           'look': 'It\'s not very appetizing',
@@ -82,15 +106,15 @@ const world:World = {
         'east': 'great-room'
       },
       'effect': session => {
-        if (session.flags.jewel === 'goblin' && session.flags.cage === 'open') {
+        if (session.flags.stone === 'goblin' && session.flags.cage === 'open') {
           return {
-            message: 'The tiny goblin leaps from the cage, disappearing with the jewel.',
-            update: { flags: mapRemove(session.flags, 'jewel') }
+            message: 'The tiny goblin leaps from the cage, disappearing with the stone.',
+            update: { flags: mapRemove(session.flags, 'stone') }
           };
         }
         return  null;
       },
-      'things': [takeable({
+      'things': [walls, floor, ceiling, takeable({
         'name': 'a knife',
         'keys': ['knife', 'knives', 'crude knife', 'crude knives'],
         'verbs': {
@@ -99,7 +123,17 @@ const world:World = {
       }, 'knife'), {
         'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron'],
         'verbs': {
-          'look': 'The pot is huge and rusted. A foul-smelling liquid boils violently inside.'
+          'look': session => {
+            const cloth = session.gone.has('cloth') ? '' : ' A greasy cloth is draped over the lip.';
+            return { message: `The pot is huge and rusted, and a foul-smelling liquid boils violently inside.${cloth}` }
+          },
+          'use': {
+            'food': session => ({
+              message: 'You drop the mouldy food into the pot',
+              update: { inventory: setRemove(session.inventory, 'food') }
+            }),
+            'goblin': 'The goblin easily avoids you.'
+          }
         }
       }, {
         'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
@@ -107,6 +141,8 @@ const world:World = {
           'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.',
           'light': new Synonym('use'),
           'use': {
+            'bone': `By itself, the bone isn't flammable.`,
+            'cloth': `The greasy cloth would burn well, but you don't want to lose it.`,
             'torch': session => ({
               message: 'You hold your improvised torch in the fire until it catches',
               update: {
@@ -126,7 +162,7 @@ const world:World = {
         'keys': ['pantry', 'rickety pantry'],
         'exit': 'south',
         'verbs': {
-          'look': 'The pantry door hangs open, revealing a space just large enough for a person to enter.',
+          'look': 'The pantry is just large enough for a person to enter.',
           'open': 'The pantry door swings loosely.',
           'close': 'The pantry door swings loosely.'
         }
@@ -139,10 +175,7 @@ const world:World = {
       }, {
         'keys': ['cutting board', 'cuttingboard', 'board'],
         'verbs': {
-          'look': session => {
-            const cloth = session.gone.has('cloth') ? '' : ' A greasy cloth hangs from the corner.';
-            return { message: `The cuttingboard is a thick piece of knotted wood, deeply grooved from years of use.${cloth}` };
-          },
+          'look': 'The cuttingboard is a thick piece of knotted wood, deeply grooved from years of use.',
           'use': {
             'knife': 'You cut a few more notches into the board'
           }
@@ -160,39 +193,39 @@ const world:World = {
           'eat': 'It tastes worse than it looks.'
         }
       }, {
-        'keys': ['jewel', 'sparkling jewel'],
-        'visibility': session => session.flags.jewel === 'cage',
+        'keys': ['stone', 'glowing stone'],
+        'visibility': session => session.flags.stone === 'cage',
         'verbs': {
-          'look': 'The jewel sparkles inside the cage.',
+          'look': 'The stone sparkles inside the cage.',
           'take': session => {
             if (session.flags.cage !== 'open') {
               return { message: 'The cage door is closed.' };
             }
-            if (session.inventory.has('jewel')) {
-              return { message: 'You already have a jewel.' };
+            if (session.inventory.has('stone')) {
+              return { message: 'You already have a stone.' };
             }
             return {
-              message: 'You take the jewel out of the cage.',
+              message: 'You take the stone out of the cage.',
               update: {
-                inventory: setAdd(session.inventory, 'jewel'),
-                flags: mapRemove(session.flags, 'jewel')
+                inventory: setAdd(session.inventory, 'stone'),
+                flags: mapRemove(session.flags, 'stone')
               }
             };
           }
         }
       }, {
         'keys': ['goblin', 'tiny goblin'],
-        'visibility': session => session.flags.jewel === 'goblin',
+        'visibility': session => session.flags.stone === 'goblin',
         'verbs': {
-          'look': 'The goblin jitters nervously in the cage, clutching its jewel tightly.',
+          'look': 'The goblin jitters nervously in the cage, clutching its stone tightly.',
           'talk': 'The goblin chitters angrily.',
           'tie': new Synonym('use'),
           'use': {
             'thread': session => {
               if (session.flags.cage === 'open') {
                 return {
-                  message: 'The goblin dodges past you, disappearing down the hall with its jewel.',
-                  update: { flags: mapRemove(session.flags, 'jewel') }
+                  message: 'The goblin dodges past you, disappearing down the hall with its stone.',
+                  update: { flags: mapRemove(session.flags, 'stone') }
                 };
               }
               return {
@@ -216,9 +249,9 @@ const world:World = {
 
             const door = session.flags.cage === 'open' ? 'open' : 'closed';
             let contents;
-            switch (session.flags.jewel) {
+            switch (session.flags.stone) {
               case 'cage':
-                contents = 'There is a sparkling jewel in the cage.'; break;
+                contents = 'There is a glowing stone in the cage.'; break;
               case 'goblin':
                 contents = 'There is a tiny goblin in the cage.'; break;
               default:
@@ -238,22 +271,22 @@ const world:World = {
               return {
                 message: 'You open the cage door and the goblin bursts out, trailing thread.',
                 update: { 
-                  flags: mapSet(session.flags, { 'jewel': null, 'cage': 'open' }),
+                  flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }),
                   effects: setAdd(session.effects, 'thread')
                 }
               };
             }
-            if (session.flags.jewel === 'goblin') {
+            if (session.flags.stone === 'goblin') {
               return {
-                message: 'You open the cage door and the goblin bursts out, fleeing with the jewel.',
-                update: { flags: mapSet(session.flags, { 'jewel': null, 'cage': 'open' }) }
+                message: 'You open the cage door and the goblin bursts out, fleeing with the stone.',
+                update: { flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }) }
               };
             }
-            if (session.flags.jewel === 'cage' && session.effects.has('goblin')) {
+            if (session.flags.stone === 'cage' && session.effects.has('goblin')) {
               return {
-                message: 'You open the cage and the tiny goblin jumps inside, grabbing for the jewel.',
+                message: 'You open the cage and the tiny goblin jumps inside, grabbing for the stone.',
                 update: {
-                  flags: mapSet(session.flags, 'jewel', 'goblin'),
+                  flags: mapSet(session.flags, 'stone', 'goblin'),
                   effects: setRemove(session.effects, 'goblin')
                 }
               };
@@ -273,28 +306,29 @@ const world:World = {
             };
           },
           'use': {
-            'jewel': session => {
+            'goblin': 'The goblin remains out of reach. Perhaps with some bait...',
+            'stone': session => {
               if (session.flags.cage !== 'open') {
                 return { message: 'The cage door is closed.' }
               }
-              if (session.flags.jewel === 'cage') {
-                return { message: 'There is already a jewel in the cage.' };
+              if (session.flags.stone === 'cage') {
+                return { message: 'There is already a stone in the cage.' };
               }
               if (session.effects.has('goblin')) {
                 return {
-                  message: 'You place the jewel in the cage. The goblin scampers inside after it.',
+                  message: 'You place the stone in the cage. The goblin scampers inside after it.',
                   update: {
-                    inventory: setRemove(session.inventory, 'jewel'),
-                    flags: mapSet(session.flags, 'jewel', 'goblin'),
+                    inventory: setRemove(session.inventory, 'stone'),
+                    flags: mapSet(session.flags, 'stone', 'goblin'),
                     effects: setRemove(session.effects, 'goblin')
                   }
                 };
               }
               return {
-                message: 'You place the sparkling jewel in the cage.',
+                message: 'You place the glowing stone in the cage.',
                 update: {
-                  inventory: setRemove(session.inventory, 'jewel'),
-                  flags: mapSet(session.flags, 'jewel', 'cage')
+                  inventory: setRemove(session.inventory, 'stone'),
+                  flags: mapSet(session.flags, 'stone', 'cage')
                 }
               };
             }
@@ -307,6 +341,9 @@ const world:World = {
           'look': 'The creature is cat-like, but covered in dull scales. Its face is unnervingly human, and it watches you with keen eyes.',
           'use': 'The cage imprisoning it is closed.',
           'untie': new Synonym('use'),
+          'give': {
+            'food': 'It looks at you, disgustedly.'
+          },
           'talk': (session, world) => {
             if (session.flags['it']) {
               return { message: 'It just watches you, expectantly.' }
@@ -329,8 +366,8 @@ const world:World = {
     'great-room': {
       'name': 'the greatroom',
       'description': session => {
-        const hound = session.flags.hound ? 'lies' : 'squats';
-        return `This room is long and wide, with a low hewn-stone ceiling. A large table dominates the center, and a beastly hound ${hound} in the corner. There are doors to the west and south and, behind the hound, a hall stretches north.`;
+        const hound = session.flags.hound ? 'lies in the corner' : 'squats in the corner, gnawing at a large bone';
+        return `This room is long and wide, with a low hewn-stone ceiling. A beastly hound ${hound}. There are doors to the west and south and, behind the hound, a hall stretches north.`;
       },
       'exits': session => { 
         return {
@@ -343,7 +380,7 @@ const world:World = {
         'south': session => session.flags.door ? null : `The door is locked, and won't open.`,
         'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
-      'things': [{
+      'things': [walls, floor, {
         'keys': [ 'ceiling' ],
         'verbs': {
           'look': 'The ceiling has been roughly chiseled out of natural rock.'
@@ -370,11 +407,6 @@ const world:World = {
           }
         }
       }, {
-        'keys': ['table', 'large table'],
-        'verbs': {
-          'look': 'The table stands as high as your chest and looks to have been made from a single slab of wood. It is bare.'
-        }
-      }, {
         'keys': ['hound', 'beastly hound', 'beast', 'dog', 'wolf'],
         'verbs': {
           'look': session => {
@@ -398,6 +430,15 @@ const world:World = {
             return { message: 'The hound snarls in response.' };
           },
           'use': {
+            'self': session => {
+              if (session.flags.hound === 'dead') {
+                return { message: `The hound doesn't react.` };
+              }
+              if (session.flags.hound === 'fed') {
+                return { message: 'You scratch the hound behind its ears.' };
+              }
+              return { message: 'The hound snaps at you, and you reconsider.' };
+            },
             'knife': session => {
               if (session.flags.hound === 'dead') {
                 return { message: 'The hound is already dead.' };
@@ -451,7 +492,7 @@ const world:World = {
         }
       }],
       'phrases': [{
-        keys: ['feed the dog', 'feed the hound', 'feed dog', 'feed hound'],
+        keys: ['feed the dog', 'feed the hound', 'feed dog', 'feed hound', 'feed the beastly hound'],
         action: 'give:food:dog'
       }, {
         keys: ['unlock door', 'unlock the door', 'unlock south door', 'unlock the south door', 'unlock the southern door'],
@@ -460,7 +501,7 @@ const world:World = {
     },
     //#endregion
 
-    //#region Bedroom
+    //#region Darkness
     'bedroom': {
       'name': 'darkness',
       'description': 'It is too dark to see. A loud, rhythmic rumbling fills the room. Faint light outlines a hall to the south.',
@@ -481,7 +522,7 @@ const world:World = {
     'bedroom-lit': {
       'name': 'the bedroom',
       'description': `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. Against the back wall is a heavy wooden trunk. A hallway leads south.`,
-      'things': [{
+      'things': [walls, floor, ceiling, {
         'keys': ['hall', 'hallway'],
         'exit': 'south',
         'verbs': {
@@ -489,11 +530,22 @@ const world:World = {
         }
       }, locked({
         'name': 'the trunk',
-        'keys': ['trunk', 'wooden trunk', 'heavy wooden trunk', 'chest', 'wooden chest', 'heavy wooden chest'],
+        'keys': ['trunk', 'wooden trunk', 'heavy wooden trunk', 'chest', 'wooden chest', 'heavy wooden chest', 'lid'],
           'verbs': {
             'look': session => ({ message: session.flags.trunk === 'open' 
-                ? 'The trunk is filled with sparkling red jewels.' 
-                : `The trunk is made from thick wooden boards, banded with rusting iron. The wood is swollen from moisture, and bits of moss are growing in the seams. The lid is closed.` })
+                ? 'The trunk is filled with glowing red stones.' 
+                : `The trunk is made from thick wooden boards, banded with rusting iron. The wood is swollen from moisture, and bits of moss are growing in the seams. The lid is closed.` }),
+            'use': {
+              'stone': session => {
+                if (session.flags.trunk !== 'open') {
+                  return { message: 'The trunk is closed.' };
+                }
+                return {
+                  message: 'You return the stone to the trunk.',
+                  update: { inventory: setRemove(session.inventory, 'stone') }
+                };
+              }
+            }
           }
       }, { stateKey: 'trunk', keyId: 'keys', unlockMessage: 'The lock fits the first key you try, and clicks open.' }), {
         'keys': [ 'moss' ],
@@ -501,28 +553,32 @@ const world:World = {
           'look': 'The moss grows in the seams of a large wooden trunk.'
         }
       }, takeable({
-        'name': 'a jewel',
-        'keys': ['jewel', 'jewels', 'sparkling jewel', 'sparkling red jewel', 'ruby', 'rubies', 'all the jewels', 'all of the jewels', 'more jewels', 'another jewel'],
+        'name': 'a glowing stone',
+        'keys': ['stone', 'stones', 'red stone', 'red stones', 'glowing stone', 'glowing red stone', 'ruby', 'rubies', 'all the stones', 'all of the stones', 'more stones', 'another stone'],
         'visibility': session => session.flags.trunk === 'open',
         'verbs': {
-          'look': 'The jewels are walnut-sized, and glitter brilliantly in the torchlight.'
+          'look': 'The stones are walnut-sized, and glitter brilliantly in the torchlight.'
         }
-      }, 'jewel'), takeable({
+      }, 'stone'), takeable({
         'name': 'some filthy straw',
         'keys': ['straw', 'bed', 'bed of straw', 'straw bed', `giant's bed`, 'filthy straw', 'bed of filthy straw'],
         'verbs': {
           'look': session => {
             const keys = session.flags.belt && !session.gone.has('keys') ? ' A large keyring is nestled amongst the filth.' : '';
             return { message: `The straw smells awful but the giant, sprawled in the center, doesn't seem to care.${keys}` };
+          },
+          'use': {
+            'lit-torch': `You don't want to risk waking the giant.`
           }
         }
       }, 'straw'), {
-        'keys': ['giant', 'bog giant'],
+        'keys': ['giant', 'bog giant', 'beast', 'monster', 'creature'],
         'verbs': {
           'look': session => {
-            const belt = session.flags['belt'] ? '' : ` Around its waist is tied a belt of rough twine, from which hangs a large keyring.`;
+            const belt = session.flags['belt'] ? '' : ` Around its waist is tied a belt of rough twine, from which hangs a large key-ring.`;
             return { message: `The giant is enormous, with wide drooping features and a ponderous girth. Its hide is the texture of waterlogged driftwood, and is stippled with patches of multicoloured lichens.${belt}` };
           },
+          'talk': `You don't want to risk waking the giant.`,
           'use': {
             'knife': `You're quite certain that the giant would kill you.`
           },
@@ -533,7 +589,7 @@ const world:World = {
         'verbs': {
           'look': session => ({ message: session.flags['belt'] 
               ? 'The belt has been split, but remains trapped beneath the giant.' 
-              : `A length of hempen twine loops around the giant's waist, supporting a large keyring.` }),
+              : `A length of hempen twine loops around the giant's waist, supporting a large key-ring.` }),
           'take': session => ({ message: session.flags['belt'] 
               ? `The sleeping giant's bulk holds it in place.` 
               : `The belt is tied securely around the giant's waist.` }),
@@ -545,14 +601,14 @@ const world:World = {
                 return { message: `It's already been cut.` };
               }
               return {
-                message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the keyring into the straw.',
+                message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the key-ring into the straw.',
                 update: { flags: mapSet(session.flags, 'belt', 'cut') }
               };
             }
           }
         }
       }, {
-        'keys': ['keyring', 'key ring', 'large keyring', 'keys', 'key', `giant's keyring`, `giant's keys`],
+        'keys': ['keyring', 'key-ring', 'key ring', 'large keyring', 'keys', 'key', `giant's keyring`, `giant's keys`],
         'id': 'keys',
         'verbs': {
           'look': session => {
@@ -569,7 +625,11 @@ const world:World = {
                 }
               }
             }
-            return { message: `The giant's belt loops through the keyring, holding it in place.` };
+            return { message: `The giant's belt loops through the key-ring, holding it in place.` };
+          },
+          'use': {
+            'self': `The giant's belt loops through the key-ring, holding it in place.`,
+            'knife': `You can't cut the iron key-ring. Perhaps something else?`
           }
         }
       }, {
@@ -579,7 +639,7 @@ const world:World = {
         }
       }],
       'phrases': [{
-        'keys': [ 'unlock the trunk', 'unlock the wooden trunk', 'unlock the heavy trunk', 'unlock the heavy wooden trunk', 'unlock the chest', 'unlock the wooden chest', 'unlock the heavy chest', 'unlock the heavy wooden chest'],
+        'keys': [ 'unlock the trunk', 'unlock trunk', 'unlock the wooden trunk', 'unlock the heavy trunk', 'unlock the heavy wooden trunk', 'unlock the chest', 'unlock the wooden chest', 'unlock the heavy chest', 'unlock the heavy wooden chest'],
         'action': 'use:key:trunk'
       }],
       'exits': {
@@ -588,9 +648,9 @@ const world:World = {
     },
     //#endregion Bedroom-lit
 
-    //#region Tunnel
+    //#region Mossy Tunnel
     'tunnel': {
-      'name': 'a tunnel',
+      'name': 'a mossy tunnel',
       'description': `You are in a cavernous tunnel. On the walls, bioluminescent moss glows faintly. There is a door to the north, and the passage continues to the south. Tiny goblins dart about your feet, visible only for a moment before vanishing deeper into darkness.`,
       'exits': session => { 
         return {
@@ -599,21 +659,27 @@ const world:World = {
         }; 
       },
       'effect': session => {
-        if (!session.inventory.has('jewel') || session.effects.has('goblin')) {
+        if (!session.inventory.has('stone') || session.effects.has('goblin')) {
           return { message: '', update: { flags: mapRemove(session.flags, 'lost') }};
         }
         return {
-          message: 'The goblins appear entranced by your sparkling jewel.',
+          message: 'The goblins appear entranced by your glowing stone, and begin trailing you.',
           update: { 
             effects: setAdd(session.effects, 'goblin'),
             flags: mapRemove(session.flags, 'lost')
           }
         };
       },
-      'things': [goblins, {
+      'things': [floor, ceiling, goblins, {
         'keys': [ 'moss', 'bioluminescent moss', 'bioluminescence', 'walls', 'wall', 'moss on the wall', 'moss on the walls' ],
         'verbs': {
-          'look': 'The moss covers large swaths of the rock walls, and emits a soft green light.'
+          'look': 'The moss covers large swaths of the rock walls, and emits a soft green light.',
+          'take': `You don't need the moss.`
+        }
+      }, {
+        'keys': [ 'gravel' ],
+        'verbs': {
+          'look': 'Fragments of rock litter the tunnel floor.'
         }
       }]
     },
@@ -622,7 +688,13 @@ const world:World = {
     //#region Maze
     'maze': {
       'name': 'a maze',
-      'things': [ goblins ],
+      'things': [ walls, floor, ceiling, goblins, {
+        'keys': [ 'rock' ],
+        'verbs': {
+          'take': `You don't want the rock.`,
+          'look': `Does it look familiar? Maybe not...`
+        }
+      } ],
       'effect': session => { 
         const lost = isNaN(session.flags.lost) ? 0 : parseInt(session.flags.lost);
         return {
@@ -683,13 +755,13 @@ const world:World = {
       'name': 'the mouth of a cave',
       'description': session => {
         const goblin = session.flags.goblin ? '' : ' Just ahead, a tiny goblin struggles at the end of a thread extending back into darkness.';
-        return `Before you, the tunnel ends abruptly in a verdant bloom of flora. Daylight streams between hanging vines, casting long shadows on the rocky terrain.${goblin} The cave opens to the west, and a tunnel leads east.`;
+        return `Before you, the tunnel ends abruptly in a verdant bloom of flora. Daylight streams between hanging vines, casting long shadows on the rocky terrain.${goblin} The cave opens to the west, and a tunnel leads back to the east.`;
       },
       'exits': {
         'east': 'tunnel',
         'west': 'swamp-dream'
       },
-      'things': [{
+      'things': [walls, floor, ceiling, {
         'keys': ['goblin', 'tiny goblin', 'sruggling goblin', 'thread', 'string', 'tether', 'knot'],
         'visibility': session => !session.flags.goblin,
         'verbs': {
@@ -710,9 +782,9 @@ const world:World = {
         }
       }]
     },
-    //#region Cave Mouth
+    //#endregion
 
-    //#region Swamp
+    //#region Swamp Dream
     'swamp-dream': {
       'name': 'a swamp',
       'effect': session => ({
@@ -778,6 +850,7 @@ const world:World = {
     
     'cloth': {
       'id': 'cloth',
+      'name': 'the cloth',
       'keys': ['cloth', 'greasy cloth'],
       'name': 'a greasy cloth',
       'verbs': {
@@ -821,12 +894,12 @@ const world:World = {
       }
     },
 
-    'jewel': {
-      'id': 'jewel',
-      'keys': [ 'jewel', 'ruby', 'sparkling jewel', 'sparkling ruby' ],
-      'name': 'a sparkling jewel',
+    'stone': {
+      'id': 'stone',
+      'keys': [ 'stone', 'ruby', 'glowing stone', 'glowing ruby' ],
+      'name': 'a glowing stone',
       'verbs': {
-        'look': 'The jewel is walnut-sized and sparkles enticingly.'
+        'look': 'The stone is walnut-sized and sparkles enticingly.'
       }
     },
 
@@ -860,36 +933,47 @@ const world:World = {
         }
         if (roomId === 'bedroom-lit' && session.flags.trunk === 'open') {
           return {
-            message: 'The tiny goblin rushes feverishly to the open trunk, shoves a jewel into its bag, and disappears down the hall.',
+            message: 'The tiny goblin rushes feverishly to the open trunk, shoves a stone into its bag, and disappears down the hall.',
             update: { effects: setRemove(session.effects, 'goblin') }
           };
         }
-        if (roomId === 'kitchen' && session.flags.jewel === 'cage') {
+        if (roomId === 'kitchen' && session.flags.stone === 'cage') {
           if (session.flags.cage === 'open') {
             return {
-              message: 'The tiny goblin jumps into the cage, grabbing for the jewel.',
+              message: 'The tiny goblin jumps into the cage, grabbing for the stone.',
               update: {
                 effects: setRemove(session.effects, 'goblin'),
-                flags: mapSet(session.flags, 'jewel', 'goblin')
+                flags: mapSet(session.flags, 'stone', 'goblin')
               }
             };
           }
-          return { message: 'The tiny goblin runs circles around the cage, trying to find a way to the jewel.' };
+          return { message: 'The tiny goblin runs circles around the cage, trying to find a way to the stone.' };
         }
         return { message: 'A tiny goblin is following you.' };
       },
       'things': [{
+        'id': 'goblin',
         'keys': [ 'goblin', 'tiny goblin' ],
         'verbs': {
-          'look': 'The goblin stays well out of reach, but remains fixated on the jewel you are carrying.',
+          'look': 'The goblin stays well out of reach, but remains fixated on the stone you are carrying.',
           'take': 'The goblin easily avoids your attempts at capture.',
           'attack': new Synonym('use'),
           'talk': 'The goblin chitters unintelligibly.',
+          'give': new Synonym('use'),
           'use': {
-            'knife': 'The goblin easily avoids your attempts at violence.'
+            'thread': 'You attempt to snare the goblin with the thread, but it is too quick.',
+            'knife': 'The goblin easily avoids your attempts at violence.',
+            'food': `The goblin chitters disgustedly`,
+            'stone': session => ({
+              message: `The goblin snatches up the stone, and scampers away.`,
+              update: { 
+                inventory: setRemove(session.inventory, 'stone'),
+                effects: setRemove(session.effects, 'goblin')
+              }
+            })
           }
         }
-      }] 
+      }]
     },
 
     'thread': {

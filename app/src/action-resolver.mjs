@@ -63,21 +63,25 @@ const handlers:{[string]:ActionHandler} = {
   'object-travel': objectTravel,
   'inventory': inventory,
   'exits': exits,
-  'attack': interact('attack'),
-  'give': interact('give'),
+  'attack': interact('attack', { failure: s => `You can't attack the ${s}` }),
+  'give': interact('give', { failure: (s, o) => `The ${s} doesn't want the ${o}` }),
   'open': interact('open'),
   'close': interact('close'),
   'take': interact('take'),
   'eat': interact('eat'),
-  'talk': interact('talk'),
+  'talk': interact('talk', { failure: s => `You can't talk to the ${s}`}),
   'use': interact('use', { exits: true }),
   'tie': interact('tie'),
   'untie': interact('untie'),
   'light': interact('light'),
-  'look': interact('look', { 
+  'look': interact('look', {
+    failure: s => `The ${s} is unremarkable`,
     subjectless: (session, world) => lookAt(session, world, session.room),
     custom:(session, world, subject) => {
       subject = subject.toLowerCase();
+      if (subject === session.room) {
+        return () => lookAt(session, world, session.room);
+      }
       if (INV_LOOK_KEYS.has(subject)) {
         // Check your inventory
         return inventory;
