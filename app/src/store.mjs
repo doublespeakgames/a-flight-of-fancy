@@ -8,7 +8,7 @@
  */
 
 import MongoDB from 'mongodb';
-import Logger from './logger';
+import Logger from './util/logger';
 import Config from './config';
 
 import type { MongoClient, Db } from 'mongodb';

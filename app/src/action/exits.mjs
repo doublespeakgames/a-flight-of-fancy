@@ -10,7 +10,7 @@
 import type { Session } from '../model/session';
 import type { Room } from '../model/room';
 import type { ActionHandler, ActionResult } from '../action-resolver';
-import { join } from '../list';
+import { join } from '../util/list';
 import { resolve } from '../value';
 
 export function getExitText(session:Session, room:Room):string {

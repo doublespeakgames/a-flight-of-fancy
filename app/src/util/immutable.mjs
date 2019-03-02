@@ -1,7 +1,7 @@
 // @flow
 
-export function setAdd<T>(set:Set<T>, item:T):Set<T> {
-  return new Set([...set, item]);
+export function setAdd<T>(set:Set<T>, ...items:Array<T>):Set<T> {
+  return new Set([...set, ...items]);
 }
 
 export function setRemove<T>(set:Set<T>, item:T):Set<T> {

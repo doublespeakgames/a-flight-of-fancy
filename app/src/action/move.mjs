@@ -10,7 +10,7 @@
 import type { Session, SessionDiff } from '../model/session';
 import type { ActionHandler, ActionResult } from '../action-resolver';
 import { getExitText } from './exits';
-import { setAdd } from '../immutable';
+import { setAdd } from '../util/immutable';
 import { lookAt } from '../model/room';
 import { resolve } from '../value';
 
@@ -31,9 +31,7 @@ const move:ActionHandler = (session, world, subject) => {
 
   const nextRoomId = exits[dir];
   if (!nextRoomId) {
-    return {
-      message: getExitText(session, room)
-    };
+    return { message: `You can't go ${dir}. ${getExitText(session, room)}` };
   }
 
   const locks = room.locks;

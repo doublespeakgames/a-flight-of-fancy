@@ -8,7 +8,8 @@
 
 import type { Thing, ThingId } from './thing';
 import type { SessionDiff } from './session';
-import { mapSet, setAdd } from '../immutable';
+import type { RoomEffect } from './room';
+import { mapSet, setAdd } from '../util/immutable';
 
 type LockOptions = {|
   stateKey:string,
@@ -89,4 +90,17 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
   }
 
   return base;
+}
+
+// Displays a message only once
+export function once(text:string, key:string):RoomEffect {
+  return (session, world, roomId) => {
+    if (session.flags[key]) {
+      return null;
+    }
+    return {
+      message: text,
+      update: { flags: mapSet(session.flags, key, '1') }
+    };
+  }
 }

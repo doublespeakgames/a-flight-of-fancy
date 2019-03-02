@@ -7,6 +7,7 @@
  * Handles unhandled stuff
  */
 
+import Config from '../config';
 import type { Session, SessionDiff } from '../model/session';
 import type { Action, ActionHandler, ActionResult } from '../action-resolver';
 

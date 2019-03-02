@@ -8,7 +8,7 @@ import type { Value } from '../value';
 
 import { resolve } from '../value';
 
-type ExitMap = { [Direction]:RoomId };
+export type ExitMap = { [Direction]:RoomId };
 export type Lock = Session => ?string;
 export type Direction = string;
 export type RoomId = string;
@@ -20,7 +20,8 @@ export type Room = {|
   things?: Value<Array<Thing>>,
   phrases?: Array<{keys:Array<string>, action:string}>,
   effect?: RoomEffect,
-  leaveMessage?: (to:RoomId, dir:Direction) => string
+  leaveMessage?: (to:RoomId, dir:Direction) => string,
+  article?: string
 |};
 
 export type RoomEffect = (session:Session, world:World, roomId:RoomId) => ?ActionResult;
@@ -28,9 +29,10 @@ export type RoomEffect = (session:Session, world:World, roomId:RoomId) => ?Actio
 export function lookAt(session:Session, world:World, roomId:RoomId, short:boolean = false):ActionResult {
 
   const room = world.rooms[roomId];
+  const article = room.article || 'in'; 
 
   const finalResult:ActionResult = {
-    message: short ? `You are in ${resolve(session, room.name)}.` : resolve(session, room.description),
+    message: short ? `You are ${article} ${resolve(session, room.name)}.` : resolve(session, room.description),
     update: {}
   };
 

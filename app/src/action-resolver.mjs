@@ -3,7 +3,7 @@
 import type { Session, SessionDiff } from './model/session';
 import type { World } from './model/world';
 
-import { getSession, writeSession, deleteSession, getWorld } from './store';
+import { getSession, writeSession, getWorld } from './store';
 import { lookAt } from './model/room';
 
 import fallback from './action/fallback'
@@ -12,6 +12,7 @@ import objectTravel from './action/object-travel';
 import inventory from './action/inventory';
 import exits from './action/exits';
 import interact from './action/interact';
+import restart from './action/restart';
 import { resolve } from './value';
 
 export type Action = {|
@@ -63,6 +64,7 @@ const handlers:{[string]:ActionHandler} = {
   'object-travel': objectTravel,
   'inventory': inventory,
   'exits': exits,
+  'restart': restart,
   'attack': interact('attack', { failure: s => `You can't attack the ${s}` }),
   'give': interact('give', { failure: (s, o) => `The ${s} doesn't want the ${o}` }),
   'open': interact('open'),
@@ -136,15 +138,6 @@ function processUpdate(oldSession:Session, update:SessionDiff):Session {
 }
 
 export async function resolveAction(action:Action):Promise<ActionResult> {
-
-  if (action.type === 'restart') {
-    // TODO: This needs confirmation
-    await deleteSession(action.sessionId);
-    return {
-      message: `Okay, we'll start over.`,
-      close: true
-    };
-  }
 
   let session = await getSession(action.sessionId);
   if (!session) {

@@ -8,7 +8,7 @@
  * Configures endpoints and bootstraps the application
  */
 
-import Logger from './logger';
+import Logger from './util/logger';
 import Server from './server';
 import { getSessions } from './store';
 import GoogleEndpoint from './endpoint/google';

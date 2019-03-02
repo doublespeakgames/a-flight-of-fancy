@@ -8,5 +8,6 @@ export default {
   'database': {
     'url': 'mongodb://mongo:27017',
     'name': 'voice-adventure'
-  }
+  },
+  'dev': true
 };

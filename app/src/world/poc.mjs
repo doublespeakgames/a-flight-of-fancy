@@ -1,16 +1,22 @@
 // @flow
 
 import type { World } from '../model/world';
+import type { ExitMap } from '../model/room';
 import { Synonym } from '../action-resolver';
-import { setAdd, setRemove, setMutate, mapSet, mapRemove } from '../immutable';
-import { random } from '../list';
-import { locked, takeable } from '../model/mixins';
+import { setAdd, setRemove, setMutate, mapSet, mapRemove } from '../util/immutable';
+import { random } from '../util/list';
+import { tryParse } from '../util/number';
+import message from '../util/message';
+import result from '../util/result';
+import map from '../util/conditional-map';
+import { ifHere, ifFlagGTE, ifFlagIs } from '../util/builder';
+import { once, locked, takeable } from '../model/mixins';
 
 //#region Shared Things
 const goblins = {
   'keys': [ 'goblin', 'goblins', 'tiny goblin', 'tiny goblins', 'small goblin', 'small goblins' ],
   'verbs': {
-    'look': 'The goblins are no larger than rats, and are in constant motion. They carry small bags, and appear to be collecting bits of gravel.',
+    'look': 'The goblins are no larger than rats, and in constant motion. They carry small bags, and appear to be collecting bits of gravel.',
     'take': 'The goblins easily avoid your attempts at capture.',
     'talk': 'The goblins chitter unintelligibly.',
     'give': new Synonym('use'),
@@ -44,6 +50,18 @@ const ceiling = {
   'verbs': {
     'look': 'The ceiling is unremarkable'
   }
+};
+const useBinoculars = session => {
+  if (session.room !== 'bluff-top') {
+    return { message: `You see nothing special.` };
+  }
+  if (tryParse(session.flags.explore, 0) > 1) {
+    return { message: `You don't find anything new.` };
+  }
+  return {
+    message: 'You lift the binoculars to your eyes, searching the distance for only a moment before you find it: The tree from your dream, huge and garled, splits the canopy about a mile east of camp. To the south, a thin line of smoke rises from the bush. You update your map.',
+    update: { flags: mapSet(session.flags, 'explore', '2') }
+  };
 }
 //#endregion
 
@@ -794,7 +812,7 @@ const world:World = {
       'name': 'the mouth of a cave',
       'description': session => {
         const goblin = session.flags.goblin ? '' : ' Just ahead, a tiny goblin struggles at the end of a thread extending back into darkness.';
-        return `Before you, the tunnel ends abruptly in a verdant bloom of flora. Daylight streams between hanging vines, casting long shadows on the rocky terrain.${goblin} The cave opens to the west, and a tunnel leads back to the east.`;
+        return `Before you, the tunnel ends abruptly in a verdant bloom of flora. Daylight streams between hanging vines, casting long shadows on the rocky footing.${goblin} The cave opens to the west, and a tunnel leads back to the east.`;
       },
       'exits': {
         'east': 'tunnel',
@@ -839,15 +857,297 @@ const world:World = {
     //#region Tent
     'tent': {
       'name': 'your tent',
-      'description': `The tent is close and stifling. Your expedition pack sits in one corner, and a zippered flap opens to the east.`,
-      'things': [
-        // TODO
-      ],
+      'description': session => {
+        const pack = !session.gone.has('pack') ? 'Your expedition pack sits in one corner, and a' : 'A';
+        return `The tent is close and stifling. ${pack} zippered flap opens to the east.`
+      },
+      'things': [{
+        'id': 'pack',
+        'keys': ['pack', 'backpack', 'back pack', 'expedition pack'],
+        'verbs': {
+          'look': 'The pack',
+          'open': new Synonym('take'),
+          'take': session => ({
+            message: 'You strap the pack onto your shoulders. It contains supplies gathered over countless weeks of rigourous preparation, including some rope, a map, and a multitool.',
+            update: {
+              inventory: setAdd(session.inventory, 'rope', 'map', 'multitool'),
+              gone: setAdd(session.gone, 'pack')
+            }
+          })
+        }
+      }, {
+        'exit': 'east',
+        'keys': ['flap', 'tent flap', 'door', 'tent door'],
+        'verbs': {
+          'look': 'A thin layer of nylon between you and the morass.',
+          'open': 'You unzip the tent.',
+          'close': 'You zip up the tent.'
+        }
+      }],
       'exits': {
-        // TODO
+        'east': 'camp'
       }
     },
     //#endregion
+
+    //#region Camp
+    'camp': {
+      'name': 'camp',
+      'description': message('The camp is situated on a low rise, somewhat protected from the sucking mire that surrounds it. Slightly downhill, a jeep is buried up to its doors in mud. Your tent is pitched on the western slope.')
+                      .append(ifFlagGTE('explore', 1), ' On your map is marked a bluff to the north')
+                      .append(ifFlagGTE('explore', 2), ', the tree to the east')
+                      .append(ifFlagIs('explore', '2'), ', and mysterious smoke to the south')
+                      .append(ifFlagGTE('explore', 3), ', and a cabin to the south')
+                      .append('.')
+                      .build,
+      'exits': map({ 'west': 'tent' })
+                .and(ifFlagGTE('explore', 1), 'north', 'bluff')
+                .and(ifFlagGTE('explore', 2), 'east', 'tree')
+                .and(ifFlagGTE('explore', 2), 'south', 'garden')
+                .build,
+      'things': [{
+        'keys': [ 'tent' ],
+        'exit': 'west',
+        'verbs': {
+          'look': 'The tent is made of lightweight nylon, and hugs the ground like the cocoon of some enormous worm.'
+        }
+      }, {
+        'keys': [ 'jeep', 'stuck jeep', 'buried jeep', 'downhill', 'down hill', 'wheels', 'algae' ],
+        'verbs': {
+          'take': new Synonym('use'),
+          'use': 'The jeep is thoroughly stuck.',
+          'look': result('The jeep is dented, and spattered with mud and algae. Its wheels have sunk completely into the sodden terrain.')
+                    .append(ifHere('binoculars'), ` A pair of binoculars sits on the driver's seat.`)
+                    .build
+        }
+      }, takeable({
+        'name': 'the binoculars',
+        'keys': [ 'binoculars', 'pair of binoculars' ],
+        'verbs': {
+          'look': 'The binoculars are new, but grime already cakes the hinges.'
+        }
+      }, 'binoculars', true), {
+        'keys': [ 'swamp', 'mire', 'morass', 'bog', 'terrain', 'mud', 'ground' ],
+        'verbs': {
+          'look': 'The swamp is a vast bed of loamy muck, hooded by a dense tangle of stunted trees and creeping vines. Navigating it will be treacherous.'
+        }
+      }, {
+        'keys': [ 'bluff', 'cliff' ],
+        'visibility': ifFlagGTE('explore', 1),
+        'exit': 'north',
+        'verbs': {
+          'look': `It's just to the north.`
+        }
+      }, {
+        'keys': [ 'tree', 'gnarled tree', 'huge tree' ],
+        'visibility': ifFlagGTE('explore', 2),
+        'exit': 'east',
+        'verbs': {
+          'look': `It's an hour's hike to the east.`
+        }
+      }, {
+        'keys': [ 'smoke', 'mysterious smoke', 'cabin', 'garden' ],
+        'visibility': ifFlagGTE('explore', 2),
+        'exit': 'south',
+        'verbs': {
+          'look': `It's somewhere to the south.`
+        }
+      }]
+    },
+    //#endregion
+
+    //#region Bluff
+    'bluff': {
+      'article': 'at',
+      'name': 'the foot of a bluff',
+      'description': message('Rising out of the swamp, a tall bluff presents a sheer face of dripping stone. Small rocks pebble the ground, having fallen from above, and tenacious trees cling to the upper ridge. ')
+                      .append(ifFlagIs('bluff', 'roped'), 'A rope scales the rock face to the north, and y', 'Y')
+                      .append('our camp lies to the south.')
+                      .build,
+      'exits': map({ 'south': 'camp' })
+                .and(ifFlagIs('bluff', 'roped'), 'north', 'bluff-top')
+                .build,
+      'things': [{
+        'visibility': session => !!session.flags.bluff,
+        'keys': [ 'rope', 'up' ],
+        'exit': 'north',
+        'verbs': {
+          'look': 'The rope dangles from a tree atop the bluff.',
+          'take': `The rope won't come down.`
+        }
+      }, {
+        'keys': [ 'bluff', 'cliff', 'face', 'cliff face', 'up' ],
+        'verbs': {
+          'look': 'The bluff is thirty feet high, composed mainly of shale rock, and crowned with squat trees. Moisture glistens on its surface, making the prospect of a climb quite dangerous.',
+          'tie': new Synonym('use'),
+          'attack': new Synonym('use'),
+          'use': {
+            'self': `Your hands can't find purchase on the slick rock.`,
+            'rope': `The rope falls limply at your feet.`,
+            'weighted-rope': `The weighed rope clatters off the rock face, and lands at your feet.`
+          }
+        }
+      }, {
+        'keys': [ 'tree', 'trees', 'tenacious tree', 'tenacious trees' ],
+        'verbs': {
+          'look': 'The trees at the top of the bluff are woody and rugged, with thick trunks and grasping branches.',
+          'tie': new Synonym('use'),
+          'attack': new Synonym('use'),
+          'use': {
+            'self': `You can't reach the trees.`,
+            'rope': 'The rope falls limply at your feet.',
+            'weighted-rope': session => ({
+              message: 'You hurl the rope at a particularly sturdy-looking tree, and it snags tightly in the branches.',
+              update: {
+                inventory: setRemove(session.inventory, 'weighted-rope'),
+                flags: mapSet(session.flags, 'bluff', 'roped')
+              }
+            })
+          }
+        }
+      }, takeable({
+        'keys': [ 'rock', 'rocks', 'stone', 'stones', 'shale', 'pebble', 'pebbles', 'small rocks', 'small rock'],
+        'name': 'a rock',
+        'verbs': {
+          'look': 'Flakes of fallen shale litter the ground.',
+          'tie': new Synonym('use'),
+          'use': {
+            'rope': session => ({
+              message: 'You lash a stone to the end of your rope.',
+              update: {
+                inventory: setMutate(session.inventory, [ 'weighted-rope' ], [ 'rope' ])
+              }
+            }),
+            'weighted-rope': 'The rope is already weighted.'
+          }
+        }
+      }, 'shale'), {
+        'keys': [ 'camp', 'campsite', 'camp site' ],
+        'exit': 'south',
+        'verbs': {
+          'look': 'It is just to the south.'
+        }
+      }]
+    },
+    //#endregion
+
+    //#region Bluff Top
+    'bluff-top': {
+      'article': 'on',
+      'name': 'the top of a bluff',
+      'description': 'At its top, the bluff is rocky and sparse. Below you, the swamp spreads wide across the horizon, thick and dark and alive.',
+      'exits': { 'south': 'bluff' },
+      'things': [{
+        'keys': [ 'rope', 'down' ],
+        'exit': 'south',
+        'verbs': {
+          'look': 'The rope hangs down the edge of the bluff.',
+          'take': 'The rope is hopelessly tangled in a tree.'
+        }
+      }, {
+        'keys': [ 'horizon', 'swamp', 'sky' ],
+        'verbs': {
+          'look': `You think you can make something out on the horizon, but it's not clear.`,
+          'use': {
+            'binoculars': useBinoculars
+          }
+        }
+      }],
+      'phrases': [{
+        'keys': [ 'go down' ],
+        'action': 'move:south'
+      }]
+    },
+    //#endregion
+
+    //#region Tree
+    'tree': {
+      'article': 'by',
+      'name': 'the garled tree',
+      'effect': once('The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind; desire, tinged with a deep feeling of loss.', 'tree'),
+      'description': message('You stand at the base of a huge gnarled tree, its roots embedded in a rocky outcropping like veins of a strange precious metal. Camp is to the north, and ')
+                      .append(ifFlagIs('explore', '2'), 'the mysterious smoke ')
+                      .append(ifFlagGTE('explore', 3), 'the cabin ')
+                      .append('is roughly to the south')
+                      .append('.')
+                      .build,
+      'exits': { 
+        'west': 'camp', 
+        'south': 'garden'
+      },
+      'things': [{
+        'keys': [ 'tree', 'gnarled tree', 'huge tree', 'big tree' ],
+        'verbs': {
+          'look': 'The tree looms over you like the skeleton of a long-dead horror. Its branches are bare and twisted, and coated with a scabrous ashen bark. Nothing grows nearby.'
+        }
+      }, {
+        'keys': [ 'land', 'ground', 'rock', 'outcropping', 'roots', 'rocky outcropping', 'cave', 'soil' ],
+        'verbs': {
+          'look': 'The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind; desire, tinged with a deep feeling of loss.'
+        }
+      }, {
+        'keys': [ 'camp', 'campsite', 'camp site' ],
+        'exit': 'west',
+        'verbs': {
+          'look': `It is an hour's hike to the west.`
+        }
+      }, {
+        'keys': [ 'smoke', 'mysterious smoke', 'cabin', 'garden' ],
+        'exit': 'south',
+        'verbs': {
+          'look': `It is somewhere to the south.`
+        }
+      }]
+    },
+    //#endregion
+
+    //#region Garden
+    'garden': {
+      'name': 'an overgrown garden',
+      'description': 'This area of the swamp was, at one time, a curated garden. Flowering plants, vegetables, and herbs, once in neat rows, now spill across their bounds, forming a thick fragrant tapestry. Smoke rises from the chimney of an old cabin to the west. Camp is to the north, and the tree is roughly east.',
+      'effect': session => {
+        if (ifFlagGTE('explore', 3)) { return null; }
+        return {
+          message: '',
+          update: { flags: mapSet(session.flags, 'explore', '3') }
+        };
+      },
+      'exits': {
+        'north': 'camp',
+        'east': 'tree',
+        'west': 'cabin'
+      },
+      'things': [{
+        'keys': [ 'tree', 'garled tree', 'huge tree' ],
+        'exit': 'east',
+        'verbs': {
+          'look': `It's somewhere to the east.`
+        }
+      }, {
+        'keys': [ 'camp', 'camp site', 'campsite' ],
+        'exit': 'north',
+        'verbs': {
+          'look': `It's a ways to the north.`
+        }
+      }, {
+        'keys': [ 'cabin', 'old cabin' ],
+        'exit': 'west',
+        'verbs': {
+          'look': `The cabin is small, with sun-bleached paint peeling from its weathered wood walls. A thin trail of smoke rises from the chimney.`
+        }
+      }]
+    },
+    //#endregion
+
+    //#region Cabin
+    'cabin': {
+      'name': 'a small cabin',
+      'description': 'This is the cabin. Leave to the east.',
+      'exits': { 'east': 'garden' },
+      'things': []
+    }
+    //#endregion
+
   },
   //#endregion
 
@@ -958,6 +1258,95 @@ const world:World = {
       'name': 'some filthy straw',
       'verbs': {
         'look': 'The straw smells awful.'
+      }
+    },
+
+    'binoculars': {
+      'id': 'binoculars',
+      'keys': [ 'binoculars', 'pair of binoculars' ],
+      'verbs': {
+        'look': 'The binoculars are new, but grime already cakes the hinges.',
+        'use': useBinoculars
+      }
+    },
+
+    'rope': {
+      'id': 'rope',
+      'name': 'some rope',
+      'keys': [ 'rope' ],
+      'verbs': {
+        'look': `The rope is made from braided nylon, and is wrapped tightly into a mountaineer's coil.`,
+        'use': `The rope isn't attached to anything.`
+      }
+    },
+
+    'weighted-rope': {
+      'id': 'weighted-rope',
+      'name': 'a weighted rope',
+      'keys': [ 'rope', 'rock', 'stone' ],
+      'verbs': {
+        'look': 'The climbing rope is weighted with a chunk of shale.',
+        'use': `The rope isn't attached to anything.`
+      }
+    },
+
+    'multitool': {
+      'id': 'multitool',
+      'name': 'a multitool',
+      'keys': ['multitool', 'multi tool', 'multi-tool', 'tool'],
+      'verbs': {
+        'look': 'Pliers, a screwdriver, and a very sharp knife in a compact steel sheath.'
+      }
+    },
+
+    'map': {
+      'id': 'map',
+      'name': 'a map',
+      'keys': [ 'map' ],
+      'verbs': {
+        'use': new Synonym('look'),
+        'look': session => {
+          let desc = 'Topographic data for a few square miles of undeveloped swamp land. Your campsite is marked in red';
+          const explore = tryParse(session.flags.explore, 0);
+          if (explore === 0) {
+            return {
+              message: `${desc}. There is a high point just north of camp that could be useful in surveiling the area.`,
+              update: { flags: mapSet(session.flags, 'explore', '1') }
+            };
+          }
+          if (explore >= 1) {
+            desc = `${desc}, along with a bluff to its north`;
+          }
+          if (explore >= 2) {
+            desc = `${desc}, the tree to its east`;
+          }
+          if (explore === 2) {
+            desc = `${desc}, and mysterious smoke to its south`;
+          }
+          if (explore >= 3) {
+            desc = `${desc}, and a cabin to its south`;
+          }
+          return { message: `${desc}.` };
+        }
+      }
+    },
+
+    'shale': {
+      'id': 'shale',
+      'name': 'a rock',
+      'keys': [ 'rock', 'stone', 'shale' ],
+      'verbs': {
+        'look': 'A piece of rough shale, roughly the size of your fist.',
+        'tie': new Synonym('use'),
+        'use': {
+          'rope': session => ({
+            message: 'You lash the stone to the end of the rope.',
+            update: {
+              inventory: setMutate(session.inventory, [ 'weighted-rope' ], [ 'rope', 'shale' ])
+            }
+          }),
+          'weighted-rope': 'The rope is already weighted.'
+        }
       }
     }
   },
