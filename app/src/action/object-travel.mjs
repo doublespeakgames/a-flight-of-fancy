@@ -31,7 +31,9 @@ const objectTravel:ActionHandler = (session, world, subject) => {
   }
 
   return {
-    message: `You can't do that.`
+    sessionId: session._id,
+    type: 'look',
+    subject
   };
 };
 

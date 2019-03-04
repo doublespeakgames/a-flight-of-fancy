@@ -10,14 +10,14 @@
 import type { Session, SessionDiff } from '../model/session';
 import type { Action, ActionHandler, ActionResult } from '../action-resolver';
 
-function getMessage(tries:number):string {
+function getMessage(phrase:string, tries:number):string {
   if (tries >= 2) {
     return 'Try simple sentences with verbs like move, take, look, talk, and use.'
   }
   if (tries >= 1) {
-    return `I don't understand that`;
+    return `I don't understand "${phrase}"`;
   }
-  return `You can't do that`;
+  return `You can't "${phrase}"`;
 }
 
 const fallback:ActionHandler = (session, world, subject) => {
@@ -40,7 +40,7 @@ const fallback:ActionHandler = (session, world, subject) => {
   }
 
   return { 
-    message: getMessage(session.failures),
+    message: getMessage(subject || 'do nothing', session.failures),
     update: { failures: Math.min(session.failures + 1, 2) }
   };
 };

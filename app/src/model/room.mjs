@@ -19,7 +19,8 @@ export type Room = {|
   locks?: { [Direction]:Lock},
   things?: Value<Array<Thing>>,
   phrases?: Array<{keys:Array<string>, action:string}>,
-  effect?: RoomEffect
+  effect?: RoomEffect,
+  leaveMessage?: (to:RoomId, dir:Direction) => string
 |};
 
 export type RoomEffect = (session:Session, world:World, roomId:RoomId) => ?ActionResult;

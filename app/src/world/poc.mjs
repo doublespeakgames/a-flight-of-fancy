@@ -15,7 +15,9 @@ const goblins = {
     'talk': 'The goblins chitter unintelligibly.',
     'give': new Synonym('use'),
     'attack': new Synonym('use'),
+    'tie': new Synonym('use'),
     'use': {
+      'thread': 'You could, if only you could catch a goblin first.',
       'stone': session => ({
         message: `As soon as you produce the stone, it is gone.`,
         update: { inventory: setRemove(session.inventory, 'stone') }
@@ -60,7 +62,7 @@ const world:World = {
         'north': 'kitchen'
       },
       'things': [floor, ceiling, {
-        'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls'],
+        'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls', 'pantry'],
         'verbs': {
           'look': session => {
             const thread = session.gone.has('thread') ? '' : ' A large spool of thread rests in one corner.';
@@ -182,7 +184,8 @@ const world:World = {
         }
       }, takeable({
         'id': 'cloth',
-        'keys': ['cloth', 'greasy cloth'],
+        'name': 'the cloth',
+        'keys': ['cloth', 'greasy cloth', 'rag', 'greasy rag'],
         'verbs': {
           'look': 'The cloth is a rough burlap, smeared with rancid fat.'
         }
@@ -193,7 +196,7 @@ const world:World = {
           'eat': 'It tastes worse than it looks.'
         }
       }, {
-        'keys': ['stone', 'glowing stone'],
+        'keys': ['stone', 'rock', 'ruby', 'glowing stone', 'gem', 'jewel'],
         'visibility': session => session.flags.stone === 'cage',
         'verbs': {
           'look': 'The stone sparkles inside the cage.',
@@ -272,7 +275,7 @@ const world:World = {
                 message: 'You open the cage door and the goblin bursts out, trailing thread.',
                 update: { 
                   flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }),
-                  effects: setAdd(session.effects, 'thread')
+                  effects: setMutate(session.effects, [ 'thread' ], [ 'goblin' ])
                 }
               };
             }
@@ -293,7 +296,7 @@ const world:World = {
             }
             if (session.flags.it !== 'freed') {
               return {
-                message: `You lift the latch and open the cage door. The cat-thing inside leaps deftly out, landing atop the pantry. It watches you for a moment, before hopping down and disappearing around a corner.`,
+                message: `You lift the latch and open the cage door. The cat-thing inside leaps deftly out, landing atop the pantry. It stares at you from its perch and, when you blink, it is gone.`,
                 update: {
                   flags: mapSet(session.flags, { 'it': 'freed', 'cage': 'open' }),
                   gone: setAdd(session.gone, 'creature')
@@ -443,8 +446,9 @@ const world:World = {
               if (session.flags.hound === 'dead') {
                 return { message: 'The hound is already dead.' };
               }
+              const bone = session.gone.has('dog-bone') ? '' : ' The bone it was gnawing clatters to the ground.'
               return {
-                message: `The hound is massive but chained, and you easily out-maneuver it. Your knife slips between its ribs, and its life pours hotly onto the floor.`,
+                message: `The hound is massive but chained, and you easily out-maneuver it. Your knife slips between its ribs, and its life pours hotly onto the floor.${bone}`,
                 update: { flags: mapSet(session.flags, 'hound', 'dead') }
               }
             },
@@ -456,7 +460,7 @@ const world:World = {
                 return { message: 'The hound is already sated.' };
               }
               return {
-                message: `The hound snaps up the food greedily. Its demeanor softens.`,
+                message: `The hound snaps up the food greedily, discarding the bone. Its demeanor softens.`,
                 update: { 
                   inventory: setRemove(session.inventory, 'food'),
                   flags: mapSet(session.flags, 'hound', 'fed')
@@ -473,7 +477,7 @@ const world:World = {
           'look': 'The chain looks secure'
         }
       }, {
-        'keys': ['bone', 'long bone', 'gnawed bone', 'femur', 'long femur', 'gnawed femur', `hound's bone`, `dog's bone`],
+        'keys': ['bone', 'bones', 'long bone', 'gnawed bone', 'femur', 'long femur', 'gnawed femur', `hound's bone`, `dog's bone`],
         'id': 'dog-bone',
         'verbs': {
           'look': 'The bone looks like a human femur. Small scraps of meat still cling to it.',
@@ -568,7 +572,7 @@ const world:World = {
             return { message: `The straw smells awful but the giant, sprawled in the center, doesn't seem to care.${keys}` };
           },
           'use': {
-            'lit-torch': `You don't want to risk waking the giant.`
+            'lit-torch': `You're quite certain that the giant would kill you.`
           }
         }
       }, 'straw'), {
@@ -578,11 +582,12 @@ const world:World = {
             const belt = session.flags['belt'] ? '' : ` Around its waist is tied a belt of rough twine, from which hangs a large key-ring.`;
             return { message: `The giant is enormous, with wide drooping features and a ponderous girth. Its hide is the texture of waterlogged driftwood, and is stippled with patches of multicoloured lichens.${belt}` };
           },
-          'talk': `You don't want to risk waking the giant.`,
           'use': {
-            'knife': `You're quite certain that the giant would kill you.`
+            'knife': `You're quite certain that the giant would kill you.`,
+            'self': `You're quite certain that the giant would kill you.`
           },
-          'attack': new Synonym('use')
+          'attack': new Synonym('use'),
+          'talk': new Synonym('use')
         }
       }, {
         'keys': ['belt', 'twine', 'twine belt', `giant's belt`],
@@ -641,6 +646,9 @@ const world:World = {
       'phrases': [{
         'keys': [ 'unlock the trunk', 'unlock trunk', 'unlock the wooden trunk', 'unlock the heavy trunk', 'unlock the heavy wooden trunk', 'unlock the chest', 'unlock the wooden chest', 'unlock the heavy chest', 'unlock the heavy wooden chest'],
         'action': 'use:key:trunk'
+      }, {
+        'keys': [ 'wake the giant', 'wake up the giant', 'wake the bog giant', 'wake up the bog giant'],
+        'action': 'use:giant'
       }],
       'exits': {
         'south': 'great-room'
@@ -659,7 +667,7 @@ const world:World = {
         }; 
       },
       'effect': session => {
-        if (!session.inventory.has('stone') || session.effects.has('goblin')) {
+        if (!session.inventory.has('stone') || session.effects.has('goblin') || session.effects.has('thread')) {
           return { message: '', update: { flags: mapRemove(session.flags, 'lost') }};
         }
         return {
@@ -681,6 +689,12 @@ const world:World = {
         'verbs': {
           'look': 'Fragments of rock litter the tunnel floor.'
         }
+      }, {
+        'keys': [ 'dark', 'darkness' ],
+        'exit': 'south',
+        'verbs': {
+          'look': `You don't see much.`
+        }
       }]
     },
     //#endregion
@@ -688,17 +702,42 @@ const world:World = {
     //#region Maze
     'maze': {
       'name': 'a maze',
-      'things': [ walls, floor, ceiling, goblins, {
+      'leaveMessage': (to, _) => {
+        if (to === 'tunnel') {
+          return 'Somehow, you find your way out of the maze.';
+        }
+        return random([
+          `You get turned around.`,
+          `You lose your bearings.`,
+          `You are hopelessly lost.`
+        ])
+      },
+      'things': [ walls, ceiling, goblins, {
         'keys': [ 'rock' ],
         'verbs': {
           'take': `You don't want the rock.`,
-          'look': `Does it look familiar? Maybe not...`
+          'look': `Does it look familiar? Maybe not...`,
+          'use': {
+            'thread': `Tethering a rock won't do any good.`
+          }
+        }
+      }, {
+        'keys': [ 'door', 'tunnel', 'tunnels', 'floor', 'ground' ],
+        'verbs': {
+          'look': `This tunnel looks the same as every other tunnel. You realize that you are hopelessly lost.`,
+          'use': {
+            'thread': `Tethering that won't do any good.`
+          }
         }
       } ],
       'effect': session => { 
         const lost = isNaN(session.flags.lost) ? 0 : parseInt(session.flags.lost);
         return {
-          message: lost < 2 ? random(['Have you passed that rock before?', 'Are you moving in circles?', 'The tunnels all look the same.']) : 'This tunnel looks familiar.',
+          message: lost < 2 ? random([
+            `The goblins seem to know where they're going.`, 
+            'Are you moving in circles?', 
+            'The tunnels all look the same.'
+          ]) : 'This tunnel looks familiar.',
           update: { flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) }
         }; 
       },
@@ -707,8 +746,8 @@ const world:World = {
         const dest = parseInt(session.flags.lost) >= 3 ? 'tunnel' : 'maze';
         return {
           'north': dest,
-          'south': dest,
           'east': dest,
+          'south': dest,
           'west': dest
         }; 
       }
@@ -788,10 +827,10 @@ const world:World = {
     'swamp-dream': {
       'name': 'a swamp',
       'effect': session => ({
-        message: `You start in your sleeping bag, briefly disoriented. The heat of the day is already upon you, and large insects drone outside the tent walls. Yes, the swamp. You're finally here.`,
+        message: `You start in your sleeping bag, briefly disoriented. The same dream, every night, for the past twenty-eight weeks. The heat of the day is already upon you, and large insects drone outside the tent walls. The swamp, you remember. You're finally here.`,
         update: { room: 'tent', inventory: new Set() }
       }),
-      'description': `You emerge from the cave into a dense swamp. Behind you, its roots framing the mouth of the cave, a huge gnarled tree rises above the canopy. Sunlight flickers through the tree's branches, and you squint against the sudden brightness. Defiantly, the light continues to fill your vision until the image of the swamp is just a memory. Until the memory, too, is gone. And then you wake. The same dream, every night, for the past twenty-eight weeks.`,
+      'description': `You emerge from the cave into a dense swamp. Behind you, its roots framing the mouth of the cave, a huge gnarled tree rises above the canopy. Sunlight flickers through the tree's branches, and you squint against the sudden brightness. Defiantly, the light continues to fill your vision until the image of the swamp is just a memory. Until the memory, too, is gone...`,
       'things': [],
       'exits': {}
     },
@@ -851,7 +890,7 @@ const world:World = {
     'cloth': {
       'id': 'cloth',
       'name': 'the cloth',
-      'keys': ['cloth', 'greasy cloth'],
+      'keys': ['cloth', 'greasy cloth', 'rag', 'greasy rag'],
       'name': 'a greasy cloth',
       'verbs': {
         'look': 'The cloth is a rough burlap, smeared with rancid fat.',
@@ -896,7 +935,7 @@ const world:World = {
 
     'stone': {
       'id': 'stone',
-      'keys': [ 'stone', 'ruby', 'glowing stone', 'glowing ruby' ],
+      'keys': [ 'stone', 'ruby', 'rock', 'glowing stone', 'glowing ruby' ],
       'name': 'a glowing stone',
       'verbs': {
         'look': 'The stone is walnut-sized and sparkles enticingly.'
@@ -908,7 +947,8 @@ const world:World = {
       'keys': [ 'thread', 'spool', 'spool of thread', 'large spool', 'large spool of thread', 'string' ],
       'name': 'a spool of thread',
       'verbs': {
-        'look': 'The spool looks to contain several yards of thread.'
+        'look': 'The spool looks to contain several yards of thread.',
+        'self': `Tethering yourself won't do any good.`
       }
     },
 
@@ -960,8 +1000,9 @@ const world:World = {
           'attack': new Synonym('use'),
           'talk': 'The goblin chitters unintelligibly.',
           'give': new Synonym('use'),
+          'tie': new Synonym('use'),
           'use': {
-            'thread': 'You attempt to snare the goblin with the thread, but it is too quick.',
+            'thread': 'You could, if only you could catch the goblin first.',
             'knife': 'The goblin easily avoids your attempts at violence.',
             'food': `The goblin chitters disgustedly`,
             'stone': session => ({

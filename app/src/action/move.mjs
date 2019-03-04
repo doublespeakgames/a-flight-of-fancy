@@ -32,7 +32,7 @@ const move:ActionHandler = (session, world, subject) => {
   const nextRoomId = exits[dir];
   if (!nextRoomId) {
     return {
-      message: `You can't go that way.`
+      message: getExitText(session, room)
     };
   }
 
@@ -48,6 +48,7 @@ const move:ActionHandler = (session, world, subject) => {
   const nextRoom = world.rooms[nextRoomId];
   const roomResult = lookAt(session, world, nextRoomId, session.seen.has(nextRoomId));
   const exitText = session.seen.has(nextRoomId) ? getExitText(session, nextRoom) : '';
+  const leaveMessage = room.leaveMessage ? room.leaveMessage(nextRoomId, dir) : `You go ${dir}.`;
 
   const update:SessionDiff = {
     room: nextRoomId,
@@ -55,7 +56,7 @@ const move:ActionHandler = (session, world, subject) => {
   };
 
   return {
-    message: `You go ${dir}. ${roomResult.message} ${exitText}`,
+    message: `${leaveMessage} ${roomResult.message} ${exitText}`,
     update: Object.assign(update, roomResult.update)
   };
 };
