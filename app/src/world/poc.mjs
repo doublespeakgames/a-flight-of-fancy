@@ -59,7 +59,7 @@ const useBinoculars = session => {
     return { message: `You don't find anything new.` };
   }
   return {
-    message: 'You lift the binoculars to your eyes, searching the distance for only a moment before you find it: The tree from your dream, huge and garled, splits the canopy about a mile east of camp. To the south, a thin line of smoke rises from the bush. You update your map.',
+    message: 'You lift the binoculars to your eyes, searching the distance for only a moment before you find it: The tree from your dream, huge and gnarled, splits the canopy about a mile east of camp. To the south, a thin line of smoke rises from the bush. You update your map.',
     update: { flags: mapSet(session.flags, 'explore', '2') }
   };
 }
@@ -984,7 +984,7 @@ const world:World = {
           'use': {
             'self': `Your hands can't find purchase on the slick rock.`,
             'rope': `The rope falls limply at your feet.`,
-            'weighted-rope': `The weighed rope clatters off the rock face, and lands at your feet.`
+            'weighted-rope': `The weighted rope clatters off the rock face, and lands at your feet.`
           }
         }
       }, {
@@ -1063,7 +1063,7 @@ const world:World = {
     //#region Tree
     'tree': {
       'article': 'by',
-      'name': 'the garled tree',
+      'name': 'the gnarled tree',
       'effect': once('The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind; desire, tinged with a deep feeling of loss.', 'tree'),
       'description': message('You stand at the base of a huge gnarled tree, its roots embedded in a rocky outcropping like veins of a strange precious metal. Camp is to the north, and ')
                       .append(ifFlagIs('explore', '2'), 'the mysterious smoke ')
@@ -1118,7 +1118,7 @@ const world:World = {
         'west': 'cabin'
       },
       'things': [{
-        'keys': [ 'tree', 'garled tree', 'huge tree' ],
+        'keys': [ 'tree', 'gnarled tree', 'huge tree' ],
         'exit': 'east',
         'verbs': {
           'look': `It's somewhere to the east.`
@@ -1130,7 +1130,7 @@ const world:World = {
           'look': `It's a ways to the north.`
         }
       }, {
-        'keys': [ 'cabin', 'old cabin' ],
+        'keys': [ 'cabin', 'old cabin', 'smoke', 'chimney' ],
         'exit': 'west',
         'verbs': {
           'look': `The cabin is small, with sun-bleached paint peeling from its weathered wood walls. A thin trail of smoke rises from the chimney.`
