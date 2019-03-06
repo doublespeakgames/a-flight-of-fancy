@@ -14,12 +14,12 @@ import exits from './action/exits';
 import interact from './action/interact';
 import restart from './action/restart';
 import { resolve } from './value';
+import Logger from './util/logger';
 
 export type Action = {|
   sessionId:string,
   type:ActionType,
-  subject?:string,
-  object?:string
+  sentence:Sentence
 |};
 
 export type ActionResult = {|
@@ -28,7 +28,13 @@ export type ActionResult = {|
   close?:boolean
 |};
 
-export type ActionHandler = (session:Session, world:World, subject?:string, object?:string) => ActionResult | Action;
+export type Sentence = {|
+  subject?:string,
+  object?:string,
+  verb?:string
+|};
+
+export type ActionHandler = (session:Session, world:World, sentence:Sentence) => ActionResult | Action;
 
 export class Synonym {
   value:string;
@@ -130,6 +136,13 @@ function formatThing(thing:?string):string {
   if (!thing) { return ''; }
   return thing.toLowerCase().replace(determiner, '');
 }
+export function makeSentence(subject:string = '', object:string = '', verb:string = '') {
+  return {
+    subject: formatThing(subject),
+    object: formatThing(object),
+    verb: formatThing(verb),
+  }
+}
 
 function processUpdate(oldSession:Session, update:SessionDiff):Session {
   // $FlowFixMe Object.assign({}, oldSession) is *obviously* of type Session, idiot
@@ -138,17 +151,18 @@ function processUpdate(oldSession:Session, update:SessionDiff):Session {
 }
 
 export async function resolveAction(action:Action):Promise<ActionResult> {
-
+  Logger.info(`Resolving action ${JSON.stringify(action)}`);
   let session = await getSession(action.sessionId);
   if (!session) {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result = handlers[action.type](session, world, formatThing(action.subject), formatThing(action.object));
+  const result = handlers[action.type](session, world, action.sentence);
   if (result.message) { // This is an ActionResult
     if (result.update) {
       writeSession(processUpdate(session, result.update));
     }
+    Logger.info(`Action resolved with ${JSON.stringify(result)}`);
     return result;
   }
 

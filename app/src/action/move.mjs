@@ -14,11 +14,11 @@ import { setAdd } from '../util/immutable';
 import { lookAt } from '../model/room';
 import { resolve } from '../value';
 
-const move:ActionHandler = (session, world, subject) => {
+const move:ActionHandler = (session, world, sentence) => {
   const room = world.rooms[session.room];
   const exits = resolve(session, room.exits);
 
-  let dir = subject;
+  let dir = sentence.subject;
   if (!dir) {
     const dirs = Object.keys(exits);
     if (dirs.length === 1) {

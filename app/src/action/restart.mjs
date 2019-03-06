@@ -5,7 +5,7 @@ import Config from '../config';
 import { deleteSession } from '../store';
 
 
-const restart:ActionHandler = (session, world, subject) => {
+const restart:ActionHandler = (session, world, { subject }) => {
 
   if (!Config.dev || !subject || !world.rooms[subject]) {
     subject = 'pantry';

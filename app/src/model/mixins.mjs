@@ -9,6 +9,7 @@
 import type { Thing, ThingId } from './thing';
 import type { SessionDiff } from './session';
 import type { RoomEffect } from './room';
+import type { Predicate } from '../util/builder';
 import { mapSet, setAdd } from '../util/immutable';
 
 type LockOptions = {|
@@ -65,6 +66,7 @@ export function locked(base:Thing, { stateKey , keyId, unlockMessage }:LockOptio
 
 // Lets you pick up a thing, putting it in your inventory
 export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing {
+  base = {...base}; // clone
   const name = base.name || 'it';
 
   base.verbs = Object.assign({
@@ -92,15 +94,28 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
   return base;
 }
 
-// Displays a message only once
-export function once(text:string, key:string):RoomEffect {
+// Displays a message (or does a thing) only once
+export function once(text:string|RoomEffect, key:string):RoomEffect {
   return (session, world, roomId) => {
     if (session.flags[key]) {
       return null;
     }
-    return {
+    const base = typeof text === 'string' ? {
       message: text,
-      update: { flags: mapSet(session.flags, key, '1') }
-    };
+      update: {}
+    } : text(session, world, roomId);
+
+    if (!base) { 
+      return null;
+    }
+
+    base.update = { ...(base.update || {}), flags: mapSet(session.flags, key, '1') };
+
+    return base;
+    
   }
+}
+
+export function maybeDo(p:Predicate, effect:RoomEffect):RoomEffect {
+  return (session, world, roomId) => p(session) ? effect(session, world, roomId) : null;
 }

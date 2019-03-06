@@ -11,11 +11,11 @@ import type { Session } from '../model/session';
 import type { ActionHandler, ActionResult } from '../action-resolver';
 import { fromInventory } from '../model/thing';
 
-const inventory:ActionHandler = (session, world, subject) => {
+const inventory:ActionHandler = (session, world, sentence) => {
 
-  if (subject) {
+  if (sentence.subject) {
     return {
-      message: fromInventory(session.inventory, subject, world) ? `Yes.` : `No.`
+      message: fromInventory(session.inventory, sentence.subject, world) ? `Yes.` : `No.`
     };
   }
 

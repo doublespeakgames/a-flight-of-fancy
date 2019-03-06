@@ -53,5 +53,12 @@ export function fromEffects(session:Session, key:string, world:World):?Thing {
       }
     }
   }
+  if (world.effects.always) {
+    for (let thing of world.effects.always.things) {
+      if (thing.keys.includes(key)) {
+        return thing;
+      }
+    }
+  }
   return null;
 }

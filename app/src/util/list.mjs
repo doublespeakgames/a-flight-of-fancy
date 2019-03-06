@@ -16,3 +16,7 @@ export function join<T>(list:Array<T>, sep:string = '', last:string = sep):strin
 export function random<T>(list:Array<T>):T {
   return list[Math.floor(Math.random() * list.length)];
 }
+
+export function flatMap<T, R>(list:Array<T>, mapper:T => Array<R>):Array<R> {
+  return list.map(mapper).reduce((ret,cur) => [...ret, ...cur]);
+}

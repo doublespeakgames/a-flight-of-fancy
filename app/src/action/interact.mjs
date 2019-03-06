@@ -23,22 +23,22 @@ type Options = {
 };
 
 export default (verb:string, options:Options = {}):ActionHandler => 
-  (session, world, subject, object) => {
-    if (!subject) {
+  (session, world, sentence) => {
+    if (!sentence.subject) {
       if (typeof options.subjectless === 'string') {
         return { message: options.subjectless };
       }
       if (typeof options.subjectless === 'function') {
-        return options.subjectless(session, world);
+        return options.subjectless(session, world, {});
       }
       return { message: `You can't do that.` };
     }
     
-    if (!object) {
-      return simpleHandler(session, world, verb, subject, options);
+    if (!sentence.object) {
+      return simpleHandler(session, world, verb, sentence.subject, sentence.verb, options);
     }
 
-    return complexHandler(session, world, verb, subject, object, options);
+    return complexHandler(session, world, verb, sentence.subject, sentence.object, sentence.verb, options);
 
   };
 
@@ -50,7 +50,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
     ].filter(Boolean);
   }
 
-  function simpleHandler(session, world, verb, subject, options) {
+  function simpleHandler(session, world, verb, subject, rawVerb, options) {
 
     const things = getThings(session, world, subject);
     if (!things.length) {
@@ -58,7 +58,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       if (options.custom) {
         const handler = options.custom(session, world, subject);
         if (handler) {
-          return handler(session, world);
+          return handler(session, world, {});
         }
       }
 
@@ -71,13 +71,13 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       if (thing.verbs) {
         const handler = thing.verbs[verb];
         if (typeof handler === 'function') {
-          return handler(session, world);
+          return handler(session, world, {});
         }
         if (typeof handler === 'string') {
           return { message: handler };
         }
         if (handler instanceof Synonym) {
-          return simpleHandler(session, world, handler.value, subject, options);
+          return simpleHandler(session, world, handler.value, subject, rawVerb, options);
         }
         if (typeof handler === 'object') {
           const inner = handler['self'];
@@ -85,20 +85,20 @@ export default (verb:string, options:Options = {}):ActionHandler =>
             return { message: inner };
           }
           if (typeof inner === 'function') {
-            return inner(session, world);
+            return inner(session, world, {});
           }
         }
       }
       if (options.exits && thing.exit) {
-        return move(session, world, thing.exit);
+        return move(session, world, { subject: thing.exit });
       }
     }
 
-    const fail = options.failure ? options.failure(subject, '') : `You can't ${verb} the ${subject}`;
+    const fail = options.failure ? options.failure(subject, '') : `You can't ${rawVerb || verb} the ${subject}`;
     return { message: fail };
   }
 
-  function complexHandler(session, world, verb, subject, object, options) {
+  function complexHandler(session, world, verb, subject, object, rawVerb, options) {
 
     const subjectThings = getThings(session, world, subject);
     if (!subjectThings.length) {
@@ -130,7 +130,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       }
     }
 
-    const fail = options.failure ? options.failure(subject, object) : `You can't ${verb} those together.`;
+    const fail = options.failure ? options.failure(subject, object) : `You can't ${rawVerb || verb} those together.`;
     return { message: fail };
   }
 
@@ -147,7 +147,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       if (typeof handler === 'string') {
         return { message: handler };
       }
-      return handler(session, world);
+      return handler(session, world, {});
     }
     return null;
   }

@@ -46,7 +46,7 @@ export function lookAt(session:Session, world:World, roomId:RoomId, short:boolea
     .filter(Boolean)
     .reduce((result, effect) => {
       return {
-        message: `${result.message} ${effect.message}`,
+        message: [result.message, effect.message].filter(Boolean).join(' '),
         update: Object.assign({}, result.update, effect.update)
       }
     }, finalResult);

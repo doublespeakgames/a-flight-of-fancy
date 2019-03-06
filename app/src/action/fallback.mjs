@@ -21,27 +21,29 @@ function getMessage(phrase:string, tries:number):string {
   return `You can't "${phrase}"`;
 }
 
-const fallback:ActionHandler = (session, world, subject) => {
+const fallback:ActionHandler = (session, world, sentence) => {
 
   const phrases = world.rooms[session.room].phrases;
   if (phrases) {
     for (let phrase of phrases) {
       // subject is the raw instruction, in this handler
-      if (!phrase.keys.includes(subject)) {
+      if (!phrase.keys.includes(sentence.subject)) {
         continue;
       }
       const i = phrase.action.split(':');
       return {
         sessionId: session._id,
         type: i[0],
-        subject: i[1],
-        object: i[2]
+        sentence: {
+          subject: i[1],
+          object: i[2]
+        }
       };
     }
   }
 
   return { 
-    message: getMessage(subject || 'do nothing', session.failures),
+    message: getMessage(sentence.subject || 'do nothing', session.failures),
     update: { failures: Math.min(session.failures + 1, 2) }
   };
 };

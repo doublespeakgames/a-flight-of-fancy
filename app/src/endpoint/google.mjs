@@ -8,11 +8,11 @@
  */
 
 import Actions from 'actions-on-google';
-import { resolveAction } from '../action-resolver';
+import { resolveAction, makeSentence } from '../action-resolver';
 import uuid from 'uuid/v1';
 
 import type { Conversation } from 'actions-on-google';
-import type { Action, ActionType } from '../action-resolver';
+import type { Sentence, Action, ActionType } from '../action-resolver';
 
 const CONFIDENCE_THRESHOLD = 0.6;
 const LAST_RESPONSE = 'last-response';
@@ -31,12 +31,12 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
   const confidence = conv.body.queryResult.intentDetectionConfidence;
   const queryText = conv.body.queryResult.queryText;
   const isFallback = actionType === 'fallback' || confidence < CONFIDENCE_THRESHOLD;
+  const sentence = makeSentence(!isFallback ? params.subject : queryText, params.object, params.verb);
 
   const action:Action = {
     sessionId: `goog-${getUserId(conv)}`,
     type: !isFallback ? actionType : 'fallback',
-    subject: !isFallback ? params['subject'] : queryText,
-    object: params['object']
+    sentence
   };
   const result = await resolveAction(action);
   conv.contexts.set(LAST_RESPONSE, 1, { message: result.message });

@@ -12,7 +12,7 @@ import type { ActionHandler, ActionResult } from '../action-resolver';
 import { fromRoom } from '../model/thing';
 import move from './move';
 
-const objectTravel:ActionHandler = (session, world, subject) => {
+const objectTravel:ActionHandler = (session, world, { subject }) => {
   if (!subject) {
     return {
       message: `Go where?`
@@ -27,13 +27,13 @@ const objectTravel:ActionHandler = (session, world, subject) => {
   }
 
   if (thing.exit) {
-    return move(session, world, thing.exit);
+    return move(session, world, { subject: thing.exit });
   }
 
   return {
     sessionId: session._id,
     type: 'look',
-    subject
+    sentence: { subject }
   };
 };
 
