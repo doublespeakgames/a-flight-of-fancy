@@ -7,7 +7,7 @@ import { deleteSession } from '../store';
 
 const restart:ActionHandler = (session, world, subject) => {
 
-  if (!Config.dev || !subject) {
+  if (!Config.dev || !subject || !world.rooms[subject]) {
     subject = 'pantry';
   }
 
