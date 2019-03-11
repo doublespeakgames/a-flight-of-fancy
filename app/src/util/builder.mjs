@@ -24,6 +24,10 @@ export function ifHere(key:string):Predicate {
   return session => !session.gone.has(key);
 }
 
+export function ifFlag(key:string):Predicate {
+  return session => !!session.flags[key];
+}
+
 export function ifFlagGT(key:string, val:number):Predicate {
   return session => tryParse(session.flags[key], 0) > val;
 }

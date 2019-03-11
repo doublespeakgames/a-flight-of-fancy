@@ -7,10 +7,13 @@
  */
 
 import type { Thing, ThingId } from './thing';
-import type { SessionDiff } from './session';
 import type { RoomEffect } from './room';
 import type { Predicate } from '../util/builder';
+import type { Updater } from '../util/updater';
+import type { ActionResult } from '../action-resolver';
+
 import { mapSet, setAdd } from '../util/immutable';
+import { compose } from '../util/updater';
 
 type LockOptions = {|
   stateKey:string,
@@ -74,12 +77,16 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
       if (session.inventory.has(id)) {
         return { message: `You already have ${name}.` };
       }
-      const update:SessionDiff = {
-        inventory: setAdd(session.inventory, id)
+      const update:Updater = session => {
+        const ss = {
+          ...session,
+          inventory: setAdd(session.inventory, id)
+        };
+        if (limited) {
+          ss.gone = setAdd(session.gone, id);
+        }
+        return ss;
       };
-      if (limited) {
-        update.gone = setAdd(session.gone, id);
-      }
       return {
         message: `You take ${name}.`,
         update
@@ -96,26 +103,25 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
 
 // Displays a message (or does a thing) only once
 export function once(text:string|RoomEffect, key:string):RoomEffect {
-  return (session, world, roomId) => {
+  return (session, roomId) => {
     if (session.flags[key]) {
       return null;
     }
-    const base = typeof text === 'string' ? {
-      message: text,
-      update: {}
-    } : text(session, world, roomId);
+    const base:?ActionResult = typeof text === 'string' ? {
+      message: text
+    } : text(session, roomId);
 
     if (!base) { 
       return null;
     }
 
-    base.update = { ...(base.update || {}), flags: mapSet(session.flags, key, '1') };
+    const update:Updater = s => ({ ...s, flags: mapSet(s.flags, key, '1') });
+    base.update = compose(base.update, update);
 
     return base;
-    
   }
 }
 
 export function maybeDo(p:Predicate, effect:RoomEffect):RoomEffect {
-  return (session, world, roomId) => p(session) ? effect(session, world, roomId) : null;
+  return (session, roomId) => p(session) ? effect(session, roomId) : null;
 }

@@ -8,7 +8,7 @@
  */
 
 import Config from '../config';
-import type { Session, SessionDiff } from '../model/session';
+import type { Session } from '../model/session';
 import type { Action, ActionHandler, ActionResult } from '../action-resolver';
 
 function getMessage(phrase:string, tries:number):string {
@@ -44,7 +44,7 @@ const fallback:ActionHandler = (session, world, sentence) => {
 
   return { 
     message: getMessage(sentence.subject || 'do nothing', session.failures),
-    update: { failures: Math.min(session.failures + 1, 2) }
+    update: session => ({ ...session, failures: Math.min(session.failures + 1, 2) })
   };
 };
 

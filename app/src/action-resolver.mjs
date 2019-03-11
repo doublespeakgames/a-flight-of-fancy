@@ -1,7 +1,8 @@
 // @flow
 
-import type { Session, SessionDiff } from './model/session';
+import type { Session } from './model/session';
 import type { World } from './model/world';
+import type { Updater } from './util/updater';
 
 import { getSession, writeSession, getWorld } from './store';
 import { lookAt } from './model/room';
@@ -24,7 +25,7 @@ export type Action = {|
 
 export type ActionResult = {|
   message:string,
-  update?:SessionDiff,
+  update?:Updater,
   close?:boolean
 |};
 
@@ -144,12 +145,6 @@ export function makeSentence(subject:string = '', object:string = '', verb:strin
   }
 }
 
-function processUpdate(oldSession:Session, update:SessionDiff):Session {
-  // $FlowFixMe Object.assign({}, oldSession) is *obviously* of type Session, idiot
-  const newSession:Session = Object.assign({}, oldSession, { failures: 0 }, update);
-  return newSession;
-}
-
 export async function resolveAction(action:Action):Promise<ActionResult> {
   Logger.info(`Resolving action ${JSON.stringify(action)}`);
   let session = await getSession(action.sessionId);
@@ -160,7 +155,7 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
   const result = handlers[action.type](session, world, action.sentence);
   if (result.message) { // This is an ActionResult
     if (result.update) {
-      writeSession(processUpdate(session, result.update));
+      writeSession(result.update(session));
     }
     Logger.info(`Action resolved with ${JSON.stringify(result)}`);
     return result;

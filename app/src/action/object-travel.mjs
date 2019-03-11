@@ -31,9 +31,7 @@ const objectTravel:ActionHandler = (session, world, { subject }) => {
   }
 
   return {
-    sessionId: session._id,
-    type: 'look',
-    sentence: { subject }
+    message: `You're close enough to the ${subject}.`
   };
 };
 

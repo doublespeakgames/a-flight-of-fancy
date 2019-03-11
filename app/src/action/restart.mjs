@@ -14,14 +14,15 @@ const restart:ActionHandler = (session, world, { subject }) => {
   // TODO: This needs confirmation
   return {
     message: `Starting at the ${subject}`,
-    update: {
+    update: session => ({
+      ...session,
       room: subject,
       inventory: new Set(),
       flags: {},
       effects: new Set(),
       seen: new Set(),
       gone: new Set()
-    }
+    })
   };
 
 };

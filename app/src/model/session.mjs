@@ -5,6 +5,8 @@ import type { RoomId } from './room';
 import type { ThingId } from './thing';
 import type { EffectId } from './effect';
 
+import { mapSet, setAdd } from '../util/immutable';
+
 export type Session = {|
   _id:string,
   world:WorldId,
@@ -27,6 +29,8 @@ export type SessionDiff = {|
   effects?:Set<EffectId>,
   failures?:number
 |};
+
+export type SessionProp = $Keys<Session>;
 
 export function deserialize(json:?Object):?Session {
   if (!json) {

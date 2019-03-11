@@ -9,8 +9,10 @@ import { tryParse } from '../util/number';
 import message from '../util/message';
 import result from '../util/result';
 import map from '../util/conditional-map';
-import { not, both, ifSeen, ifAt, ifHere, ifFlagGTE, ifFlagIs, ifEffect } from '../util/builder';
+import { not, both, ifSeen, ifAt, ifHere, ifFlag, ifFlagGTE, ifFlagIs, ifEffect } from '../util/builder';
 import { maybeDo, once, locked, takeable } from '../model/mixins';
+import dialogue, { Pitch } from '../util/dialogue';
+import { update } from '../util/updater';
 
 //#region Shared Things
 const threadDirs = {
@@ -34,7 +36,7 @@ const goblins = {
       'thread': 'You could, if only you could catch a goblin first.',
       'stone': session => ({
         message: `As soon as you produce the stone, it is gone.`,
-        update: { inventory: setRemove(session.inventory, 'stone') }
+        update: update({ inventory: setRemove(session.inventory, 'stone') })
       }),
       'knife': 'The goblins easily avoid your attempts at violence.',
       'food': `The goblins chitter disgustedly`,
@@ -68,7 +70,7 @@ const useBinoculars = session => {
   }
   return {
     message: 'You lift the binoculars to your eyes, searching the distance for only a moment before you spot your ambition. The tree from your dream, huge and gnarled, splits the canopy about a mile east of camp. To the south, a thin line of smoke rises from the bush. You update your map.',
-    update: { flags: mapSet(session.flags, 'explore', '2') }
+    update: update({ flags: mapSet(session.flags, 'explore', '2') })
   };
 }
 function recipe(ailmentKeys:Array<string>, recipe:string) {
@@ -89,7 +91,7 @@ const ingredients = [
 ];
 const potpourriResult = (...consumed) => session => ({
   message: `That doesn't seem right. At least your results smell nice.`,
-  update: { inventory: setMutate(session.inventory, [ 'potpourri' ], consumed.filter(Boolean)) }
+  update: update({ inventory: setMutate(session.inventory, [ 'potpourri' ], consumed.filter(Boolean)) })
 });
 function makePotpourri(herbKey?:string) {
   const useMap = {};
@@ -191,11 +193,12 @@ const herbs = {
   }
 };
 const drowsyTree = `You begin to drowse, and the tree's branches swim in your vision. You find yourself mesmerized by the interplay of light and shadow as the woody tendrils sway in the misty breeze. And there, directly below, the cave yawns, extending deep into the earth like the gullet of an antediluvian worm.`;
-const catCave = `This room is low and musty. The walls are bare earth, and honeycombed with small passageways.`;
+const pit = `You stand on the edge of a wide pit, its depths churning with flickering shadows. Four huge stone pillars support the ceiling and, above you, a rope descends from an opening in the arching rock.`;
 const touchAmber = session => ({
-  message: `You place your hand on the glassy surface. The amber is warm to the touch, and your fingers tingle as if thawing from a deep-rooted cold. And then you are somewhere else. ${catCave} You blink. How long have you been here?`,
-  update: { room: 'cat-cave' }
+  message: `You place your hand on the glassy surface. The amber is warm to the touch, and your fingers tingle as if thawing from a deep-rooted cold. And then you are somewhere else. ${pit} You blink. How long have you been here?`,
+  update: update({ room: 'pit' })
 });
+const catVoice = text => ({ text, pitch: Pitch.HIGH });
 //#endregion
 
 const world:World = {
@@ -262,7 +265,7 @@ const world:World = {
         if (session.flags.stone === 'goblin' && session.flags.cage === 'open') {
           return {
             message: 'The tiny goblin leaps from the cage, disappearing with the stone.',
-            update: { flags: mapRemove(session.flags, 'stone') }
+            update: update({ flags: mapRemove(session.flags, 'stone') })
           };
         }
         return  null;
@@ -283,7 +286,7 @@ const world:World = {
           'use': {
             'food': session => ({
               message: 'You drop the mouldy food into the pot',
-              update: { inventory: setRemove(session.inventory, 'food') }
+              update: update({ inventory: setRemove(session.inventory, 'food') })
             }),
             'goblin': 'The goblin easily avoids you.'
           }
@@ -298,9 +301,9 @@ const world:World = {
             'cloth': `The greasy cloth would burn well, but you don't want to lose it.`,
             'torch': session => ({
               message: 'You hold your improvised torch in the fire until it catches',
-              update: {
+              update: update({
                 inventory: setMutate(session.inventory, ['lit-torch'], ['torch'])
-              }
+              })
             }),
             'lit-torch': `It's already lit.`
           }
@@ -360,10 +363,10 @@ const world:World = {
             }
             return {
               message: 'You take the stone out of the cage.',
-              update: {
+              update: update({
                 inventory: setAdd(session.inventory, 'stone'),
                 flags: mapRemove(session.flags, 'stone')
-              }
+              })
             };
           }
         }
@@ -379,15 +382,15 @@ const world:World = {
               if (session.flags.cage === 'open') {
                 return {
                   message: 'The goblin dodges past you, disappearing down the hall with its stone.',
-                  update: { flags: mapRemove(session.flags, 'stone') }
+                  update: update({ flags: mapRemove(session.flags, 'stone') })
                 };
               }
               return {
                 message: 'You tie one end of the thread securely to the goblin, and the other to the cage.',
-                update: { 
+                update: update({ 
                   inventory: setRemove(session.inventory, 'thread'),
                   flags: mapSet(session.flags, 'thread', 'goblin')
-                }
+                })
               };
             }
           }
@@ -424,39 +427,39 @@ const world:World = {
             if (session.flags.thread === 'goblin') {
               return {
                 message: 'You open the cage door and the goblin bursts out, trailing thread.',
-                update: { 
+                update: update({ 
                   flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }),
                   effects: setMutate(session.effects, [ 'thread' ], [ 'goblin' ])
-                }
+                })
               };
             }
             if (session.flags.stone === 'goblin') {
               return {
                 message: 'You open the cage door and the goblin bursts out, fleeing with the stone.',
-                update: { flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }) }
+                update: update({ flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }) })
               };
             }
             if (session.flags.stone === 'cage' && session.effects.has('goblin')) {
               return {
                 message: 'You open the cage and the tiny goblin jumps inside, grabbing for the stone.',
-                update: {
+                update: update({
                   flags: mapSet(session.flags, 'stone', 'goblin'),
                   effects: setRemove(session.effects, 'goblin')
-                }
+                })
               };
             }
             if (session.flags.it !== 'freed') {
               return {
                 message: `You lift the latch and open the cage door. The cat-thing inside leaps deftly out, landing atop the pantry. It stares at you from its perch and, when you blink, it is gone.`,
-                update: {
+                update: update({
                   flags: mapSet(session.flags, { 'it': 'freed', 'cage': 'open' }),
                   gone: setAdd(session.gone, 'creature')
-                }
+                })
               };
             }
             return { 
               message: 'You open the cage.',
-              update: { flags: mapSet(session.flags, 'cage', 'open') }
+              update: update({ flags: mapSet(session.flags, 'cage', 'open') })
             };
           },
           'use': {
@@ -471,19 +474,19 @@ const world:World = {
               if (session.effects.has('goblin')) {
                 return {
                   message: 'You place the stone in the cage. The goblin scampers inside after it.',
-                  update: {
+                  update: update({
                     inventory: setRemove(session.inventory, 'stone'),
                     flags: mapSet(session.flags, 'stone', 'goblin'),
                     effects: setRemove(session.effects, 'goblin')
-                  }
+                  })
                 };
               }
               return {
                 message: 'You place the glowing stone in the cage.',
-                update: {
+                update: update({
                   inventory: setRemove(session.inventory, 'stone'),
                   flags: mapSet(session.flags, 'stone', 'cage')
-                }
+                })
               };
             }
           }
@@ -504,8 +507,11 @@ const world:World = {
               return { message: 'It just watches you, expectantly.' }
             }
             return {
-              message: `<speak><prosody pitch="+6st">"Meat is alive?"</prosody> the creature hisses. <prosody pitch="+6st">"Meat lets it out! It doesn't want to be dinner."</prosody></speak>`,
-              update: { flags: mapSet(session.flags, 'it', 'spoke') }
+              message: dialogue(catVoice('Meat is alive?'))
+                        .append('the creature hisses.')
+                        .append(catVoice(`Meat lets it out! It doesn't want to be dinner.`))
+                        .build(),
+              update: update({ flags: mapSet(session.flags, 'it', 'spoke') })
             };
           }
         }
@@ -601,7 +607,7 @@ const world:World = {
               const bone = session.gone.has('dog-bone') ? '' : ' The bone it was gnawing clatters to the ground.'
               return {
                 message: `The hound is massive but chained, and you easily out-maneuver it. Your knife slips between its ribs, and its life pours hotly onto the floor.${bone}`,
-                update: { flags: mapSet(session.flags, 'hound', 'dead') }
+                update: update({ flags: mapSet(session.flags, 'hound', 'dead') })
               }
             },
             'food': session => { 
@@ -613,10 +619,10 @@ const world:World = {
               }
               return {
                 message: `The hound snaps up the food greedily, discarding the bone. Its demeanor softens.`,
-                update: { 
+                update: update({ 
                   inventory: setRemove(session.inventory, 'food'),
                   flags: mapSet(session.flags, 'hound', 'fed')
-                }
+                })
               }
             }
           },
@@ -639,10 +645,10 @@ const world:World = {
             }
             return {
               message: 'You take the bone',
-              update: { 
+              update: update({ 
                 gone: setAdd(session.gone, 'dog-bone'),
                 inventory: setAdd(session.inventory, 'bone')
-              }
+              })
             };
           }
         }
@@ -716,7 +722,7 @@ const world:World = {
                 }
                 return {
                   message: 'You return the stone to the trunk.',
-                  update: { inventory: setRemove(session.inventory, 'stone') }
+                  update: update({ inventory: setRemove(session.inventory, 'stone') })
                 };
               }
             }
@@ -777,7 +783,7 @@ const world:World = {
               }
               return {
                 message: 'You carefully slip the knife beneath the twine and pull. It catches for a moment but then the belt gives way, spilling the key-ring into the straw.',
-                update: { flags: mapSet(session.flags, 'belt', 'cut') }
+                update: update({ flags: mapSet(session.flags, 'belt', 'cut') })
               };
             }
           }
@@ -794,10 +800,10 @@ const world:World = {
             if (session.flags['belt']) {
               return {
                 message: 'You take the keys.',
-                update: {
+                update: update({
                   inventory: setAdd(session.inventory, 'keys'),
                   gone: setAdd(session.gone, 'keys')
-                }
+                })
               }
             }
             return { message: `The giant's belt loops through the key-ring, holding it in place.` };
@@ -838,14 +844,14 @@ const world:World = {
       },
       'effect': session => {
         if (!session.inventory.has('stone') || session.effects.has('goblin') || session.effects.has('thread')) {
-          return { message: '', update: { flags: mapRemove(session.flags, 'lost') }};
+          return { message: '', update: update({ flags: mapRemove(session.flags, 'lost') }) };
         }
         return {
           message: 'The goblins appear entranced by your glowing stone, and begin trailing you.',
-          update: { 
+          update: update({ 
             effects: setAdd(session.effects, 'goblin'),
             flags: mapRemove(session.flags, 'lost')
-          }
+          })
         };
       },
       'things': [floor, ceiling, goblins, {
@@ -914,7 +920,7 @@ const world:World = {
             'Are you moving in circles?', 
             'The tunnels all look the same.'
           ]) : 'This tunnel looks familiar.',
-          update: { flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) }
+          update: update({ flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) })
         }; 
       },
       'description': 'The tunnels here are twisting and elusive. Tiny goblins skitter purposefully to and fro. Passages extend in all directions.',
@@ -986,7 +992,7 @@ const world:World = {
           'talk': 'The goblin chitters angrily.',
           'use': session => ({
             message: 'You untie the squirming goblin, and it sprints off into the underbrush.',
-            update: { flags: mapSet(session.flags, 'goblin', 'freed') }
+            update: update({ flags: mapSet(session.flags, 'goblin', 'freed') })
           })
         }
       }, {
@@ -1004,7 +1010,7 @@ const world:World = {
       'name': 'a swamp',
       'effect': session => ({
         message: `You start in your sleeping bag, briefly disoriented. The same dream, every night, for the past twenty-eight weeks. The heat of the day is already upon you, and large insects drone outside the tent walls. The swamp, you remember. You're finally here.`,
-        update: { room: 'tent', inventory: new Set() }
+        update: update({ room: 'tent', inventory: new Set() })
       }),
       'description': `You emerge from the cave into a dense swamp. Behind you, its roots framing the mouth of the cave, a huge gnarled tree rises above the canopy. Sunlight flickers through the tree's branches, and you squint against the sudden brightness. Defiantly, the light continues to fill your vision until the image of the swamp is just a memory. Until the memory, too, is gone...`,
       'things': [],
@@ -1027,10 +1033,10 @@ const world:World = {
           'open': new Synonym('take'),
           'take': session => ({
             message: 'You strap the pack onto your shoulders. It contains supplies gathered over countless weeks of rigourous preparation, including some rope, a map, and a multitool.',
-            update: {
+            update: update({
               inventory: setAdd(session.inventory, 'rope', 'map', 'multitool'),
               gone: setAdd(session.gone, 'pack')
-            }
+            })
           })
         }
       }, {
@@ -1176,10 +1182,10 @@ const world:World = {
             'rope': 'The rope falls limply at your feet.',
             'weighted-rope': session => ({
               message: 'You hurl the rope at a particularly sturdy-looking tree, and it snags tightly in the branches.',
-              update: {
+              update: update({
                 inventory: setRemove(session.inventory, 'weighted-rope'),
                 flags: mapSet(session.flags, 'bluff', 'roped')
-              }
+              })
             })
           }
         }
@@ -1192,9 +1198,9 @@ const world:World = {
           'use': {
             'rope': session => ({
               message: 'You lash a stone to the end of your rope.',
-              update: {
+              update: update({
                 inventory: setMutate(session.inventory, [ 'weighted-rope' ], [ 'rope' ])
-              }
+              })
             }),
             'weighted-rope': 'The rope is already weighted.'
           }
@@ -1401,31 +1407,31 @@ const world:World = {
           'use': {
             'valerian': session => ({
               message: 'You grind the valerian root into a paste.',
-              update: { inventory: setMutate(session.inventory, [ 'p-valerian' ], [ 'valerian' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-valerian' ], [ 'valerian' ]) })
             }),
             'ginger': session => ({
               message: 'You grind the ginger root into a paste.',
-              update: { inventory: setMutate(session.inventory, [ 'p-ginger' ], [ 'ginger' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-ginger' ], [ 'ginger' ]) })
             }),
             'garlic': session => ({
               message: 'You grind the garlic into a paste.',
-              update: { inventory: setMutate(session.inventory, [ 'p-garlic' ], [ 'garlic' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-garlic' ], [ 'garlic' ]) })
             }),
             'lavender': session => ({
               message: 'You grind the lavender into a powder.',
-              update: { inventory: setMutate(session.inventory, [ 'p-lavender' ], [ 'lavender' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-lavender' ], [ 'lavender' ]) })
             }),
             'maypop': session => ({
               message: 'You grind the maypop into a powder.',
-              update: { inventory: setMutate(session.inventory, [ 'p-maypop' ], [ 'maypop' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-maypop' ], [ 'maypop' ]) })
             }),
             'mint': session => ({
               message: 'You grind the mint into a powder.',
-              update: { inventory: setMutate(session.inventory, [ 'p-mint' ], [ 'mint' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-mint' ], [ 'mint' ]) })
             }),
             'echinacea': session => ({
               message: 'You grind the echinacea into a powder.',
-              update: { inventory: setMutate(session.inventory, [ 'p-echinacea' ], [ 'echinacea' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'p-echinacea' ], [ 'echinacea' ]) })
             })
           }
         }
@@ -1438,15 +1444,15 @@ const world:World = {
             ...makePotpourri(),
             'valerian-lavender': session => ({
               message: 'You heat the purple mixture on the oil burner',
-              update: { inventory: setMutate(session.inventory, [ 'valerian-lavender-heat' ], [ 'valerian-lavender' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'valerian-lavender-heat' ], [ 'valerian-lavender' ]) })
             }),
             'ginger-mint': session => ({
               message: 'You heat the green mixture on the oil burner',
-              update: { inventory: setMutate(session.inventory, [ 'ginger-mint-heat' ], [ 'ginger-mint' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'ginger-mint-heat' ], [ 'ginger-mint' ]) })
             }),
             'garlic-ginger': session => ({
               message: 'You heat the yellow mixture on the oil burner',
-              update: { inventory: setMutate(session.inventory, [ 'garlic-ginger-heat' ], [ 'garlic-ginger' ]) }
+              update: update({ inventory: setMutate(session.inventory, [ 'garlic-ginger-heat' ], [ 'garlic-ginger' ]) })
             })
           }
         }
@@ -1464,7 +1470,7 @@ const world:World = {
       'description': 'The tunnel is long and winding. Fragments of shadow dance just inside the periphery of your vision, but when you turn to look there is nothing. The cave continues to the east.',
       'effect': session => ({
         message: '',
-        update: { inventory: new Set(), effects: new Set() }
+        update: update({ inventory: new Set(), effects: new Set() })
       }),
       'exits': {
         'east': 'sap'
@@ -1512,11 +1518,57 @@ const world:World = {
     },
     //#endregion
 
-    //#region
-    'cat-cave': {
-      'name': 'a perforated burrow',
-      'description': catCave,
-      'exits': {},
+    //#region Pit
+    'pit': {
+      'article': 'at',
+      'name': 'the precipice of a pit',
+      'description': message(pit)
+                      .append(ifFlag('cat'), ' A cat-like creature is perched nearby, observing you with curiosity.')
+                      .append(' A tunnel leads south.')
+                      .build,
+      'exits': {
+        'south': 'mine'
+      },
+      'things': [{
+        'keys': [ 'rope', 'hook', 'iron hook', 'crude iron hook' ],
+        'verbs': {
+          'look': 'A rope hangs from an opening in the stone ceiling. On its end is a crude iron hook.'
+        }
+      }, {
+        'keys': [ 'pit', 'wide pit', 'shadows', 'flickering shadows', 'flickers', 'roiling shadows' ],
+        'verbs': {
+          'look': result('The darkened bottom of the pit churns and flashes as if brimming with vigorous obsidian fish.')
+                    .append(once('As you stare into the abyss, a small black shape splits from the throng, effortlessly scaling the pit wall to rest on the ground just beside you.', 'cat'))
+                    .build
+        }
+      }, {
+        'visibility': ifFlag('cat'),
+        'keys': [ 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing' ],
+        'verbs': {
+          'look': 'The creature looks vaguely feline, but black and scaled. Its eyes shine with intelligence.',
+          'talk': dialogue(catVoice('How did this get here? Intriguing.'))
+                    .append('The creature puzzles.')
+                    .append(catVoice('For so long, this place was ours alone. Will you also devour us? Plunder our home? Are you like the ones that came before?'))
+                    .append('It appraises you silently for a moment.')
+                    .append(catVoice('No, I see other intentions in you.'))
+                    .build()
+        }
+      }, {
+        'keys': [ 'pillars', 'pillar', 'stone pillars', 'stone pillar', 'huge stone pillars', 'huge stone pillar', 'huge pillars', 'huge pillar' ],
+        'verbs': {
+          'look': 'Cyclopean stone pillars ring the pit, opposing one another at the cardinal points. They appear structural.'
+        }
+      }]
+    },
+    //#endregion
+
+    //#region Mine
+    'mine': {
+      'name': 'a busy mine',
+      'description': '',
+      'exits': {
+        'north': 'pit'
+      },
       'things': []
     }
     //#endregion
@@ -1571,9 +1623,9 @@ const world:World = {
         'use': {
           'bone': session => ({
             message: 'You wrap the cloth tightly around one end of the bone, making an improvised torch',
-            update: {
+            update: update({
               inventory: setMutate(session.inventory, ['torch'], ['cloth', 'bone'])
-            }
+            })
           })
         }
       }
@@ -1688,7 +1740,7 @@ const world:World = {
           if (explore === 0) {
             return {
               message: `${desc}. There is a high point just north of camp that could be useful in surveiling the area.`,
-              update: { flags: mapSet(session.flags, 'explore', '1') }
+              update: update({ flags: mapSet(session.flags, 'explore', '1') })
             };
           }
           if (explore >= 1) {
@@ -1718,9 +1770,9 @@ const world:World = {
         'use': {
           'rope': session => ({
             message: 'You lash the stone to the end of the rope.',
-            update: {
+            update: update({
               inventory: setMutate(session.inventory, [ 'weighted-rope' ], [ 'rope', 'shale' ])
-            }
+            })
           }),
           'weighted-rope': 'The rope is already weighted.'
         }
@@ -1738,7 +1790,7 @@ const world:World = {
           ...makePotpourri('p-valerian'),
           'p-lavender': session => ({
             message: 'You combine the valerian and lavender into a purple paste.',
-            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) })
           })
         }
       }
@@ -1753,11 +1805,11 @@ const world:World = {
           ...makePotpourri('p-lavender'),
           'p-valerian': session => ({
             message: 'You combine the valerian and lavender into a purple paste.',
-            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) })
           }),
           'ginger-mint-heat': session => ({
             message: 'You add the powdered lavender to the mixture. This should serve as an antinauseant.',
-            update: { inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) })
           })
         }
       }
@@ -1772,7 +1824,7 @@ const world:World = {
           ...makePotpourri('p-maypop'),
           'valerian-lavender-heat': session => ({
             message: 'You add the powdered maypop to the mixture. This should function as a sedative.',
-            update: { inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) })
           })
         }
       }
@@ -1787,11 +1839,11 @@ const world:World = {
           ...makePotpourri('p-ginger'),
           'p-mint': session => ({
             message: 'You combine the ginger and mint into a green paste.',
-            update: { inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) })
           }),
           'p-garlic': session => ({
             message: 'You combine the garlic and ginger into a yellow paste.',
-            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) })
           })
         }
       }
@@ -1806,7 +1858,7 @@ const world:World = {
           ...makePotpourri('p-mint'),
           'p-ginger': session => ({
             message: 'You combine the ginger and mint into a green paste.',
-            update: { inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) })
           })
         }
       }
@@ -1821,7 +1873,7 @@ const world:World = {
           ...makePotpourri('p-garlic'),
           'p-ginger': session => ({
             message: 'You combine the garlic and ginger into a yellow paste.',
-            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) })
           })
         }
       }
@@ -1836,7 +1888,7 @@ const world:World = {
           ...makePotpourri('p-echinacea'),
           'garlic-ginger-heat': session => ({
             message: 'You add the powdered echinacea to the mixture. This should serve to heal an infection.',
-            update: { inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) })
           })
         }
       }
@@ -1869,7 +1921,7 @@ const world:World = {
           ...makePotpourri('valerian-lavender-heat'),
           'p-maypop': session => ({
             message: 'You add the powdered maypop to the mixture. This should function as a sedative.',
-            update: { inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) })
           })
         }
       }
@@ -1893,7 +1945,7 @@ const world:World = {
           ...makePotpourri('ginger-mint-heat'),
           'p-lavender': session => ({
             message: 'You add the powdered lavender to the mixture. This should settle an upset stomach.',
-            update: { inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) })
           })
         }
       }
@@ -1917,7 +1969,7 @@ const world:World = {
           ...makePotpourri('garlic-ginger-heat'),
           'p-echinacea': session => ({
             message: 'You add the powdered echinacea to the mixture. This should serve to heal an infection.',
-            update: { inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) }
+            update: update({ inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) })
           })
         }
       }
@@ -1932,7 +1984,7 @@ const world:World = {
         'take': new Synonym('use'),
         'use': session => ({
           message: `You swallow the medicine.`,
-          update: { inventory: setRemove(session.inventory, 'antinauseant') }
+          update: update({ inventory: setRemove(session.inventory, 'antinauseant') })
         })
       }
     },
@@ -1946,7 +1998,7 @@ const world:World = {
         'take': new Synonym('use'),
         'use': session => ({
           message: `You swallow the medicine.`,
-          update: { inventory: setRemove(session.inventory, 'antibiotic') }
+          update: update({ inventory: setRemove(session.inventory, 'antibiotic') })
         })
       }
     },
@@ -1962,10 +2014,10 @@ const world:World = {
           message: message(`You swallow the medicine.`)
                     .append(ifAt('tree'), ` ${drowsyTree}`)
                     .build(session),
-          update: { 
+          update: update({ 
             inventory: setRemove(session.inventory, 'sedative'),
             effects: setAdd(session.effects, 'drugged')
-          }
+          })
         })
       }
     }
@@ -1987,24 +2039,24 @@ const world:World = {
     },
 
     'goblin': {
-      'roomEffect': (session, world, roomId) => {
+      'roomEffect': (session, roomId) => {
         if (roomId === 'maze' || roomId === 'tunnel') {
           return { message: 'One of the goblins is following you.' };
         }
         if (roomId === 'bedroom-lit' && session.flags.trunk === 'open') {
           return {
             message: 'The tiny goblin rushes feverishly to the open trunk, shoves a stone into its bag, and disappears down the hall.',
-            update: { effects: setRemove(session.effects, 'goblin') }
+            update: update({ effects: setRemove(session.effects, 'goblin') })
           };
         }
         if (roomId === 'kitchen' && session.flags.stone === 'cage') {
           if (session.flags.cage === 'open') {
             return {
               message: 'The tiny goblin jumps into the cage, grabbing for the stone.',
-              update: {
+              update: update({
                 effects: setRemove(session.effects, 'goblin'),
                 flags: mapSet(session.flags, 'stone', 'goblin')
-              }
+              })
             };
           }
           return { message: 'The tiny goblin runs circles around the cage, trying to find a way to the stone.' };
@@ -2027,10 +2079,10 @@ const world:World = {
             'food': `The goblin chitters disgustedly`,
             'stone': session => ({
               message: `The goblin snatches up the stone, and scampers away.`,
-              update: { 
+              update: update({ 
                 inventory: setRemove(session.inventory, 'stone'),
                 effects: setRemove(session.effects, 'goblin')
-              }
+              })
             })
           }
         }
@@ -2038,7 +2090,7 @@ const world:World = {
     },
 
     'thread': {
-      'roomEffect': (session, world, roomId) => {
+      'roomEffect': (session, roomId) => {
         const dir = threadDirs[roomId];
         return dir ? { message: `A trail of thread leads ${dir}.` } : null;
       },
@@ -2052,11 +2104,11 @@ const world:World = {
     },
 
     'drugged': {
-      'roomEffect': (session, world, roomId) => { 
+      'roomEffect': (session, roomId) => { 
         if (roomId === 'tree' && session.flags.tree !== 'sleep') {
           return { 
             message: drowsyTree,
-            update: { flags: mapSet(session.flags, 'tree', 'sleep') }
+            update: update({ flags: mapSet(session.flags, 'tree', 'sleep') })
           };
         }
         return { message: random([

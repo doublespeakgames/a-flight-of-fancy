@@ -24,7 +24,8 @@ export type Room = {|
   article?: string
 |};
 
-export type RoomEffect = (session:Session, world:World, roomId:RoomId) => ?ActionResult;
+// TODO: This is used for more than room effects now, so it should be moved and renamed
+export type RoomEffect = (session:Session, roomId:RoomId) => ?ActionResult;
 
 export function lookAt(session:Session, world:World, roomId:RoomId, short:boolean = false):ActionResult {
 
@@ -32,8 +33,7 @@ export function lookAt(session:Session, world:World, roomId:RoomId, short:boolea
   const article = room.article || 'in'; 
 
   const finalResult:ActionResult = {
-    message: short ? `You are ${article} ${resolve(session, room.name)}.` : resolve(session, room.description),
-    update: {}
+    message: short ? `You are ${article} ${resolve(session, room.name)}.` : resolve(session, room.description)
   };
 
   const effects = [
@@ -42,7 +42,7 @@ export function lookAt(session:Session, world:World, roomId:RoomId, short:boolea
   ].filter(Boolean);
 
   return effects
-    .map(effect => effect(session, world, roomId))
+    .map(effect => effect(session, roomId))
     .filter(Boolean)
     .reduce((result, effect) => {
       return {

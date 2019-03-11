@@ -7,12 +7,13 @@
  * Moves between rooms
  */
 
-import type { Session, SessionDiff } from '../model/session';
+import type { Session } from '../model/session';
 import type { ActionHandler, ActionResult } from '../action-resolver';
 import { getExitText } from './exits';
 import { setAdd } from '../util/immutable';
 import { lookAt } from '../model/room';
 import { resolve } from '../value';
+import { compose } from '../util/updater';
 
 const move:ActionHandler = (session, world, sentence) => {
   const room = world.rooms[session.room];
@@ -48,14 +49,15 @@ const move:ActionHandler = (session, world, sentence) => {
   const exitText = session.seen.has(nextRoomId) ? getExitText(session, nextRoom) : '';
   const leaveMessage = room.leaveMessage ? room.leaveMessage(nextRoomId, dir) : `You go ${dir}.`;
 
-  const update:SessionDiff = {
+  const update = session => ({
+    ...session,
     room: nextRoomId,
     seen: setAdd(session.seen, nextRoomId)
-  };
+  });
 
   return {
     message: `${leaveMessage} ${roomResult.message} ${exitText}`,
-    update: Object.assign(update, roomResult.update)
+    update: compose(update, roomResult.update)
   };
 };
 
