@@ -9,10 +9,3 @@ const I:Updater = s => s;
 export function compose(a:Updater = I, b:Updater = I):Updater {
   return session => b(a(session));
 }
-
-export function update(diff:SessionDiff):Updater {
-  return session => ({
-    ...session,
-    ...diff
-  });
-}

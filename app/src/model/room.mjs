@@ -7,6 +7,7 @@ import type { ActionResult } from '../action-resolver';
 import type { Value } from '../value';
 
 import { resolve } from '../value';
+import { compose } from '../util/updater';
 
 export type ExitMap = { [Direction]:RoomId };
 export type Lock = Session => ?string;
@@ -47,7 +48,7 @@ export function lookAt(session:Session, world:World, roomId:RoomId, short:boolea
     .reduce((result, effect) => {
       return {
         message: [result.message, effect.message].filter(Boolean).join(' '),
-        update: Object.assign({}, result.update, effect.update)
+        update: compose(result.update, effect.update)
       }
     }, finalResult);
 }
