@@ -8,6 +8,7 @@ import type { Value } from '../value';
 
 import { resolve } from '../value';
 import { compose } from '../util/updater';
+import { getExitText } from '../action/exits';
 
 export type ExitMap = { [Direction]:RoomId };
 export type Lock = Session => ?string;
@@ -25,7 +26,14 @@ export type Room = {|
   article?: string
 |};
 
-// TODO: This is used for more than room effects now, so it should be moved and renamed
+/* TODO:::
+ * I want to do a big refactor regarding this stuff. Ideally, 
+ * both messages and model updates would be represented by a chain
+ * of composable Session => [Message, NewSession] functions.
+ * This would consolidate ActionHandler and RoomEffect and remove
+ * the need to pass Session once to get an ActionResult, then again 
+ * into the update function to regenerate the model.
+ */
 export type RoomEffect = (session:Session, roomId:RoomId) => ?ActionResult;
 
 export function lookAt(session:Session, world:World, roomId:RoomId, short:boolean = false):ActionResult {
@@ -34,7 +42,7 @@ export function lookAt(session:Session, world:World, roomId:RoomId, short:boolea
   const article = room.article || 'in'; 
 
   const finalResult:ActionResult = {
-    message: short ? `You are ${article} ${resolve(session, room.name)}.` : resolve(session, room.description)
+    message: short ? `You are ${article} ${resolve(session, room.name)}. ${getExitText(session, room)}` : resolve(session, room.description)
   };
 
   const effects = [

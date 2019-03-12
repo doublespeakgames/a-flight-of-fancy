@@ -35,7 +35,7 @@ export type Sentence = {|
   verb?:string
 |};
 
-export type ActionHandler = (session:Session, world:World, sentence:Sentence) => ActionResult | Action;
+export type ActionHandler = (session:Session, world:World, sentence:Sentence) => ActionResult | Promise<ActionResult>;
 
 export class Synonym {
   value:string;
@@ -152,17 +152,10 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result = handlers[action.type](session, world, action.sentence);
-  if (result.message) { // This is an ActionResult
-    if (result.update) {
-      writeSession(result.update(session));
-    }
-    Logger.info(`Action resolved with ${JSON.stringify(result)}`);
-    return result;
+  const result = await handlers[action.type](session, world, action.sentence);
+  if (result.update) {
+    writeSession(result.update(session));
   }
-
-  // $FlowFixMe This is obviously an Action at this point =/
-  const r:Action = result;
-  
-  return resolveAction(r);
+  Logger.info(`Action resolved with ${JSON.stringify(result)}`);
+  return result;
 }

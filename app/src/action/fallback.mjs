@@ -7,9 +7,11 @@
  * Handles unhandled stuff
  */
 
-import Config from '../config';
 import type { Session } from '../model/session';
 import type { Action, ActionHandler, ActionResult } from '../action-resolver';
+
+import Config from '../config';
+import { resolveAction } from '../action-resolver';
 
 function getMessage(phrase:string, tries:number):string {
   if (tries >= 2) {
@@ -31,14 +33,14 @@ const fallback:ActionHandler = (session, world, sentence) => {
         continue;
       }
       const i = phrase.action.split(':');
-      return {
+      return resolveAction({
         sessionId: session._id,
         type: i[0],
         sentence: {
           subject: i[1],
           object: i[2]
         }
-      };
+      });
     }
   }
 

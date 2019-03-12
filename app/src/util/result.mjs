@@ -5,7 +5,7 @@ import type { Session } from '../model/session';
 import type { Predicate, Builder } from './builder';
 import type { RoomEffect } from '../model/room';
 
-import { compose } from './updater';
+import { compose as composeUpdaters } from './updater';
 
 type Appendable = string | RoomEffect | ActionResult;
 
@@ -14,9 +14,9 @@ type ResultBuilder = {
   append: (predicate:Appendable|Predicate, toAppend?:Appendable) => ResultBuilder
 }
 
-const merge = (a:ActionResult, b:ActionResult):ActionResult => ({
-  message: `${a.message} ${b.message}`,
-  update: compose(a.update, b.update)
+export const compose = (a:ActionResult, b:?ActionResult):ActionResult => ({
+  message: b ? `${a.message} ${b.message}` : a.message,
+  update: b ? composeUpdaters(a.update, b.update) : a.update
 });
 
 function getParams(a, b):[?Predicate, Appendable] {
@@ -44,8 +44,8 @@ function append(prev:Session => ?ActionResult, a:Appendable|Predicate, b?:Append
   const [ p, toAppend ] = getParams(a, b);
   const build = session => {
     const base = prev(session);
-    const next = getNext(session, toAppend);
-    return base && next ? merge(base, next) : base || next;
+    const next = !p || p(session) ? getNext(session, toAppend) : undefined;
+    return base && next ? compose(base, next) : base || next;
   }
   return {
     build,

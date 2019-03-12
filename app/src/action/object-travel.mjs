@@ -26,6 +26,12 @@ const objectTravel:ActionHandler = (session, world, { subject }) => {
     };
   }
 
+  // TODO: It'd be cool to port all of object-travel to the interact handler
+  // Do this, just for now
+  if (thing.verbs && typeof thing.verbs.move === 'string') {
+    return { message: thing.verbs.move };
+  }
+
   if (thing.exit) {
     return move(session, world, { subject: thing.exit });
   }
