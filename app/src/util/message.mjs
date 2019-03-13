@@ -2,6 +2,7 @@
 
 import type { Session } from '../model/session';
 import type { Builder, Predicate } from './builder';
+import type { ActionResult } from '../action-resolver';
 
 type MessageBuilder = {
     ...Builder<string>,

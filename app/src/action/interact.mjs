@@ -7,7 +7,7 @@
  * Executes verbs on things
  */
 
-import type { ActionHandler } from '../action-resolver';
+import type { ActionHandler, ActionOutput } from '../action-resolver';
 import type { ThingId, Thing } from '../model/thing';
 import type { World } from '../model/world';
 import type { Session } from '../model/session';
@@ -35,10 +35,10 @@ export default (verb:string, options:Options = {}):ActionHandler =>
     }
     
     if (!sentence.object) {
-      return simpleHandler(session, world, verb, sentence.subject, sentence.verb, options);
+      return simpleHandler(world, verb, sentence.subject, sentence.verb, options);
     }
 
-    return complexHandler(session, world, verb, sentence.subject, sentence.object, sentence.verb, options);
+    return complexHandler(world, verb, sentence.subject, sentence.object, sentence.verb, options);
 
   };
 
@@ -50,104 +50,120 @@ export default (verb:string, options:Options = {}):ActionHandler =>
     ].filter(Boolean);
   }
 
-  function simpleHandler(session, world, verb, subject, rawVerb, options) {
+  function simpleHandler(world, verb, subject, rawVerb, options):ActionOutput {
+    return session => {
+      const things = getThings(session, world, subject);
+      if (!things.length) {
 
-    const things = getThings(session, world, subject);
-    if (!things.length) {
-
-      if (options.custom) {
-        const handler = options.custom(session, world, subject);
-        if (handler) {
-          return handler(session, world, {});
-        }
-      }
-
-      return {
-        message: `There is no ${subject} here.`
-      };
-    }
-
-    for (let thing of things) {
-      if (thing.verbs) {
-        const handler = thing.verbs[verb];
-        if (typeof handler === 'function') {
-          return handler(session, world, {});
-        }
-        if (typeof handler === 'string') {
-          return { message: handler };
-        }
-        if (handler instanceof Synonym) {
-          return simpleHandler(session, world, handler.value, subject, rawVerb, options);
-        }
-        if (typeof handler === 'object') {
-          const inner = handler['self'];
-          if (typeof inner === 'string') {
-            return { message: inner };
-          }
-          if (typeof inner === 'function') {
-            return inner(session, world, {});
+        if (options.custom) {
+          const handler = options.custom(session, world, subject);
+          if (handler) {
+            return handler(session, world, {});
           }
         }
-      }
-      if (options.exits && thing.exit) {
-        return move(session, world, { subject: thing.exit });
-      }
-    }
 
-    const fail = options.failure ? options.failure(subject, '') : `You can't ${rawVerb || verb} the ${subject}`;
-    return { message: fail };
-  }
-
-  function complexHandler(session, world, verb, subject, object, rawVerb, options) {
-
-    const subjectThings = getThings(session, world, subject);
-    if (!subjectThings.length) {
-      return {
-        message: `There is no ${subject} here.`
-      };
-    }
-
-    const objectThings = getThings(session, world, object);
-    if (!objectThings.length) {
-      return {
-        message: `There is no ${object} here.`
-      };
-    }
-
-    for (let subjectThing of subjectThings) {
-      const verbs = subjectThing.verbs;
-      if (!subjectThing.id && (!verbs || typeof verbs.use != 'object')) {
-        // Subject can neither use nor be used, so short-circuit
-        continue;
+        return {
+          message: `There is no ${subject} here.`
+        };
       }
 
-      for (let objectThing of objectThings) {
-        const result = tryApply(session, world, verb, subjectThing, objectThing) || 
-                      tryApply(session, world, verb, objectThing, subjectThing);
-        if (result) {
-          return result;
+      for (let thing of things) {
+        if (thing.verbs && thing.verbs[verb]) {
+          // ActionOutput | ComplexPhrase | Synonym | string
+          const handler = thing.verbs[verb];
+
+          // Synonym
+          if (handler instanceof Synonym) {
+            return simpleHandler(world, handler.value, subject, rawVerb, options);
+          }
+
+          // string
+          if (typeof handler === 'string') {
+            return { message: handler };
+          }
+
+          // ComplexPhrase with 'self' support
+          if (handler.self) {
+            const inner:ActionOutput|string = handler.self;
+            if (typeof inner === 'string') {
+              return { message: inner };
+            }
+            return inner;
+          }
+
+          // ActionOutput
+          return handler;
+        }
+        if (options.exits && thing.exit) {
+          return move(session, world, { subject: thing.exit });
         }
       }
-    }
 
-    const fail = options.failure ? options.failure(subject, object) : `You can't ${rawVerb || verb} those together.`;
-    return { message: fail };
+      const fail = options.failure ? options.failure(subject, '') : `You can't ${rawVerb || verb} the ${subject}`;
+      return { message: fail };
+    };
   }
 
-  function tryApply(session, world, verb:string, subject, object) {
+  function complexHandler(world, verb, subject, object, rawVerb, options):ActionOutput {
+    return session => {
+      const subjectThings = getThings(session, world, subject);
+      if (!subjectThings.length) {
+        return {
+          message: `There is no ${subject} here.`
+        };
+      }
+
+      const objectThings = getThings(session, world, object);
+      if (!objectThings.length) {
+        return {
+          message: `There is no ${object} here.`
+        };
+      }
+
+      for (let subjectThing of subjectThings) {
+        const verbs = subjectThing.verbs;
+        if (!subjectThing.id && (!verbs || typeof verbs.use != 'object')) {
+          // Subject can neither use nor be used, so short-circuit
+          continue;
+        }
+
+        for (let objectThing of objectThings) {
+          const result = tryApply(world, verb, subjectThing, objectThing) || 
+                        tryApply(world, verb, objectThing, subjectThing);
+          if (result) {
+            return result;
+          }
+        }
+      }
+
+      const fail = options.failure ? options.failure(subject, object) : `You can't ${rawVerb || verb} those together.`;
+      return { message: fail };
+    }
+  }
+
+  function tryApply(world, verb:string, subject, object):?ActionOutput {
     const verbs = subject.verbs;
     if (!verbs) {
       return null;
     }
-    if (verbs[verb] instanceof Synonym) {
-      return tryApply(session, world, verbs[verb].value, subject, object);
+    // Synonym | SimplePhrase | ComplexPhrase
+    const output = verbs[verb];
+    if (!output) { return null; }
+
+    // Synonym
+    if (output instanceof Synonym) {
+      return tryApply(world, output.value, subject, object);
     }
-    if (typeof verbs[verb] === 'object' && object.id && verbs[verb][object.id]) {
-      const handler = verbs[verb][object.id];
+
+    // ComplexPhrase with support for the object
+    if (typeof output === 'object' && !Array.isArray(output) && object.id && output[object.id]) {
+      const handler:string|ActionOutput = output[object.id];
       if (typeof handler === 'string') {
         return { message: handler };
       }
-      return handler(session, world, {});
+      return handler;
     }
+
+    // Unsupported
     return null;
   }

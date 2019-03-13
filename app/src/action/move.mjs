@@ -9,10 +9,8 @@
 
 import type { Session } from '../model/session';
 import type { ActionHandler, ActionResult } from '../action-resolver';
-import { setAdd } from '../util/immutable';
 import { lookAt } from '../model/room';
 import { resolve } from '../value';
-import { compose } from '../util/result';
 import { getExitText } from '../action/exits';
 
 const move:ActionHandler = (session, world, sentence) => {
@@ -45,17 +43,13 @@ const move:ActionHandler = (session, world, sentence) => {
     }
   }
   const nextRoom = world.rooms[nextRoomId];
-  const arrive = lookAt(session, world, nextRoomId, session.seen.has(nextRoomId));
   const leave = {
     message: room.leaveMessage ? room.leaveMessage(nextRoomId, dir) : `You go ${dir}.`,
-    update: session => ({
-      ...session,
-      room: nextRoomId,
-      seen: setAdd(session.seen, nextRoomId)
-    })
-  }
+    update: { room: nextRoomId }
+  };
+  const arrive = lookAt(world);
 
-  return compose(leave, arrive);
+  return [ leave, arrive ];
 };
 
 export default move;

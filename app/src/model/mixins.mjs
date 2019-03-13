@@ -6,11 +6,11 @@
  * @since Feb 2019
  */
 
+import type { SessionDiff } from './session';
 import type { Thing, ThingId } from './thing';
-import type { RoomEffect } from './room';
 import type { Predicate } from '../util/builder';
 import type { Updater } from '../util/updater';
-import type { ActionResult } from '../action-resolver';
+import type { ActionOutput } from '../action-resolver';
 
 import { mapSet, setAdd } from '../util/immutable';
 import { compose } from '../util/updater';
@@ -77,16 +77,12 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
       if (session.inventory.has(id)) {
         return { message: `You already have ${name}.` };
       }
-      const update:Updater = session => {
-        const ss = {
-          ...session,
-          inventory: setAdd(session.inventory, id)
-        };
-        if (limited) {
-          ss.gone = setAdd(session.gone, id);
-        }
-        return ss;
+      const update:SessionDiff = {
+        inventory: setAdd(session.inventory, id)
       };
+      if (limited) {
+        update.gone = setAdd(session.gone, id);
+      }
       return {
         message: `You take ${name}.`,
         update
@@ -101,27 +97,32 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
   return base;
 }
 
-// Displays a message (or does a thing) only once
-export function once(text:string|RoomEffect, key:string):RoomEffect {
-  return (session, roomId) => {
-    if (session.flags[key]) {
+export function once(action:string|ActionOutput, key:string):ActionOutput {
+  return ss => {
+    if (ss.flags[key]) {
       return null;
     }
-    const base:?ActionResult = typeof text === 'string' ? {
-      message: text
-    } : text(session, roomId);
-
-    if (!base) { 
-      return null;
-    }
-
-    const update:Updater = s => ({ ...s, flags: mapSet(s.flags, key, '1') });
-    base.update = compose(base.update, update);
-
-    return base;
-  }
+    const update = { flags: mapSet(ss.flags, key, '1') };
+    if (typeof action === 'string') {
+      return { 
+        message: action,
+        update
+      };
+    } 
+    return [
+      { message: '', update },
+      action
+    ];
+  };
 }
 
-export function maybeDo(p:Predicate, effect:RoomEffect):RoomEffect {
-  return (session, roomId) => p(session) ? effect(session, roomId) : null;
+export function maybeDo(p:Predicate, action:string|ActionOutput):ActionOutput {
+  if (typeof action === 'string') {
+    action = { message: action };
+  }
+  return ss => p(ss) ? action : null;
+}
+
+export function text(t:string):ActionOutput {
+  return { message: t };
 }

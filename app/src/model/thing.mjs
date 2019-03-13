@@ -3,11 +3,11 @@
 import type { Session } from './session';
 import type { World } from './world';
 import type { Direction, Room } from './room';
-import type { Synonym, ActionHandler } from '../action-resolver'
+import type { Synonym, ActionOutput } from '../action-resolver'
 
 export type ThingId = string;
 
-type SimplePhrase = ActionHandler|string;
+type SimplePhrase = ActionOutput|string;
 type ComplexPhrase = {[ThingId]:SimplePhrase};
 type Verb = string;
 

@@ -2,11 +2,11 @@
 
 import type { Session } from './session';
 import type { Thing } from './thing';
-import type { RoomId, RoomEffect } from './room';
-import type { ActionResult } from '../action-resolver';
+import type { RoomId } from './room';
+import type { ActionOutput } from '../action-resolver';
 
 export type EffectId = string;
 export type Effect = {|
-  roomEffect?: RoomEffect,
+  roomEffect?: ActionOutput,
   things: Array<Thing>
 |};

@@ -46,7 +46,7 @@ const fallback:ActionHandler = (session, world, sentence) => {
 
   return { 
     message: getMessage(sentence.subject || 'do nothing', session.failures),
-    update: session => ({ ...session, failures: Math.min(session.failures + 1, 2) })
+    update: { failures: Math.min(session.failures + 1, 2) }
   };
 };
 

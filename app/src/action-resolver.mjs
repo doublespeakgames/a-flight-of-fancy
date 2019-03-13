@@ -1,8 +1,9 @@
 // @flow
 
-import type { Session } from './model/session';
+import type { Session, SessionDiff } from './model/session';
 import type { World } from './model/world';
 import type { Updater } from './util/updater';
+import type { Value } from './value';
 
 import { getSession, writeSession, getWorld } from './store';
 import { lookAt } from './model/room';
@@ -25,7 +26,7 @@ export type Action = {|
 
 export type ActionResult = {|
   message:string,
-  update?:Updater,
+  update?:SessionDiff,
   close?:boolean
 |};
 
@@ -35,7 +36,10 @@ export type Sentence = {|
   verb?:string
 |};
 
-export type ActionHandler = (session:Session, world:World, sentence:Sentence) => ActionResult | Promise<ActionResult>;
+type OneOrMore<T> = T | Array<T>;
+type MaybeAsync<T> = T | Promise<T>;
+export type ActionOutput = Value<?OneOrMore<ActionOutput|ActionResult>>;
+export type ActionHandler = (session:Session, world:World, sentence:Sentence) => MaybeAsync<ActionOutput>;
 
 export class Synonym {
   value:string;
@@ -85,11 +89,11 @@ const handlers:{[string]:ActionHandler} = {
   'light': interact('light'),
   'look': interact('look', {
     failure: s => `The ${s} is unremarkable`,
-    subjectless: (session, world) => lookAt(session, world, session.room),
+    subjectless: (session, world) => lookAt(world, true),
     custom:(session, world, subject) => {
       subject = subject.toLowerCase();
       if (subject === session.room) {
-        return () => lookAt(session, world, session.room);
+        return () => lookAt(world, true);
       }
       if (INV_LOOK_KEYS.has(subject)) {
         // Check your inventory
@@ -145,6 +149,36 @@ export function makeSentence(subject:string = '', object:string = '', verb:strin
   }
 }
 
+function processOutput(session:Session, output:ActionResult|ActionOutput):?ActionResult {
+  if (!output) { return; }
+  if (typeof output.message === 'string') {
+    // This is an ActionResult, so just return it
+    // $FlowFixMe Yes it is
+    return output;
+  }
+  // Gotta be another ActionOutput, so process it
+  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(session, output);
+  if (!o) {
+    // Nothing to do
+    return;
+  }
+  const list:Array<ActionOutput|ActionResult> = Array.isArray(o) ? o : [ o ];
+  let workingSession = { ...session };
+  let workingResult:?ActionResult = null;
+  for (let unit of list) {
+    const result = processOutput(workingSession, unit);
+    if (!result) { continue; }
+    // Merge the processed result with the working result and session
+    workingResult = {
+      message: workingResult ? [workingResult.message, result.message].filter(Boolean).join(' ') : result.message,
+      update: workingResult ? { ...workingResult.update, ...result.update } : result.update
+    };
+    workingSession = { ...workingSession, ...workingResult.update };
+  }
+
+  return workingResult;
+}
+
 export async function resolveAction(action:Action):Promise<ActionResult> {
   Logger.info(`Resolving action ${JSON.stringify(action)}`);
   let session = await getSession(action.sessionId);
@@ -152,10 +186,20 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result = await handlers[action.type](session, world, action.sentence);
-  if (result.update) {
-    writeSession(result.update(session));
+  const result:?ActionResult = processOutput(session, await handlers[action.type](session, world, action.sentence));
+
+  if (!result) {
+    return {
+      message: `I'm sorry, something went wrong.`
+    }
   }
+
+  if (result.update) {
+    writeSession({ ...session, ...result.update });
+    Logger.info('Session model updated.');
+  }
+
   Logger.info(`Action resolved with ${JSON.stringify(result)}`);
   return result;
+
 }
