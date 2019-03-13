@@ -15,7 +15,7 @@ import { getExitText } from '../action/exits';
 
 const move:ActionHandler = (session, world, sentence) => {
   const room = world.rooms[session.room];
-  const exits = resolve(session, room.exits);
+  const exits = resolve(room.exits, session);
 
   let dir = sentence.subject;
   if (!dir) {

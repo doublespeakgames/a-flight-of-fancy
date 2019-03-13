@@ -77,7 +77,7 @@ const handlers:{[string]:ActionHandler} = {
   'exits': exits,
   'restart': restart,
   'attack': interact('attack', { failure: s => `You can't attack the ${s}` }),
-  'give': interact('give', { failure: (s, o) => `The ${s} doesn't want the ${o}` }),
+  'give': interact('give', { failure: (s, o) => `The ${o} doesn't want the ${s}` }),
   'open': interact('open'),
   'close': interact('close'),
   'take': interact('take'),
@@ -104,11 +104,11 @@ const handlers:{[string]:ActionHandler} = {
         return exits;
       }
       const room = world.rooms[session.room];
-      const lookRoomId = resolve(session, room.exits)[subject];
+      const lookRoomId = resolve(room.exits, session)[subject];
       if (lookRoomId) {
         // Check an exit
         if (session.seen.has(lookRoomId)) {
-          return () => ({ message: `It leads to ${resolve(session, world.rooms[lookRoomId].name)}` });
+          return () => ({ message: `It leads to ${resolve(world.rooms[lookRoomId].name, session)}` });
         }
         return () => ({ message: `You don't know where it leads.` });
       }
@@ -149,7 +149,7 @@ export function makeSentence(subject:string = '', object:string = '', verb:strin
   }
 }
 
-function processOutput(session:Session, output:ActionResult|ActionOutput):?ActionResult {
+function processOutput(output:ActionResult|ActionOutput, session:Session, verb:string):?ActionResult {
   if (!output) { return; }
   if (typeof output.message === 'string') {
     // This is an ActionResult, so just return it
@@ -157,7 +157,7 @@ function processOutput(session:Session, output:ActionResult|ActionOutput):?Actio
     return output;
   }
   // Gotta be another ActionOutput, so process it
-  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(session, output);
+  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(output, session, verb);
   if (!o) {
     // Nothing to do
     return;
@@ -166,13 +166,20 @@ function processOutput(session:Session, output:ActionResult|ActionOutput):?Actio
   let workingSession = { ...session };
   let workingResult:?ActionResult = null;
   for (let unit of list) {
-    const result = processOutput(workingSession, unit);
+    const result = processOutput(unit, workingSession, verb);
     if (!result) { continue; }
     // Merge the processed result with the working result and session
     workingResult = {
       message: workingResult ? [workingResult.message, result.message].filter(Boolean).join(' ') : result.message,
-      update: workingResult ? { ...workingResult.update, ...result.update } : result.update
+      update: workingResult ? { ...workingResult.update, ...result.update } : result.update,
+      close: workingResult && workingResult.close || result.close
     };
+
+    if (workingResult.close) {
+      // Quit early if an action requests to close
+      return workingResult;
+    }
+
     workingSession = { ...workingSession, ...workingResult.update };
   }
 
@@ -186,7 +193,7 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
     session = await createSession(action.sessionId);
   }
   const world = await getWorld(session.world);
-  const result:?ActionResult = processOutput(session, await handlers[action.type](session, world, action.sentence));
+  const result:?ActionResult = processOutput(await handlers[action.type](session, world, action.sentence), session, action.type);
 
   if (!result) {
     return {

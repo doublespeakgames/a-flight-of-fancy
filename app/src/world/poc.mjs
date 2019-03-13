@@ -195,9 +195,14 @@ const herbs = {
 const drowsyTree = `You begin to drowse, and the tree's branches swim in your vision. You find yourself mesmerized by the interplay of light and shadow as the woody tendrils sway in the misty breeze. And there, directly below, the cave yawns, extending deep into the earth like the gullet of an antediluvian worm.`;
 const touchAmber = ss => ({
   message: `You place your hand on the glassy surface. The amber is warm to the touch, and your fingers tingle as if thawing from a deep-rooted cold. And then you are somewhere else. You stand on the edge of a wide pit, its depths churning with flickering shadows. Four huge stone pillars support the ceiling and, far above you, a rope descends from an opening in the arching rock. You blink. How long have you been here?`,
-  update: { room: 'pit', effects: setAdd(ss.effects, 'giant') }
+  update: { 
+    room: 'pit', 
+    effects: setAdd(ss.effects, 'giant') ,
+    flags: mapSet(ss.flags, 'giant', 'kitchen-2')
+  }
 });
 const catVoice = text => ({ text, pitch: Pitch.HIGH });
+const childVoice = text => ({ text, pitch: Pitch.MED_HIGH });
 //#endregion
 
 const world:World = {
@@ -223,7 +228,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'door', 'light', 'kitchen' ],
+        'keys': [ 'door', 'light', 'kitchen', 'door to the north' ],
         'exit': 'north',
         'verbs': {
           'look': 'The door hangs slightly off its hinges, letting in a bit of feeble light.',
@@ -486,7 +491,7 @@ const world:World = {
         }
       }, { stateKey: 'cage', keyId: 'keys', unlockMessage: `You try three keys before one turns in the lock with a loud click. The caged creature's ears perk.`}), {
         'id': 'creature',
-        'keys': ['creature', 'strange creature', 'it'],
+        'keys': ['creature', 'strange creature', 'it', 'cat', 'kitty' ],
         'verbs': {
           'look': 'The creature is cat-like, but covered in dark shining scales. Its face is unnervingly human, and it watches you with keen eyes.',
           'use': 'The cage imprisoning it is closed.',
@@ -500,9 +505,9 @@ const world:World = {
               return { message: 'It just watches you, expectantly.' }
             }
             return {
-              message: dialogue(catVoice('Meat is alive?'))
-                        .append('the creature hisses.')
-                        .append(catVoice(`Meat lets it out! It doesn't want to be dinner.`))
+              message: dialogue(catVoice('"Oh, hello again."'))
+                        .append('the creature chirps.')
+                        .append(catVoice(`"Are you going to let me out now? You always let me out."`))
                         .build(),
               update: { flags: mapSet(session.flags, 'it', 'spoke') }
             };
@@ -1082,7 +1087,7 @@ const world:World = {
           'close': 'You zip the sleeping bag.',
           'look': `The sleeping bag is light and brightly coloured. It's just big enough for one.`,
           'use': session => ({
-            message: `${session.effects.has('drugged') ? 'Tired as you are, y' : 'Y'}our body is filled with resless energy, and you can't sleep.`
+            message: `${session.effects.has('drugged') ? 'Tired as you are, y' : 'Y'}our body is filled with restless energy, and you can't sleep.`
           })
         }
       }, {
@@ -1105,7 +1110,7 @@ const world:World = {
     //#region Camp
     'camp': {
       'name': 'camp',
-      'description': message('The camp is situated on a low rise, somewhat protected from the sucking mire that surrounds it. Slightly downhill, a jeep is buried up to its doors in mud. Your tent is pitched on the western slope')
+      'description': message('The camp is situated on a low rise, somewhat protected from the sucking mire that surrounds it. Nearby, a jeep is buried up to its doors in mud. Your tent is pitched on the western slope')
                       .append(ifFlagGTE('explore', 1), '. On your map is marked a bluff to the north')
                       .append(ifFlagGTE('explore', 2), ', the tree to the east')
                       .append(both(ifFlagGTE('explore', 2), not(ifSeen('garden'))), ', and mysterious smoke to the south')
@@ -1124,7 +1129,7 @@ const world:World = {
           'look': 'The tent is made of lightweight nylon, and hugs the ground like the cocoon of some enormous insect.'
         }
       }, {
-        'keys': [ 'jeep', 'stuck jeep', 'buried jeep', 'downhill', 'down hill', 'wheels', 'algae' ],
+        'keys': [ 'jeep', 'stuck jeep', 'buried jeep', 'wheels', 'algae' ],
         'verbs': {
           'take': new Synonym('use'),
           'use': 'The jeep is thoroughly stuck.',
@@ -1140,9 +1145,9 @@ const world:World = {
           'look': 'The binoculars are new, but grime already cakes the hinges.'
         }
       }, 'binoculars', true), {
-        'keys': [ 'swamp', 'mire', 'morass', 'bog', 'terrain', 'mud', 'ground', 'trees', 'vines' ],
+        'keys': [ 'swamp', 'mire', 'morass', 'bog', 'terrain', 'mud', 'ground', 'trees', 'vines', 'sucking mire' ],
         'verbs': {
-          'look': 'The swamp is a vast bed of loamy muck, hooded by a dense tangle of stunted trees and creeping vines. Navigating it will be treacherous.'
+          'look': `The swamp is a vast bed of loamy muck, hooded by a dense tangle of stunted trees and creeping vines. Navigating it will be treacherous if you don't know where you're going.`
         }
       }, {
         'keys': [ 'bluff', 'cliff' ],
@@ -1530,17 +1535,23 @@ const world:World = {
           'look': 'The roots tunneling through the walls are so pervasive that the chamber is as much wood as it is stone.'
         }
       }, {
-        'keys': [ 'liquid', 'sap', 'strange sap', 'mirror', 'amber', 'glass', 'surface', 'crimson liquid', 'viscous crimson liquid', 'viscous liquid' ],
+        'keys': [ 'liquid', 'sap', 'strange sap', 'mirror', 'amber', 'glass', 'surface', 'crimson liquid', 'viscous crimson liquid', 'viscous liquid', 'oozing liquid' ],
         'verbs': {
           'look': 'The amber is the colour of smoldering embers, and forms an unbroken sheet of smooth glass. In its shining surface, you swear you see the image of a small child, one hand pressed desperately against the outward face.',
-          'use': touchAmber
+          'use': {
+            'self': touchAmber,
+            'player': touchAmber
+          }
         }
       }, {
         'keys': [ 'image', 'child', 'boy', 'small child' ],
         'verbs': {
           'look': 'The image is silent and unmoving. It stares out at you, hopelessly.',
           'talk': 'There is no reply.',
-          'use': touchAmber
+          'use': {
+            'self': touchAmber,
+            'player': touchAmber
+          }
         }
       }],
       'exits': {}
@@ -1551,7 +1562,9 @@ const world:World = {
     'pit': {
       'article': 'at',
       'name': 'the precipice of a pit',
-      'description': message(`You stand on the edge of a wide pit, its depths churning with flickering shadows. Four huge stone pillars support the ceiling and, far above you, `)
+      'description': message(`You stand on the edge of a wide pit, its depths churning with flickering shadows. `)
+                      .append(ifFlag('pillars'), 'Tiny goblins tear at four huge stone pillars ', 'Four huge stone pillars support the ceiling ')
+                      .append('and, far above you, ')
                       .append(ifFlagIs('giantState', '4'), 'you can see ', `a rope descends from `)
                       .append(`an opening in the arching rock.`)
                       .append(ifFlag('cat'), ' A cat-like creature is perched nearby, observing you with curiosity.')
@@ -1562,17 +1575,17 @@ const world:World = {
       },
       'things': [ walls, {
         'visibility': not(ifFlagIs('giantState', '4')),
-        'keys': [ 'rope', 'hook', 'iron hook', 'crude iron hook', 'ceiling' ],
+        'keys': [ 'rope', 'hook', 'iron hook', 'crude iron hook', 'ceiling', 'opening' ],
         'verbs': {
           'use': { 
-            'self': new Synonym('move'),
+            'self': `The rope is damp and slippery, and you can't get a good grip.`,
             'full-bucket': ss => ({
               message: 'You hang the laden bucket on the iron hook and, somewhere far above, a bell jingles. Heavy footsteps reverberate through the ceiling.',
               update: { flags: mapSet(ss.flags, { giant: 'well-2', giantState: '0' }), inventory: setRemove(ss.inventory, 'full-bucket') }
             }),
             'bucket': ss => ({
               message: 'You hang the bucket on the iron hook.',
-              update: { flags: mapSet(ss.flags, 'bucket', 'well') }
+              update: { flags: mapSet(ss.flags, 'bucket', 'well'), inventory: setRemove(ss.inventory, 'bucket') }
             })
           },
           'move': `The rope is damp and slippery, and you can't get a good grip.`,
@@ -1587,13 +1600,17 @@ const world:World = {
         'visibility': ifFlag('bucket'),
         'verbs': {
           'look': 'The wooden bucket dangles from an iron hook.',
-          'take': ss => ({
-            message: 'You take the wooden bucket.',
-            update: { inventory: setAdd(ss.inventory, 'bucket'), flags:mapRemove(ss.flags, 'bucket') }
-          })
+          'take': ss => [{
+            message: 'You remove the wooden bucket from the hook.',
+            update: { inventory: setAdd(ss.inventory, 'bucket'), flags: mapRemove(ss.flags, 'bucket') }
+          },
+          maybeDo(ifFlag('giantState'), once(ss => ({ 
+            message: 'A fine ruby powder of glowing residue spills out into your pockets.',
+            update: { inventory: setAdd(ss.inventory, 'ore-dust') }
+          }), 'bucket-dust'))]
         }
       }, {
-        'keys': [ 'pit', 'wide pit', 'shadows', 'flickering shadows', 'flickers', 'roiling shadows', 'floor' ],
+        'keys': [ 'pit', 'pitt', 'wide pit', 'wide pitt', 'shadows', 'flickering shadows', 'flickers', 'roiling shadows', 'floor' ],
         'verbs': {
           'look': [
             text(`The darkened bottom of the pit churns and flashes, as if brimming with vigorous obsidian fish. Flat, black scales litter the ground near the pit's edge.`),
@@ -1602,15 +1619,18 @@ const world:World = {
         }
       }, {
         'visibility': ifFlag('cat'),
-        'keys': [ 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing' ],
+        'keys': [ 'cat', 'kitty', 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'small dark shape', 'darting shape', 'small darting shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing', 'fish' ],
         'verbs': {
           'look': 'The creature looks vaguely feline, but black and scaled. Its eyes shine with intelligence.',
-          'talk': dialogue(catVoice('How did this get here? Intriguing.'))
+          'talk': dialogue(catVoice('"How did this get here? Intriguing."'))
                     .append('The creature puzzles.')
-                    .append(catVoice('For so long, this place was ours alone. Will you also devour us? Plunder our home? Are you like the ones that came before?'))
+                    .append(catVoice('"For so long, this place was ours alone. Will you also devour us? Plunder our home?"'))
                     .append('It appraises you silently for a moment.')
-                    .append(catVoice('No, I see other intentions in you.'))
-                    .build()
+                    .append(catVoice('"No, you are unlike the thing that came before. Bring it down to us, and we will feast."'))
+                    .build(),
+          'use': {
+            'paint': `You don't need that to be covered in ore.`
+          }
         }
       }, takeable({
         'keys': [ 'scale', 'scales', 'flat scale', 'flat scales', 'black scale', 'black scales', 'flat black scale', 'flat black scales' ],
@@ -1621,13 +1641,38 @@ const world:World = {
       }, 'scale'), {
         'keys': [ 'pillars', 'pillar', 'stone pillars', 'stone pillar', 'huge stone pillars', 'huge stone pillar', 'huge pillars', 'huge pillar' ],
         'verbs': {
-          'look': 'Cyclopean stone pillars ring the pit, opposing one another at the cardinal points. They appear structural.'
+          'look': [
+            text('Cyclopean stone pillars ring the pit, opposing one another at the cardinal points.'),
+            maybeDo(ifFlag('pillars'), 'A horde of tiny goblins are quickly reducing them to rubble.', 'They appear structural.')
+          ],
+          'use': {
+            'ore-dust': `The dust refuses to cling to the pillars.`,
+            'paint': ss => {
+              if (ss.flags.pillars) {
+                return text('The pillars are already painted with glowing ore.');
+              }
+              return {
+                message: 'You paint the huge pillars with glowing grease. Immediately, a horde of tiny goblins streams into the room and begins to tear at the supports. The chamber trembles.',
+                update: { 
+                  inventory: setRemove(ss.inventory, 'paint'), 
+                  flags: mapSet(ss.flags, 'pillars', 'holey') 
+                }
+              };
+            }
+          }
         }
       }, {
         'keys': [ 'mine' ],
         'exit': 'south',
         'verbs': {
           'look': 'The mine is to the south.'
+        }
+      }, {
+        'keys': [ 'goblins', 'goblin', 'tiny goblins', 'tiny goblins' ],
+        'visibility': ifFlag('pillars'),
+        'verbs': {
+          'look': 'The goblins are tearing pieces out of the pillars with wild abandon.',
+          'talk': 'The goblins singlemindedly ignore you.'
         }
       }]
     },
@@ -1636,7 +1681,7 @@ const world:World = {
     //#region Mine
     'mine': {
       'name': 'a busy mine',
-      'description': 'The walls of this room are rough and irregular, and dusted with slivers of a softly glowing mineral. Tiny goblins tear frantically at the stone with their bare hands, leaving large piles of luminous ore. A ladder is set into a small alcove on the western wall, and a tunnel leads north.',
+      'description': 'The walls of this room are rough and irregular, and spotted with deposits of a glowing red mineral. Tiny goblins tear frantically at the deposits with their bare hands, leaving large piles of luminous ore strewn about the chamber. A tall ladder is set into an alcove on the western wall, and a tunnel leads north.',
       'exits': {
         'north': 'pit',
         'west': 'ledge'
@@ -1644,29 +1689,36 @@ const world:World = {
       'things': [ ceiling, floor, {
         'keys': [ 'goblins', 'tiny goblins', 'goblin', 'tiny goblin' ],
         'verbs': {
-          'look': 'The goblins work tirelessly at the walls, pulling down chunks of ore and leaving it in glowing piles.'
+          'look': 'The goblins are singularly focused on the ore deposits, whipped into a frenzy by the crimson glow.',
+          'talk': 'The goblins singlemindedly ignore you.'
         }
       }, {
-        'keys': [ 'ore', 'glowing ore', 'luminous ore', 'stone', 'rock', 'mineral', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
+        'keys': [ 'ore', 'or', 'oar', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
         'verbs': {
-          'look': 'Large piles of loose rock are strewn about the chamber. Minute fragments of a strange red mineral nestle amongst the stones, glowing faintly.',
+          'look': 'Large piles of loose rock are strewn about the chamber. Fine particles of a strange red mineral nestle amongst the stones, glowing faintly.',
+          'take': 'The ore is too loose to carry in your hands.',
           'use': {
             'full-bucket': 'The bucket is already full of ore.',
             'bucket': ss => ({
               message: 'You fill the bucket with glowing ore.',
               update: { inventory: setMutate(ss.inventory, [ 'full-bucket' ], [ 'bucket' ]) }
-            })
+            }),
+            'paint': 'The rocks are already covered in ore.'
           }
         }
       }, {
         'keys': [ 'walls', 'wall' ], 
         'verbs': {
-          'look': 'The walls are rough and irregular, and dusted with slivers of a softly glowing mineral.'
+          'look': 'The walls are rough and irregular, and dusted with slivers of a softly glowing mineral.',
+          'use': {
+            'paint': 'The walls already glow with the strange red mineral.'
+          }
         }
       }, {
         'keys': [ 'ladder', 'small ladder', 'alcove', 'small alcove', 'up' ],
         'exit': 'west',
         'verbs': {
+          'take': `It's far too large to carry with you.`,
           'look': 'The ladder is small and made from crudely lashed sticks. It should support your weight.'
         }
       }, {
@@ -1683,17 +1735,13 @@ const world:World = {
     'ledge': {
       'article': 'on',
       'name': 'an earthen ledge',
-      'description': message('At the top of the ladder is a small earthen ledge, barely large enough for a person. The soil on the opposite wall has been cleared away, exposing a ')
+      'description': message('At the top of the ladder is a small earthen ledge, barely large enough to accomodate passage. The soil on the opposite wall has been cleared away, exposing a ')
                       .append(ifFlag('pried'), 'hole leading north.', 'face of irregular wooden boards.')
                       .append(' The ladder descends to the east.')
                       .build,
-      'exits': {
-        'east': 'mine',
-        'north': 'pantry-2'
-      },
-      'locks': {
-        'north': session => !session.flags.pried ? 'The wooden boards bar your passage.' : null
-      },
+      'exits': map({ 'east': 'mine' })
+                .and(ifFlag('pried'), 'north', 'pantry-2')
+                .build,
       'things': [{
         'keys': [ 'ladder', 'small ladder', 'crude ladder', 'down' ],
         'exit': 'east',
@@ -1707,7 +1755,7 @@ const world:World = {
           'look': 'The mine is down the ladder, to the east.'
         }
       }, {
-        'keys': [ 'board', 'boards', 'wooden boards', 'wooden board', 'face' ],
+        'keys': [ 'board', 'boards', 'wooden boards', 'wooden board', 'face', 'wall', 'crack', 'cracks' ],
         'verbs': {
           'look': 'The boards are roughly shaped knotted wood, and smell of must and rot.',
           'take': new Synonym('use'),
@@ -1729,7 +1777,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'ledge', 'earthen ledge', 'small earthen ledge', 'small ledge' ],
+        'keys': [ 'ledge', 'earthen ledge', 'small earthen ledge', 'small ledge', 'soil' ],
         'verbs': {
           'look': 'The ledge is small and dusty, and looks to have been cut hastily out of the soil.'
         }
@@ -1749,17 +1797,48 @@ const world:World = {
       'name': 'the pantry',
       'description': message('You are in a cramped, dark space. Shelves line the walls, and a small child huddles in the corner')
                       .append(ifHere('bucket'), ' next to a wooden bucket')
-                      .append('. Dim light seeps through a door to the north, and there is a hole in the southern wall.')
+                      .append(ifFlagIs('giant', 'kitchen-2'), '. The sound of chopping meat echoes ', '. Dim light seeps ')
+                      .append('through a door to the north, and there is a hole in the southern wall.')
                       .build,
       'exits': {
         'north': 'kitchen-2',
         'south': 'ledge'
       },
-      'things': [{
+      'things': [floor, ceiling, {
+        'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls', 'pantry'],
+        'verbs': {
+          'look': session => {
+            const thread = session.gone.has('thread') ? '' : ' A large spool of thread rests in one corner.';
+            return { message: `The shelves are littered with moldering foodstuffs.${thread}` };
+          }
+        }
+      }, {
+        'keys': [ 'door', 'light', 'kitchen', 'north', 'door to the north' ],
+        'exit': 'north',
+        'verbs': {
+          'look': ss => ({
+            message: ss.flags.giant === 'kitchen-2' 
+              ? 'You spy frightful movement through the ill-fitted door.' 
+              : 'The door hangs slightly off its hinges, letting in a bit of feeble light.'
+          }),
+          'open': 'The door swings loosely',
+          'close': 'The door swings loosely'
+        }
+      }, takeable({
+        'keys': ['food', 'foodstuffs', 'foodstuff', 'food stuff', 'food stuffs', 'stuff'],
+        'name': 'some mouldy food',
+        'verbs': {
+          'look': 'It\'s not very appetizing',
+          'eat': `You don't want to eat that.`
+        }
+      }, 'food'), {
         'keys': [ 'child', 'small child', 'boy', 'small boy' ],
         'verbs': {
           'look': 'The child looks no older than seven years, and presses himself tightly into the corner as if to escape through the walls. His knees are tucked beneath his chin, and he shivers nervously.',
-          'talk': 'There will be dialogue here someday' // TODO
+          'talk': dialogue(childVoice(`"You're here!"`))
+                    .append('the child exclaims.')
+                    .append(childVoice(`"But now we're both trapped... The giant won't let either of us leave."`))
+                    .build()
         }
       }, takeable({
         'keys': [ 'bucket', 'wooden bucket' ],
@@ -1774,22 +1853,101 @@ const world:World = {
     //#region Kitchen 2
     'kitchen-2': {
       'name': 'the kitchen',
-      'description': 'You are in what appears to be a monstrous kitchen. Crude knives hang above a well-worn cuttingboard, and a large pot bubbles over an open fire. There is a pantry on the southern wall, next to a small cage. A doorway leads east.',
+      'description': message('You are in what appears to be a monstrous kitchen. ')
+                      .append(ifFlagIs('giant', 'kitchen-2'), 
+                        'A hideous giant stands at a well-worn cuttingboard, chopping unidentifiable gobs of meat with a rusted cleaver.', 
+                        'Crude knives hang above a well-worn cuttingboard, and a large pot bubbles over an open fire.')
+                      .append(' There is a pantry on the southern wall, next to a small cage. A doorway leads east.')
+                      .build,
       'exits': {
         'south': 'pantry-2',
         'east': 'well-2'
       },
-      'things': []
+      'things': [walls, floor, ceiling, takeable({
+        'name': 'a knife',
+        'keys': ['knife', 'knives', 'crude knife', 'crude knives'],
+        'verbs': {
+          'look': 'The knives are large and pitted, and not very clean.'
+        }
+      }, 'knife'), {
+        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron'],
+        'verbs': {
+          'look': `The pot is huge and rusted, and a foul-smelling liquid boils violently inside.`,
+          'use': {
+            'food': session => ({
+              message: 'You drop the mouldy food into the pot',
+              update: { inventory: setRemove(session.inventory, 'food') }
+            })
+          }
+        }
+      }, {
+        'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
+        'verbs': {
+          'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.'
+        }
+      }, {
+        'keys': ['wood', 'rotten wood', 'log', 'stick', 'logs', 'sticks'],
+        'verbs': {
+          'look': `It's burning.`,
+          'take': `It's too hot to pick up.`
+        }
+      }, {
+        'keys': ['pantry', 'rickety pantry'],
+        'exit': 'south',
+        'verbs': {
+          'look': 'The pantry is just large enough for a person to enter.',
+          'open': 'The pantry door swings loosely.',
+          'close': 'The pantry door swings loosely.'
+        }
+      }, {
+        'keys': [ 'door', 'doorway', 'well', 'wellhouse', 'well house', 'well-house' ],
+        'exit': 'east',
+        'verbs': {
+          'look': `It's less a door, and more an absence of wall.`
+        }
+      }, {
+        'keys': ['cutting board', 'cuttingboard', 'board'],
+        'verbs': {
+          'look': 'The cuttingboard is a thick piece of knotted wood, deeply grooved from years of use. It is covered in large globs of slowly melting fat.',
+          'use': {
+            'knife': 'You cut a few more notches into the board'
+          }
+        }
+      }, takeable({
+        'keys': ['fat', 'melting fat', 'slowly melting fat', 'glob of fat', 'globs of fat', 'glob of melting fat', 'globs of melting fat', 'glob of slowly melting fat', 'globs of slowly melting fat'],
+        'name': 'a handful of fat',
+        'verbs': {
+          'look': 'The fat is gelatinous and pliable, with a pale yellow tinge. It smells awful.'
+        }
+      }, 'fat'), {
+        'keys': ['liquid', 'boiling liquid' ],
+        'verbs': {
+          'look': 'It looks worse than it smells.',
+          'eat': 'It tastes worse than it looks.'
+        }
+      }, locked({
+        'keys': ['cage', 'small cage', 'lock', 'sturdy lock', 'cage door'],
+        'name': 'the cage',
+        'verbs': {
+          'look': 'The cage is empty'
+        }
+      }, { stateKey: 'cage', keyId: 'keys' })],
+      'phrases': [{
+        keys: [ 'unlock cage', 'unlock the cage', 'unlock lock', 'unlock the lock', 'unlockcage'],
+        action: 'use:keys:lock'
+      }]
     },
     //#endregion
 
     //#region Well 2
     'well-2': {
       'name': 'the wellhouse',
-      'description': session => {
-        const hound = session.flags.hound ? 'lies in the corner' : 'squats in the corner, gnawing at a large bone';
-        return `In the center of this room is an old stone well, its rope descending deep below the rocky floor. A beastly hound ${hound}. There are doors to the west and south and, behind the hound, a hall stretches north.`;
-      },
+      'description': message(`In the center of this room `)
+                      .append(ifFlagIs('giant', 'well-2'), 
+                        `a hideous giant stands at an old stone well, cranking ponderously.`, 
+                        `is an old stone well, its rope descending deep below the rocky floor.`)
+                      .append(` A beastly hound squats in the corner. There are doors to the west and south and, behind the hound, a hall stretches north.`)
+                      .build,
       'locks': {
         'north': _ => 'The hound snaps at you, and you reconsider.',
         'south': _ => `The door is locked, and won't open.`
@@ -1897,7 +2055,7 @@ const world:World = {
 
     'stone': {
       'id': 'stone',
-      'keys': [ 'stone', 'ruby', 'rock', 'glowing stone', 'glowing ruby', 'red stone', 'redstone' ],
+      'keys': [ 'stone', 'ruby', 'rock', 'glowing stone', 'glowing ruby', 'red stone', 'redstone', 'gem', 'red gem', 'glowing gem', 'glowing red gem' ],
       'name': 'a glowing stone',
       'verbs': {
         'look': 'The stone is walnut-sized and gleams enticingly.'
@@ -2212,7 +2370,7 @@ const world:World = {
     'antinauseant': {
       'id': 'antinauseant',
       'name': 'an herbal antinauseant',
-      'keys': [ 'antinauseant' ],
+      'keys': [ 'antinauseant', 'herbal antinauseant' ],
       'verbs': {
         'look': 'A pungeant paste that promises to settle the stomach.',
         'eat': new Synonym('use'),
@@ -2226,7 +2384,7 @@ const world:World = {
     'antibiotic': {
       'id': 'antibiotic',
       'name': 'an herbal antibiotic',
-      'keys': [ 'antibiotic' ],
+      'keys': [ 'antibiotic', 'herbal antibiotic' ],
       'verbs': {
         'look': 'A fragrant poultice to heal infected wounds.',
         'eat': new Synonym('use'),
@@ -2240,7 +2398,7 @@ const world:World = {
     'sedative': {
       'id': 'sedative',
       'name': 'an herbal sedative',
-      'keys': [ 'sedative' ],
+      'keys': [ 'sedative', 'insomnia potion', 'herbal sedative', 'sleeping potion' ],
       'verbs': {
         'look': 'The paste is dark green and smells of flowers',
         'eat': new Synonym('use'),
@@ -2271,7 +2429,12 @@ const world:World = {
       'name': 'a wooden bucket',
       'keys': [ 'bucket', 'wooden bucket' ],
       'verbs': {
-        'look': 'The bucket is made from mildewed wood with a handle of thick twine.'
+        'look': 'The bucket is made from mildewed wood with a handle of thick twine.',
+        'use': {
+          'self': 'You could fill it with something.',
+          'ore-dust': 'There is not nearly enough dust to fill the bucket.',
+          'scale': 'The bucket could hold a lot more than that.'
+        }
       }
     },
 
@@ -2281,6 +2444,45 @@ const world:World = {
       'keys': [ 'bucket', 'full bucket', 'ore', 'bucket of ore', 'bucket of glowing ore', 'bucket full of ore', 'bucket full of glowing ore' ],
       'verbs': {
         'look': 'The bucket is full to the brim with faintly glowing ore.'
+      }
+    },
+
+    'fat': {
+      'id': 'fat',
+      'name': 'a handful of fat',
+      'keys': [ 'fat', 'handful of fat', 'hand full of fat', 'glob of fat' ],
+      'verbs': {
+        'look': 'The fat is gelatinous and pliable, with a pale yellow tinge. It smells awful.',
+        'use': {
+          'ore-dust': ss => ({
+            message: 'You blend the ore dust into the fat, creating a softly glowing crimson grease.',
+            update: { inventory: setMutate(ss.inventory, [ 'paint' ], [ 'fat', 'ore-dust' ]) }
+          })
+        }
+      }
+    },
+
+    'ore-dust': {
+      'keys': [ 'residue', 'powder', 'fine powder', 'ruby powder', 'ruby dust', 'fine ruby powder', 'glowing residue', 'dust', 'ore dust', 'glowing dust', 'crumbling ore' ],
+      'id': 'ore-dust',
+      'name': 'some glowing dust',
+      'verbs': {
+        'look': 'The dust glows with a soft crimson light.'
+      }
+    },
+
+    'paint': {
+      'keys': [ 'grease', 'red grease', 'glowing grease', 'paint', 'red paint', 'crimson paint', 'glowing paint', 'glowing red paint', 'glowing crimson paint' ],
+      'id': 'paint',
+      'name': 'some glowing grease',
+      'verbs': {
+        'look': 'The gelatinous amalgam glows with a soft red light. It smells awful.',
+        'use': {
+          'self': 'You could cover something in glowing ore.',
+          'scale': `You don't need that to be covered in ore.`,
+          'knife': `You don't need that to be covered in ore.`,
+          'bucket': `You don't need that to be covered in ore.`,
+        }
       }
     }
   },
@@ -2293,7 +2495,7 @@ const world:World = {
     'always': {
       'things': [{
         'id': 'player',
-        'keys': [ 'me', 'self', 'myself', 'body', 'head', 'arm', 'arms', 'leg', 'legs', 'hand', 'hands', 'waist' ],
+        'keys': [ 'me', 'self', 'myself', 'body', 'head', 'arm', 'arms', 'leg', 'legs', 'hand', 'hands', 'waist', 'foot', 'feet' ],
         'verbs': {
           'look': `It's you.`
         }
@@ -2383,11 +2585,17 @@ const world:World = {
     },
 
     'giant': {
-      'roomEffect': ss => {
+      'roomEffect': (ss, verb) => {
+
+        if (verb !== 'move') { 
+          // Giant only moves when you do
+          return null; 
+        }
+
         const loc = ss.flags.giant || 'kitchen-2';
         const state = ss.flags.giantState;
 
-        const firstFight = fightGiant(loc, ss.room);
+        const firstFight = fightGiant(loc, ss.room, !!ss.flags.pillars);
         if (firstFight) {
           // Fight instead of move
           return firstFight;
@@ -2397,7 +2605,7 @@ const world:World = {
         const flags = moveGiant(ss);
         const text:Array<string> = [];
         if (flags.giant && flags.giant !== ss.room) {
-          text.push('Heavy footsteps reverberate through the ceiling.');
+          text.push('Heavy footsteps reverberate through the surrounding stone.');
         }
         if (flags.giant && flags.giant === ss.room) {
           text.push('A huge bog giant plods into the room.');
@@ -2422,7 +2630,7 @@ const world:World = {
           result.update = { flags: mapSet(ss.flags, flags) };
         }
 
-        return flags.giant ? [result, fightGiant(flags.giant, ss.room)] : result;
+        return flags.giant ? [result, fightGiant(flags.giant, ss.room, !!ss.flags.pillars)] : result;
       },
       'things': []
     }
@@ -2430,9 +2638,17 @@ const world:World = {
   //#endregion
 };
 
-function fightGiant(giant, player) {
+function fightGiant(giant, player, canWin) {
   if (giant !== player) {
     return null;
+  }
+
+  if (canWin && player === 'well-2') {
+    return {
+      // TODO
+      message: `The giant roars savagely and heaves its bulk in your direction. You dodge out of the way, and the giant's massive fists slam into the ground with an echoing crash. The chamber shudders and then the floor gives way, sending the giant tumbling into the depths. Far below, shadows flash with glints of tooth and scale and an unearthly howl rises from the pit. And then all is still. You win or something. Tell Michael to write an epilogue.`,
+      close: true
+    };
   }
 
   const retreatId = player === 'well-2' ? 'kitchen-2' : 'pantry-2';

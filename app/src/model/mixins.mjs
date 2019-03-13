@@ -68,7 +68,7 @@ export function locked(base:Thing, { stateKey , keyId, unlockMessage }:LockOptio
 }
 
 // Lets you pick up a thing, putting it in your inventory
-export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing {
+export function takeable(base:Thing, id:ThingId, limited:boolean = false, takeMessage?:string):Thing {
   base = {...base}; // clone
   const name = base.name || 'it';
 
@@ -84,7 +84,7 @@ export function takeable(base:Thing, id:ThingId, limited:?boolean = false):Thing
         update.gone = setAdd(session.gone, id);
       }
       return {
-        message: `You take ${name}.`,
+        message: takeMessage || `You take ${name}.`,
         update
       };
     }
@@ -116,11 +116,14 @@ export function once(action:string|ActionOutput, key:string):ActionOutput {
   };
 }
 
-export function maybeDo(p:Predicate, action:string|ActionOutput):ActionOutput {
+export function maybeDo(p:Predicate, action:string|ActionOutput, or?:string|ActionOutput = null):ActionOutput {
   if (typeof action === 'string') {
     action = { message: action };
   }
-  return ss => p(ss) ? action : null;
+  if (typeof or === 'string') {
+    or = { message: or };
+  }
+  return ss => p(ss) ? action : or;
 }
 
 export function text(t:string):ActionOutput {

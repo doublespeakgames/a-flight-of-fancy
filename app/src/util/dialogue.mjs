@@ -10,7 +10,11 @@ type DialogueBuilder = {
 
 export const Pitch:{[string]:PitchValue} = Object.seal({
   HIGHEST: '+6st',
-  HIGH: '+3st'
+  HIGH: '+3st',
+  MED_HIGH: '+1st',
+  MED_LOW: '-1st',
+  LOW: '-3st',
+  LOWEST: '-6st'
 });
 
 function renderBlock(block:DialogueBlock):string {

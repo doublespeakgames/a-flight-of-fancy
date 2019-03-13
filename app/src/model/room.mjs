@@ -42,7 +42,7 @@ export const lookAt = (world:World, preventShort:bool = false):ActionOutput => s
   } : null;
 
   return [{
-    message: !preventShort && ss.seen.has(ss.room) ? `You are ${article} ${resolve(ss, room.name)}.` : resolve(ss, room.description),
+    message: !preventShort && ss.seen.has(ss.room) ? `You are ${article} ${resolve(room.name, ss)}.` : resolve(room.description, ss),
     update: !preventShort && ss.seen.has(ss.room) ? undefined : { seen: setAdd(ss.seen, ss.room) }
   }, ...effects, exits ]; 
 };
