@@ -5,6 +5,7 @@ type PitchValue = string;
 type DialogueBlock = string | Voice;
 type DialogueBuilder = {
   append: DialogueBlock => DialogueBuilder,
+  pause: number => DialogueBuilder,
   build: void => string
 };
 
@@ -24,11 +25,15 @@ function renderBlock(block:DialogueBlock):string {
   return `<prosody pitch="${block.pitch}">${block.text}</prosody>`;
 }
 
-export default function dialogue(initial:DialogueBlock):DialogueBuilder {
+export default function ssml(initial:DialogueBlock):DialogueBuilder {
   let val = renderBlock(initial);
   const builder = {
     append: (block:DialogueBlock) => {
       val = `${val} ${renderBlock(block)}`;
+      return builder;
+    },
+    pause: seconds => {
+      val = `${val}<break time="${seconds}s" />`;
       return builder;
     },
     build: () => `<speak>${val}</speak>`

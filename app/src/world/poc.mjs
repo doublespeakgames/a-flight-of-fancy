@@ -12,7 +12,7 @@ import message from '../util/message';
 import map from '../util/conditional-map';
 import { not, both, ifSeen, ifAt, ifHere, ifFlag, ifFlagGTE, ifFlagIs, ifEffect } from '../util/builder';
 import { text, maybeDo, once, locked, takeable } from '../model/mixins';
-import dialogue, { Pitch } from '../util/dialogue';
+import ssml, { Pitch } from '../util/ssml';
 
 //#region Shared Things
 const threadDirs = {
@@ -505,7 +505,7 @@ const world:World = {
               return { message: 'It just watches you, expectantly.' }
             }
             return {
-              message: dialogue(catVoice('"Oh, hello again."'))
+              message: ssml(catVoice('"Oh, hello again."'))
                         .append('the creature chirps.')
                         .append(catVoice(`"Are you going to let me out now? You always let me out."`))
                         .build(),
@@ -1408,7 +1408,10 @@ const world:World = {
         'keys': [ 'woman', 'lady', 'girl', 'person', 'her', 'them' ],
         'verbs': {
           'look': 'The woman is neither old nor young, with long stringy hair and a tired complexion. She stares back at you, tenuous and wistful.',
-          'talk': `"You know, it took my little boy," the woman says. "The tree did. Yes, you've seen it. If anyone's here, it's for the tree." Her eyes lock with yours, and her tone hardens. "He always was a dreamer. That's how it gets in, of course. But all paths run two ways."`
+          'talk': ssml(`"It took my little boy while I was out." the woman says. "The tree. You know the one I mean. If anyone's here, it's because of that tree."`)
+                  .pause(1)
+                  .append(`Her eyes lock with yours, and her tone hardens. "He always was a dreamer, poor child. That's how it gets in. But all paths run two ways."`)
+                  .build()
         }
       }, {
         'keys': [ 'door', 'outside', 'garden' ],
@@ -1567,6 +1570,7 @@ const world:World = {
                       .append('and, far above you, ')
                       .append(ifFlagIs('giantState', '4'), 'you can see ', `a rope descends from `)
                       .append(`an opening in the arching rock.`)
+                      .append(ifFlagIs('bucket', 'well'), ' A wooden bucket dangles from its end.')
                       .append(ifFlag('cat'), ' A cat-like creature is perched nearby, observing you with curiosity.')
                       .append(' A tunnel leads south.')
                       .build,
@@ -1622,7 +1626,7 @@ const world:World = {
         'keys': [ 'cat', 'kitty', 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'small dark shape', 'darting shape', 'small darting shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing', 'fish' ],
         'verbs': {
           'look': 'The creature looks vaguely feline, but black and scaled. Its eyes shine with intelligence.',
-          'talk': dialogue(catVoice('"How did this get here? Intriguing."'))
+          'talk': ssml(catVoice('"How did this get here? Intriguing."'))
                     .append('The creature puzzles.')
                     .append(catVoice('"For so long, this place was ours alone. Will you also devour us? Plunder our home?"'))
                     .append('It appraises you silently for a moment.')
@@ -1835,7 +1839,7 @@ const world:World = {
         'keys': [ 'child', 'small child', 'boy', 'small boy' ],
         'verbs': {
           'look': 'The child looks no older than seven years, and presses himself tightly into the corner as if to escape through the walls. His knees are tucked beneath his chin, and he shivers nervously.',
-          'talk': dialogue(childVoice(`"You're here!"`))
+          'talk': ssml(childVoice(`"You're here!"`))
                     .append('the child exclaims.')
                     .append(childVoice(`"But now we're both trapped... The giant won't let either of us leave."`))
                     .build()
@@ -2643,20 +2647,36 @@ function fightGiant(giant, player, canWin) {
     return null;
   }
 
+  const ret = [{
+    message: `The giant roars savagely and heaves its bulk in your direction. You dodge out of the way, and the giant's massive fists slam into the ground with an echoing crash.`
+  }];
+
   if (canWin && player === 'well-2') {
-    return {
-      // TODO
-      message: `The giant roars savagely and heaves its bulk in your direction. You dodge out of the way, and the giant's massive fists slam into the ground with an echoing crash. The chamber shudders and then the floor gives way, sending the giant tumbling into the depths. Far below, shadows flash with glints of tooth and scale and an unearthly howl rises from the pit. And then all is still. You win or something. Tell Michael to write an epilogue.`,
+    ret.push({
+      message: ssml(`The chamber shudders, and then the floor gives way, sending the giant tumbling into the depths. Far below, shadows flash with glints of tooth and scale and an unearthly howl rises from the pit. For a fleeting moment, you picture twisted branches swarming with shadowy creatures, gnashing and rending.`)
+                .pause(1)
+                .append(`And then all is still.`)
+                .pause(1)
+                .append(`Beside you, a small child smiles.`)
+                .append(childVoice(`"Now I can finally go home."`))
+                .pause(2)
+                .append(`You become aware of an intense heat on your face, and you open your eyes. You lie sprawled on the damp loam of the swamp, while, before you, a great gnarled tree is consumed by flame. Huge plumes of black smoke spew from the blaze, streaking, oily and black, across the sky. You brace to rise to your feet, and you feel something smooth and hard in the soft peat. Just beneath a fresh bed of moss, as if in peaceful slumber, a small skeleton lies perfectly preserved. You stand and watch the flames crest the canopy.`)
+                .pause(1)
+                .append(`Tonight you will dream of home.`)
+                .build(),
       close: true
-    };
+    });
+  }
+  else {
+    const retreatId = player === 'well-2' ? 'kitchen-2' : 'pantry-2';
+    const retreat = player === 'well-2' ? 'the kitchen' : 'the pantry';
+    ret.push({
+      message: `You flee to ${retreat}.`,
+      update: { room: retreatId }
+    });
   }
 
-  const retreatId = player === 'well-2' ? 'kitchen-2' : 'pantry-2';
-  const retreat = player === 'well-2' ? 'the kitchen' : 'the pantry';
-  return {
-    message: `The giant roars savagely and heaves its bulk in your direction. You dodge out of the way, and the giant's massive fists slam into the ground with an echoing crash. You flee to ${retreat}.`,
-    update: { room: retreatId }
-  };
+  return ret;
 }
 
 function moveGiant(ss):{[string]:?string} {
