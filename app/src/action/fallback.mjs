@@ -15,7 +15,7 @@ import { resolveAction } from '../action-resolver';
 
 function getMessage(phrase:string, tries:number):string {
   if (tries >= 2) {
-    return 'Try simple sentences with verbs like move, take, look, talk, and use.'
+    return 'Try simple commands with verbs like move, take, look, talk, and use.'
   }
   if (tries >= 1) {
     return `I don't understand "${phrase}"`;

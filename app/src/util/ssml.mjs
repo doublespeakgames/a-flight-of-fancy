@@ -6,6 +6,7 @@ type DialogueBlock = string | Voice;
 type DialogueBuilder = {
   append: DialogueBlock => DialogueBuilder,
   pause: number => DialogueBuilder,
+  audio: string => DialogueBuilder,
   build: void => string
 };
 
@@ -34,6 +35,10 @@ export default function ssml(initial:DialogueBlock):DialogueBuilder {
     },
     pause: seconds => {
       val = `${val}<break time="${seconds}s" />`;
+      return builder;
+    },
+    audio: path => {
+      val = `${val}<audio src="${path}" />`;
       return builder;
     },
     build: () => `<speak>${val}</speak>`

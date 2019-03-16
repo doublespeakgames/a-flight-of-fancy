@@ -10,6 +10,9 @@
 import Actions from 'actions-on-google';
 import { resolveAction, makeSentence } from '../action-resolver';
 import uuid from 'uuid/v1';
+import { text } from '../model/mixins';
+import ssml from '../util/ssml';
+import { resolve } from '../value';
 
 import type { Conversation } from 'actions-on-google';
 import type { Sentence, Action, ActionType } from '../action-resolver';
@@ -26,6 +29,14 @@ function getUserId(conv:Conversation):string {
   return conv.user.storage.userId;
 }
 
+function idleHandler(session, world) {
+  return {
+    message: ssml(`I'll wait.`)
+              .audio(resolve(world.sounds.google.idle, session))
+              .build()
+  };
+}
+
 async function fulfill(actionType:ActionType, conv:Conversation, params:{[string]:string}) {  
 
   const confidence = conv.body.queryResult.intentDetectionConfidence;
@@ -38,7 +49,7 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
     type: !isFallback ? actionType : 'fallback',
     sentence
   };
-  const result = await resolveAction(action);
+  const result = await resolveAction(action, idleHandler);
   conv.contexts.set(LAST_RESPONSE, 1, { message: result.message });
   if (result.close) {
     conv.close(result.message);
@@ -48,6 +59,7 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
   }
 }
 
+app.intent('Idle', fulfill.bind(null, 'idle'));
 app.intent('Fallback', fulfill.bind(null, 'fallback'));
 app.intent('Welcome', fulfill.bind(null, 'look'));
 app.intent('Restart', fulfill.bind(null, 'restart'));

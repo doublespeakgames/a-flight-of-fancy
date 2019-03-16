@@ -10,7 +10,7 @@ import type { SessionDiff } from './session';
 import type { Thing, ThingId } from './thing';
 import type { Predicate } from '../util/builder';
 import type { Updater } from '../util/updater';
-import type { ActionOutput } from '../action-resolver';
+import type { ActionResult, ActionOutput } from '../action-resolver';
 
 import { mapSet, setAdd } from '../util/immutable';
 import { compose } from '../util/updater';
@@ -126,6 +126,6 @@ export function maybeDo(p:Predicate, action:string|ActionOutput, or?:string|Acti
   return ss => p(ss) ? action : or;
 }
 
-export function text(t:string):ActionOutput {
+export function text(t:string):ActionResult {
   return { message: t };
 }

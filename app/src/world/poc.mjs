@@ -203,11 +203,25 @@ const touchAmber = ss => ({
 });
 const catVoice = text => ({ text, pitch: Pitch.HIGH });
 const childVoice = text => ({ text, pitch: Pitch.MED_HIGH });
+const swampRooms = new Set([ 'tent', 'camp', 'bluff', 'bluff-top', 'tree', 'garden', 'cabin' ]);
 //#endregion
 
 const world:World = {
   'id': 'poc',
   'start': 'pantry',
+
+  //#region Sounds
+  'sounds': {
+    'google': {
+      'idle': session => {
+        if (swampRooms.has(session.room)) {
+          return 'https://actions.google.com/sounds/v1/ambiences/jungle_atmosphere_morning.ogg';
+        }
+        return 'https://actions.google.com/sounds/v1/weather/wind_through_window.ogg';
+      }
+    }
+  },
+  //#endregion
 
   //#region Rooms
   'rooms': {

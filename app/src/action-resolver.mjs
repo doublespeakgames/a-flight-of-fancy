@@ -17,6 +17,7 @@ import interact from './action/interact';
 import restart from './action/restart';
 import { resolve } from './value';
 import Logger from './util/logger';
+import { text } from './model/mixins';
 
 export type Action = {|
   sessionId:string,
@@ -69,6 +70,8 @@ const EXIT_LOOK_KEYS = new Set([
   'directions'
 ]);
 
+const defaultIdle:ActionHandler = () => text('Take your time.');
+
 const handlers:{[string]:ActionHandler} = {
   'fallback': fallback,
   'move': move,
@@ -76,6 +79,7 @@ const handlers:{[string]:ActionHandler} = {
   'inventory': inventory,
   'exits': exits,
   'restart': restart,
+  'idle': defaultIdle,
   'attack': interact('attack', { failure: s => `You can't attack the ${s}` }),
   'give': interact('give', { failure: (s, o) => `The ${o} doesn't want the ${s}` }),
   'open': interact('open'),
@@ -191,14 +195,17 @@ function processSSML(message:string):string {
   return `<speak>${noSpeak}</speak>`;
 }
 
-export async function resolveAction(action:Action):Promise<ActionResult> {
+export async function resolveAction(action:Action, idleHandler:ActionHandler = defaultIdle):Promise<ActionResult> {
   Logger.info(`Resolving action ${JSON.stringify(action)}`);
   let session = await getSession(action.sessionId);
   if (!session) {
     session = await createSession(action.sessionId);
   }
+
+  const handler = action.type === 'idle' ? idleHandler : handlers[action.type];
+
   const world = await getWorld(session.world);
-  const result:?ActionResult = processOutput(await handlers[action.type](session, world, action.sentence), session, action.type);
+  const result:?ActionResult = processOutput(await handler(session, world, action.sentence), session, action.type);
 
   if (!result) {
     return {
