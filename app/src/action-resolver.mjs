@@ -202,7 +202,7 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
   }
 
   if (result.update) {
-    writeSession({ ...session, ...result.update });
+    writeSession({ ...session, failures: 0, ...result.update });
     Logger.info('Session model updated.');
   }
 

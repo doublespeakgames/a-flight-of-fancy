@@ -1060,7 +1060,7 @@ const world:World = {
       },
       'things': [{
         'id': 'pack',
-        'keys': ['pack', 'backpack', 'back pack', 'expedition pack'],
+        'keys': ['pack', 'backpack', 'back pack', 'expedition pack', 'equipment', 'useful equipment'],
         'verbs': {
           'look': 'The backpack is ultralight, with a springsteel frame and numerous straps. It is full of useful equipment.',
           'open': new Synonym('take'),
@@ -1697,7 +1697,7 @@ const world:World = {
           'talk': 'The goblins singlemindedly ignore you.'
         }
       }, {
-        'keys': [ 'ore', 'or', 'oar', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
+        'keys': [ 'ore', 'or', 'oar', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
         'verbs': {
           'look': 'Large piles of loose rock are strewn about the chamber. Fine particles of a strange red mineral nestle amongst the stones, glowing faintly.',
           'take': 'The ore is too loose to carry in your hands.',
@@ -1763,12 +1763,14 @@ const world:World = {
         'verbs': {
           'look': 'The boards are roughly shaped knotted wood, and smell of must and rot.',
           'take': new Synonym('use'),
+          'attack': new Synonym('use'),
           'use': {
             'self': ss => ({
               message: ss.flags.pried 
                 ? `It's too big to carry around.` 
                 : `You can't fit your fingers into the cracks between the boards.`
             }),
+            'player': `The boards won't be knocked inward. Perhaps they could be pried loose.`,
             'scale': ss => { 
               if (ss.flags.pried) {
                 return { message: 'The path has already been cleared.' };
