@@ -1666,7 +1666,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'mine' ],
+        'keys': [ 'mine', 'tunnel' ],
         'exit': 'south',
         'verbs': {
           'look': 'The mine is to the south.'
@@ -1726,7 +1726,7 @@ const world:World = {
           'look': 'The ladder is small and made from crudely lashed sticks. It should support your weight.'
         }
       }, {
-        'keys': [ 'pit' ],
+        'keys': [ 'pit', 'tunnel' ],
         'exit': 'north',
         'verbs': {
           'look': 'The pit is to the north.'
@@ -1852,7 +1852,13 @@ const world:World = {
         'verbs': {
           'look': 'The bucket is made from mildewed wood with a handle of thick twine. It is blessedly empty.'
         }
-      }, 'bucket', true)]
+      }, 'bucket', true), {
+        'keys': [ 'hole' ],
+        'exit': 'south',
+        'verbs': {
+          'look': 'A few of the boards in the back of the pantry are missing, exposing a tunnel into the earth.'
+        }
+      }]
     },
     //#endregion
 
@@ -2662,9 +2668,10 @@ function fightGiant(giant, player, canWin) {
                 .append(`Beside you, a small child smiles.`)
                 .append(childVoice(`"Now I can finally go home."`))
                 .pause(2)
-                .append(`You become aware of an intense heat on your face, and you open your eyes. You lie sprawled on the damp loam of the swamp, while, before you, a great gnarled tree is consumed by flame. Huge plumes of black smoke spew from the blaze, streaking, oily and black, across the sky. You brace to rise to your feet, and you feel something smooth and hard in the soft peat. Just beneath a fresh bed of moss, as if in peaceful slumber, a small skeleton lies perfectly preserved. You stand and watch the flames crest the canopy.`)
+                .append(`You become aware of an intense heat on your face, and you open your eyes. You lie sprawled on the damp loam of the swamp, while, before you, a great gnarled tree is consumed by flame. Huge plumes of smoke spew from the blaze, streaking, oily and black, across the sky. You brace to rise to your feet, and you feel something smooth and hard in the soft peat. Just beneath a fresh bed of moss, as if in peaceful slumber, a small skeleton lies perfectly preserved. You stand and watch the flames crest the canopy.`)
                 .pause(1)
                 .append(`Tonight you will dream of home.`)
+                .pause(2)
                 .build(),
       close: true
     });

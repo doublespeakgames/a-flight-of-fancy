@@ -186,6 +186,11 @@ function processOutput(output:ActionResult|ActionOutput, session:Session, verb:s
   return workingResult;
 }
 
+function processSSML(message:string):string {
+  const noSpeak = message.replace(/<speak>/g, '').replace(/<\/speak>/g, '');
+  return `<speak>${noSpeak}</speak>`;
+}
+
 export async function resolveAction(action:Action):Promise<ActionResult> {
   Logger.info(`Resolving action ${JSON.stringify(action)}`);
   let session = await getSession(action.sessionId);
@@ -205,6 +210,8 @@ export async function resolveAction(action:Action):Promise<ActionResult> {
     writeSession({ ...session, failures: 0, ...result.update });
     Logger.info('Session model updated.');
   }
+
+  result.message = processSSML(result.message);
 
   Logger.info(`Action resolved with ${JSON.stringify(result)}`);
   return result;
