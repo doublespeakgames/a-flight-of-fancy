@@ -10,7 +10,7 @@ import { random, flatMap } from '../util/list';
 import { tryParse } from '../util/number';
 import message from '../util/message';
 import map from '../util/conditional-map';
-import { not, both, ifSeen, ifAt, ifHere, ifFlag, ifFlagGTE, ifFlagIs, ifEffect } from '../util/builder';
+import { not, or, both, ifHas, ifSeen, ifAt, ifHere, ifFlag, ifFlagGTE, ifFlagIs, ifEffect } from '../util/builder';
 import { text, maybeDo, once, locked, takeable } from '../model/mixins';
 import ssml, { Pitch } from '../util/ssml';
 
@@ -91,7 +91,8 @@ const ingredients = [
 ];
 const potpourriResult = (...consumed) => session => ({
   message: `That doesn't seem right. At least your results smell nice.`,
-  update: { inventory: setMutate(session.inventory, [ 'potpourri' ], consumed.filter(Boolean)) }
+  update: { inventory: setMutate(session.inventory, [ 'potpourri' ], consumed.filter(Boolean)) },
+  context: 'potpourri'
 });
 function makePotpourri(herbKey?:string) {
   const useMap = {};
@@ -192,7 +193,7 @@ const herbs = {
     }
   }
 };
-const drowsyTree = `You begin to drowse, and the tree's branches swim in your vision. You find yourself mesmerized by the interplay of light and shadow as the woody tendrils sway in the misty breeze. And there, directly below, the cave yawns, extending deep into the earth like the gullet of an antediluvian worm.`;
+const drowsyTree = `You begin to drowse, and the tree's branches swim in your vision. You find yourself mesmerized by the interplay of light and shadow as the woody tendrils sway in the misty breeze. And there. Directly below, the cave yawns. Extending deep into the earth like the gullet of an antediluvian worm.`;
 const touchAmber = ss => ({
   message: `You place your hand on the glassy surface. The amber is warm to the touch, and your fingers tingle as if thawing from a deep-rooted cold. And then you are somewhere else. You stand on the edge of a wide pit, its depths churning with flickering shadows. Four huge stone pillars support the ceiling and, far above you, a rope descends from an opening in the arching rock. You blink. How long have you been here?`,
   update: { 
@@ -315,7 +316,8 @@ const world:World = {
             'cloth': `The greasy cloth would burn well, but you don't want to lose it.`,
             'torch': session => ({
               message: 'You hold your improvised torch in the fire until it catches',
-              update: { inventory: setMutate(session.inventory, ['lit-torch'], ['torch']) }
+              update: { inventory: setMutate(session.inventory, ['lit-torch'], ['torch']) },
+              context: 'torch'
             }),
             'lit-torch': `It's already lit.`
           }
@@ -411,6 +413,7 @@ const world:World = {
         'keys': ['cage', 'small cage', 'lock', 'sturdy lock', 'cage door'],
         'name': 'the cage',
         'verbs': {
+          'take': 'The cage is too heavy to carry.',
           'look': session => {
             if (session.flags.it !== 'freed') {
               return { message: 'Inside the cage, a strange creature huddles furtively.' };
@@ -442,7 +445,8 @@ const world:World = {
                 update: {
                   flags: mapSet(session.flags, { 'stone': null, 'cage': 'open' }),
                   effects: setMutate(session.effects, [ 'thread' ], [ 'goblin' ])
-                }
+                },
+                context: 'thread'
               };
             }
             if (session.flags.stone === 'goblin') {
@@ -474,6 +478,7 @@ const world:World = {
               update: { flags: mapSet(session.flags, 'cage', 'open') }
             };
           },
+          'attack': new Synonym('use'),
           'use': {
             'goblin': 'The goblin remains out of reach. Perhaps with some bait...',
             'stone': session => {
@@ -500,12 +505,13 @@ const world:World = {
                   flags: mapSet(session.flags, 'stone', 'cage')
                 }
               };
-            }
+            },
+            'any': 'The lock is too sturdy to force.'
           }
         }
       }, { stateKey: 'cage', keyId: 'keys', unlockMessage: `You try three keys before one turns in the lock with a loud click. The caged creature's ears perk.`}), {
         'id': 'creature',
-        'keys': ['creature', 'strange creature', 'it', 'cat', 'kitty' ],
+        'keys': ['creature', 'strange creature', 'cat', 'kitty' ],
         'verbs': {
           'look': 'The creature is cat-like, but covered in dark shining scales. Its face is unnervingly human, and it watches you with keen eyes.',
           'use': 'The cage imprisoning it is closed.',
@@ -530,7 +536,7 @@ const world:World = {
       }],
       'phrases': [{
         keys: [ 'unlock cage', 'unlock the cage', 'unlock lock', 'unlock the lock', 'unlockcage'],
-        action: 'use:keys:lock'
+        action: 'use:lock:keys'
       }]
     },
     //#endregion
@@ -554,14 +560,11 @@ const world:World = {
         'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
       'things': [walls, floor, ceiling, {
-        'keys': [ 'well', 'stone well', 'old well', 'old stone well', 'crank', 'large crank', 'wooden crank', 'large wooden crank' ],
+        'keys': [ 'well', 'stone well', 'old well', 'old stone well', 'crank', 'large crank', 'wooden crank', 'large wooden crank', 'crankshaft', 'crank shaft', 'crank on the well' ],
         'verbs': {
           'move': 'The well is too narrow to fit inside',
           'use': {
-            'self': ss => ({
-              message: `You spin the crank, and the rope ${ss.flags.well === 'up' ? 'lowers' : 'rises'}.`,
-              update: { flags: mapSet(ss.flags, 'well', ss.flags.well === 'up' ? 'down' : 'up') }
-            }),
+            'self': `The crank is heavy and stiff, and you can't get it to turn.`,
             'stone': ss => ({
               message: 'You toss the stone down the well, and its light fades from view.',
               update: { inventory: setRemove(ss.inventory, 'stone') }
@@ -574,27 +577,18 @@ const world:World = {
         'verbs': {
           'move': `The rope is damp and slippery, and you can't get a good grip.`,
           'use': new Synonym('move'),
-          'look': ss => ({ 
-            message: ss.flags.well === 'up' 
-              ? 'At the end of the rope is a crude iron hook. Nothing hangs from it.'
-              : 'The end of the rope is obscured in darkness, well below the chamber floor.' 
-          })
+          'take': new Synonym('move'),
+          'look': `The rope descends deep into the well.`
         }
       }, {
         'keys': [ 'bell', 'sizeable bell', 'large bell' ],
         'verbs': {
           'look': 'The bell is heavy and broad. It looks quite loud.',
-          'use': 'The bell clangs loudly.',
-          'take': `You try to pull the bell off the crankshaft, but it doesn't budge.`
-        }
-      }, {
-        'keys': [ 'hook', 'iron hook', 'crude iron hook', 'crude hook' ],
-        'visibility': ifFlagIs('well', 'up'),
-        'verbs': {
-          'look': 'A crescent of roughly shaped iron hangs from the end of the rope.'
+          'use': `You worry about what might hear you.`,
+          'take': `You try to pull the bell off the crankshaft, but it won't budge.`
         }
       }, locked({
-        'keys': [ 'door', 'locked door', 'south door', 'southern door', 'door to the south', 'stone door', 'south' ],
+        'keys': [ 'door', 'lock', 'locked door', 'south door', 'southern door', 'door to the south', 'stone door', 'south' ],
         'name': 'the door',
         'exit': 'south',
         'verbs': {
@@ -723,7 +717,7 @@ const world:World = {
         action: 'give:food:dog'
       }, {
         keys: ['unlock door', 'unlock the door', 'unlock south door', 'unlock the south door', 'unlock the southern door'],
-        action: 'use:key:door'
+        action: 'use:door:key'
       }]
     },
     //#endregion
@@ -748,7 +742,7 @@ const world:World = {
     //#region Bedroom-lit
     'bedroom-lit': {
       'name': 'the bedroom',
-      'description': `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a bed of filthy straw. Against the back wall is a heavy wooden trunk. A hallway leads south.`,
+      'description': `Illuminated by torchlight, you can see that you are in a small bedroom. Immediately in front of you, a bog giant snores loudly atop a damp bed of filthy straw. Against the back wall is a heavy wooden trunk. A hallway leads south.`,
       'things': [walls, floor, ceiling, {
         'keys': ['hall', 'hallway', 'well', 'wellhouse', 'well house', 'well-house'],
         'exit': 'south',
@@ -759,9 +753,10 @@ const world:World = {
         'name': 'the trunk',
         'keys': ['trunk', 'wooden trunk', 'heavy wooden trunk', 'chest', 'wooden chest', 'heavy wooden chest', 'lid'],
           'verbs': {
-            'look': session => ({ message: session.flags.trunk === 'open' 
-                ? 'The trunk is filled with glowing red stones.' 
-                : `The trunk is made from thick wooden boards, banded with rusting iron. The wood is swollen from moisture, and bits of moss are growing in the seams. The lid is closed.` }),
+            'take': 'The trunk is too heavy to carry.',
+            'look': maybeDo(ifFlagIs('trunk', 'open'), 
+                      { message: 'The trunk is filled with glowing red stones.', context: 'stone' }, 
+                      `The trunk is made from thick wooden boards, banded with rusting iron. The wood is swollen from moisture, and bits of moss are growing in the seams. The lid is closed.`),
             'use': {
               'stone': session => {
                 if (session.flags.trunk !== 'open') {
@@ -792,10 +787,10 @@ const world:World = {
         'verbs': {
           'look': session => {
             const keys = session.flags.belt && !session.gone.has('keys') ? ' A large keyring is nestled amongst the filth.' : '';
-            return { message: `The straw smells awful but the giant, sprawled in the center, doesn't seem to care.${keys}` };
+            return { message: `The straw is damp and mildewed, but the giant, sprawled in the center, doesn't seem to care.${keys}` };
           },
           'use': {
-            'lit-torch': `You're quite certain that the giant would kill you.`
+            'lit-torch': `The straw is too damn to burn.`
           }
         }
       }, 'straw'), {
@@ -868,7 +863,7 @@ const world:World = {
       }],
       'phrases': [{
         'keys': [ 'unlock the trunk', 'unlock trunk', 'unlock the wooden trunk', 'unlock the heavy trunk', 'unlock the heavy wooden trunk', 'unlock the chest', 'unlock the wooden chest', 'unlock the heavy chest', 'unlock the heavy wooden chest'],
-        'action': 'use:key:trunk'
+        'action': 'use:trunk:key'
       }, {
         'keys': [ 'wake the giant', 'wake up the giant', 'wake the bog giant', 'wake up the bog giant'],
         'action': 'use:giant'
@@ -959,7 +954,7 @@ const world:World = {
           }
         }
       } ],
-      'effect': session => { 
+      'effect': (session, verb) => { 
         const lost = isNaN(session.flags.lost) ? 0 : parseInt(session.flags.lost);
         return {
           message: lost < 2 ? random([
@@ -967,7 +962,7 @@ const world:World = {
             'Are you moving in circles?', 
             'The tunnels all look the same.'
           ]) : 'This tunnel looks familiar.',
-          update: { flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) }
+          update: verb === 'move' ? { flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) } : undefined
         }; 
       },
       'description': 'The tunnels here are twisting and elusive. Tiny goblins skitter purposefully to and fro. Passages extend in all directions.',
@@ -1037,10 +1032,17 @@ const world:World = {
           'untie': new Synonym('use'),
           'take': new Synonym('use'),
           'talk': 'The goblin chitters angrily.',
-          'use': session => ({
-            message: 'You untie the squirming goblin, and it sprints off into the underbrush.',
-            update: { flags: mapSet(session.flags, 'goblin', 'freed') }
-          })
+          'attack': new Synonym('use'),
+          'use': {
+            'self': session => ({
+              message: 'You untie the squirming goblin, and it sprints off into the underbrush.',
+              update: { flags: mapSet(session.flags, 'goblin', 'freed') }
+            }),
+            'knife': ss => ({
+              message: 'You cut the thread holding the squirming goblin, and it sprints off into the underbrush.',
+              update: { flags: mapSet(ss.flags, 'goblin', 'freed') }
+            })
+          }
         }
       }, {
         'keys': ['vines', 'hanging vines', 'flora', 'plants', 'ferns', 'underbrush', 'exit', 'mouth', 'mouth of the cave', 'cave mouth', 'sunlight', 'light', 'daylight', 'sun', 'outside'],
@@ -1056,7 +1058,7 @@ const world:World = {
     'swamp-dream': {
       'name': 'a swamp',
       'effect': session => ({
-        message: `You start in your sleeping bag, briefly disoriented. The same dream, every night, for the past twenty-eight weeks. The heat of the day is already upon you, and large insects drone outside the tent walls. The swamp, you remember. You're finally here.`,
+        message: `You start in your sleeping bag, briefly disoriented. The same dream, every night, for the past twenty-eight weeks. The heat of the day is already upon you, and large insects drone outside the tent walls. Everything comes back at once: the discovery that your swamp was real, buying the plane tickets, heading off into the wilderness. And now you're here.`,
         update: { room: 'tent', inventory: new Set() }
       }),
       'description': `You emerge from the cave into a dense swamp. Behind you, its roots framing the mouth of the cave, a huge gnarled tree rises above the canopy. Sunlight flickers through the tree's branches, and you squint against the sudden brightness. Defiantly, the light continues to fill your vision until the image of the swamp is just a memory. Until the memory, too, is gone...`,
@@ -1079,9 +1081,9 @@ const world:World = {
           'look': 'The backpack is ultralight, with a springsteel frame and numerous straps. It is full of useful equipment.',
           'open': new Synonym('take'),
           'take': session => ({
-            message: 'You strap the pack onto your shoulders. It contains supplies gathered over countless weeks of rigourous preparation, including some rope, a map, and a multitool.',
+            message: 'You strap the pack onto your shoulders. It contains supplies gathered over countless weeks of rigourous preparation, including some rope, a map, a multitool, and a lighter.',
             update: {
-              inventory: setAdd(session.inventory, 'rope', 'map', 'multitool'),
+              inventory: setAdd(session.inventory, 'rope', 'map', 'multitool', 'lighter'),
               gone: setAdd(session.gone, 'pack')
             }
           })
@@ -1149,7 +1151,7 @@ const world:World = {
           'use': 'The jeep is thoroughly stuck.',
           'look': [
             text('The jeep is dented, and spattered with mud and algae. Its wheels have sunk completely into the sodden terrain.'),
-            maybeDo(ifHere('binoculars'), `A pair of binoculars sits on the driver's seat.`)
+            maybeDo(ifHere('binoculars'), `A pair of binoculars sit on the driver's seat.`)
           ]
         }
       }, takeable({
@@ -1159,7 +1161,7 @@ const world:World = {
           'look': 'The binoculars are new, but grime already cakes the hinges.'
         }
       }, 'binoculars', true), {
-        'keys': [ 'swamp', 'mire', 'morass', 'bog', 'terrain', 'mud', 'ground', 'trees', 'vines', 'sucking mire' ],
+        'keys': [ 'slope', 'swamp', 'mire', 'morass', 'bog', 'terrain', 'mud', 'ground', 'trees', 'vines', 'sucking mire', 'meyer', 'meijer' ],
         'verbs': {
           'look': `The swamp is a vast bed of loamy muck, hooded by a dense tangle of stunted trees and creeping vines. Navigating it will be treacherous if you don't know where you're going.`
         }
@@ -1330,6 +1332,10 @@ const world:World = {
       'things': [{
         'keys': [ 'tree', 'gnarled tree', 'huge tree', 'big tree' ],
         'verbs': {
+          'use': {
+            'self': 'Something about the way the branches are swaying makes the thought of climbing repulsive.',
+            'multitool': `The tree's bark is unexpectedly resiliant to your efforts.`
+          },
           'look': session => ({
             message: session.effects.has('drugged') 
                       ? drowsyTree 
@@ -1349,7 +1355,7 @@ const world:World = {
           'look': session => ({
             message: session.effects.has('drugged') 
                       ? drowsyTree 
-                      : 'The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind; desire, tinged with a deep feeling of loss.'
+                      : 'The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind; desire, tinged with a deep sense of loss.'
           })
         }
       }, {
@@ -1416,11 +1422,14 @@ const world:World = {
     //#region Cabin
     'cabin': {
       'name': 'a small cabin',
-      'description': 'The interior of the cabin is warm and dank. A woman sits by the only window, watching you intently. A faded hutch rests against one wall, and a door to the east leads outside.',
+      'description': 'The interior of the cabin is warm and dank. A woman sits at a table by the only window, watching you intently. A faded bookshelf rests against one wall, and a door to the east leads outside.',
       'exits': { 'east': 'garden' },
       'things': [{
         'keys': [ 'woman', 'lady', 'girl', 'person', 'her', 'them' ],
         'verbs': {
+          'attack': {
+            'any': `Violence isn't justified here.`
+          },
           'look': 'The woman is neither old nor young, with long stringy hair and a tired complexion. She stares back at you, tenuous and wistful.',
           'talk': ssml(`"It took my little boy while I was out." the woman says. "The tree. You know the one I mean. If anyone's here, it's because of that tree."`)
                   .pause(1)
@@ -1439,16 +1448,28 @@ const world:World = {
           'look': 'The window looks out over the garden, and is the sole source of light in the cabin.'
         }
       }, {
-        'keys': [ 'hutch', 'weathered hutch', 'desk', 'counter', 'cabinet' ],
+        'keys': [ 'table' ],
         'verbs': {
-          'look': 'On its shelves, the hutch contains a series of books on herbalism. On the counter below, a large mortar sits next to an oil burner.'
+          'look': { message: 'On the table sits a heavy stone mortar.', context: 'mortar' }
         }
       }, {
-        'keys': [ 'book', 'books', 'herbalism', 'book on herbalism', 'recipe', 'recipes', 'medicinal recipe', 'medicinal recipes' ],
+        'keys': [ 'bookshelf', 'book shelf', 'books', 'shelf', 'library' ],
+        'verbs': {
+          'look': `The shelves contain a mixture of children's fairytales and treatises on herbalism.`
+        }
+      }, {
+        'keys': [ 'treatise', 'treatises', 'treatise on herbalism', 'treatises on herbalism', 'herbalism', 'about herbalism', 'book on herbalism', 'books on herbalism', 'recipe', 'recipes', 'medicinal recipe', 'medicinal recipes' ],
         'verbs': {
           'use': new Synonym('look'),
-          'take': `You're not a thief.`,
+          'take': new Synonym('look'),
           'look': 'The books describe medicines for curing various ailments. You find recipes for nausea, insomnia, and infection.'
+        }
+      }, {
+        'keys': [ 'fairy tales', 'fairytales', 'story', 'stories', `children's book`, `children's books`, 'childrens book', 'childrensbook', 'kids book', 'kids books', `kid's book`, `kid's books` ],
+        'verbs': {
+          'use': new Synonym('look'),
+          'take': new Synonym('look'),
+          'look': `You don't recognize any of these stories; strange, dark tales of hidden places and grotesque creatures.`
         }
       }, {
         'keys': [ 'mortar' ],
@@ -1457,53 +1478,32 @@ const world:World = {
           'take': `You're not a thief.`,
           'use': {
             'valerian': session => ({
-              message: 'You grind the valerian root into a paste.',
+              message: 'You grind the valerian root and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-valerian' ], [ 'valerian' ]) }
             }),
             'ginger': session => ({
-              message: 'You grind the ginger root into a paste.',
+              message: 'You grind the ginger root and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-ginger' ], [ 'ginger' ]) }
             }),
             'garlic': session => ({
-              message: 'You grind the garlic into a paste.',
+              message: 'You grind the garlic and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-garlic' ], [ 'garlic' ]) }
             }),
             'lavender': session => ({
-              message: 'You grind the lavender into a powder.',
+              message: 'You grind the lavender and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-lavender' ], [ 'lavender' ]) }
             }),
             'maypop': session => ({
-              message: 'You grind the maypop into a powder.',
+              message: 'You grind the maypop and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-maypop' ], [ 'maypop' ]) }
             }),
             'mint': session => ({
-              message: 'You grind the mint into a powder.',
+              message: 'You grind the mint and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-mint' ], [ 'mint' ]) }
             }),
             'echinacea': session => ({
-              message: 'You grind the echinacea into a powder.',
+              message: 'You grind the echinacea and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-echinacea' ], [ 'echinacea' ]) }
-            })
-          }
-        }
-      }, {
-        'keys': [ 'burner', 'oil burner', 'flame' ],
-        'verbs': {
-          'look': 'The burner consists of a low wick beneath a shallow dish. It could be used to heat various mixtures.',
-          'take': `You're not a thief.`,
-          'use': {
-            ...makePotpourri(),
-            'valerian-lavender': session => ({
-              message: 'You heat the purple mixture on the oil burner',
-              update: { inventory: setMutate(session.inventory, [ 'valerian-lavender-heat' ], [ 'valerian-lavender' ]) }
-            }),
-            'ginger-mint': session => ({
-              message: 'You heat the green mixture on the oil burner',
-              update: { inventory: setMutate(session.inventory, [ 'ginger-mint-heat' ], [ 'ginger-mint' ]) }
-            }),
-            'garlic-ginger': session => ({
-              message: 'You heat the yellow mixture on the oil burner',
-              update: { inventory: setMutate(session.inventory, [ 'garlic-ginger-heat' ], [ 'garlic-ginger' ]) }
             })
           }
         }
@@ -1586,7 +1586,9 @@ const world:World = {
                       .append(`an opening in the arching rock.`)
                       .append(ifFlagIs('bucket', 'well'), ' A wooden bucket dangles from its end.')
                       .append(ifFlag('cat'), ' A cat-like creature is perched nearby, observing you with curiosity.')
-                      .append(' A tunnel leads south.')
+                      .append(' A tunnel leads south')
+                      .append(ifHas('paint'), ', from which a horde of goblins watches you anxiously')
+                      .append('.')
                       .build,
       'exits': {
         'south': 'mine'
@@ -1598,18 +1600,18 @@ const world:World = {
           'use': { 
             'self': `The rope is damp and slippery, and you can't get a good grip.`,
             'full-bucket': ss => ({
-              message: 'You hang the laden bucket on the iron hook and, somewhere far above, a bell jingles. Heavy footsteps reverberate through the ceiling.',
+              message: 'You hang the laden bucket on the iron hook and, somewhere far above, a bell jingles. Heavy footsteps reverberate through the ceiling, and soon the bucket begins to rise.',
               update: { flags: mapSet(ss.flags, { giant: 'well-2', giantState: '0' }), inventory: setRemove(ss.inventory, 'full-bucket') }
             }),
             'bucket': ss => ({
-              message: 'You hang the bucket on the iron hook.',
+              message: 'You hang the bucket on the iron hook. Something seems missing.',
               update: { flags: mapSet(ss.flags, 'bucket', 'well'), inventory: setRemove(ss.inventory, 'bucket') }
             })
           },
           'move': `The rope is damp and slippery, and you can't get a good grip.`,
           'look': [
             text('A rope hangs from an opening in the stone ceiling. On its end is'),
-            maybeDo(ifFlag('bucket'), 'a wooden bucket dangling from'),
+            maybeDo(or(ifFlag('bucket'), ifFlagGTE('giantState', 0)), 'a wooden bucket dangling from'),
             text('a crude iron hook.')
           ]
         }
@@ -1618,6 +1620,9 @@ const world:World = {
         'visibility': ifFlag('bucket'),
         'verbs': {
           'look': 'The wooden bucket dangles from an iron hook.',
+          'use': {
+            'any': 'That would be easier if you were holding the bucket.'
+          },
           'take': ss => [{
             message: 'You remove the wooden bucket from the hook.',
             update: { inventory: setAdd(ss.inventory, 'bucket'), flags: mapRemove(ss.flags, 'bucket') }
@@ -1628,17 +1633,30 @@ const world:World = {
           }), 'bucket-dust'))]
         }
       }, {
+        'keys': [ 'bucket', 'wooden bucket', 'laden bucket', 'laden wooden bucket' ],
+        'visibility': ifFlagGTE('giantState', 0),
+        'verbs': {
+          'look': 'The laden bucket hangs well above your head.',
+          'use': {
+            'self': `You can't reach the bucket.`,
+            'any': `You can't reach the bucket.`
+          },
+          'take': `You can't reach the bucket.`
+        }
+      }, {
         'keys': [ 'pit', 'pitt', 'wide pit', 'wide pitt', 'shadows', 'flickering shadows', 'flickers', 'roiling shadows', 'floor' ],
         'verbs': {
+          'move': `It's a long way down...`,
           'look': [
-            text(`The darkened bottom of the pit churns and flashes, as if brimming with vigorous obsidian fish. Flat, black scales litter the ground near the pit's edge.`),
+            text(`The darkened bottom of the pit churns and flashes, as if brimming with vigorous obsidian fish. Large black scales litter the ground near the pit's edge.`),
             once('As you stare into the abyss, a small darting shape splits from the throng, effortlessly scaling the pit wall to rest on the ground just beside you.', 'cat')
           ]
         }
       }, {
         'visibility': ifFlag('cat'),
-        'keys': [ 'cat', 'kitty', 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'small dark shape', 'darting shape', 'small darting shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing', 'fish' ],
+        'keys': [ 'cat', 'kitty', 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'small dark shape', 'darting shape', 'small darting shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing', 'fish', 'beside me', 'thing beside me' ],
         'verbs': {
+          'take': new Synonym('use'),
           'look': 'The creature looks vaguely feline, but black and scaled. Its eyes shine with intelligence.',
           'talk': ssml(catVoice('"How did this get here? Intriguing."'))
                     .append('The creature puzzles.')
@@ -1647,6 +1665,7 @@ const world:World = {
                     .append(catVoice('"No, you are unlike the thing that came before. Bring it down to us, and we will feast."'))
                     .build(),
           'use': {
+            'self': 'The creature avoids your touch',
             'paint': `You don't need that to be covered in ore.`
           }
         }
@@ -1699,7 +1718,7 @@ const world:World = {
     //#region Mine
     'mine': {
       'name': 'a busy mine',
-      'description': 'The walls of this room are rough and irregular, and spotted with deposits of a glowing red mineral. Tiny goblins tear frantically at the deposits with their bare hands, leaving large piles of luminous ore strewn about the chamber. A tall ladder is set into an alcove on the western wall, and a tunnel leads north.',
+      'description': 'The walls of this room are rough and irregular, and spotted with fragments of a glowing red mineral. Tiny goblins tear frantically at the deposits with their bare hands, leaving large piles of luminous earth strewn about the chamber. A tall ladder is set into an alcove on the western wall, and a tunnel leads north.',
       'exits': {
         'north': 'pit',
         'west': 'ledge'
@@ -1707,18 +1726,29 @@ const world:World = {
       'things': [ ceiling, floor, {
         'keys': [ 'goblins', 'tiny goblins', 'goblin', 'tiny goblin' ],
         'verbs': {
-          'look': 'The goblins are singularly focused on the ore deposits, whipped into a frenzy by the crimson glow.',
-          'talk': 'The goblins singlemindedly ignore you.'
+          'use': {
+            'self': 'The goblins easily avoid you.',
+            'any': 'The goblins easily avoid you.'
+          },
+          'give': {
+            'paint': 'You get some grease on one of the goblins, and the others descend upon it, tearing the tiny creature limb from limb.'
+          },
+          'take': 'The goblins easily avoid your attempts at capture',
+          'look': 'The goblins are singularly focused on the glowing deposits, whipped into a frenzy by the crimson aura.',
+          'talk': 'The goblins singlemindedly ignore you.',
+          'attack': {
+            'any': 'The goblins easily avoid your attempts at violence'
+          }
         }
       }, {
-        'keys': [ 'ore', 'or', 'oar', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
+        'keys': [ 'earth', 'ore', 'or', 'oar', 'glowing earth', 'luminous earth', 'pile of earth', 'piles of earth', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
         'verbs': {
           'look': 'Large piles of loose rock are strewn about the chamber. Fine particles of a strange red mineral nestle amongst the stones, glowing faintly.',
-          'take': 'The ore is too loose to carry in your hands.',
+          'take': 'The earth is too loose to carry in your hands.',
           'use': {
-            'full-bucket': 'The bucket is already full of ore.',
+            'full-bucket': 'The bucket is already full of earth.',
             'bucket': ss => ({
-              message: 'You fill the bucket with glowing ore.',
+              message: 'You fill the bucket with glowing earth.',
               update: { inventory: setMutate(ss.inventory, [ 'full-bucket' ], [ 'bucket' ]) }
             }),
             'paint': 'The rocks are already covered in ore.'
@@ -1791,7 +1821,8 @@ const world:World = {
               }
               return { 
                 message: `You fit the scale into a space between two boards, and lever them apart. Working quickly, you remove boards until a path is cleared to the north.`,
-                update: { flags: mapSet(ss.flags, 'pried', '1') }
+                update: { flags: mapSet(ss.flags, 'pried', '1') },
+                context: 'hole'
               }; 
             }
           }
@@ -1856,7 +1887,7 @@ const world:World = {
         'verbs': {
           'look': 'The child looks no older than seven years, and presses himself tightly into the corner as if to escape through the walls. His knees are tucked beneath his chin, and he shivers nervously.',
           'talk': ssml(childVoice(`"You're here!"`))
-                    .append('the child exclaims.')
+                    .append('the child remarks.')
                     .append(childVoice(`"But now we're both trapped... The giant won't let either of us leave."`))
                     .build()
         }
@@ -1883,7 +1914,8 @@ const world:World = {
                       .append(ifFlagIs('giant', 'kitchen-2'), 
                         'A hideous giant stands at a well-worn cuttingboard, chopping unidentifiable gobs of meat with a rusted cleaver.', 
                         'Crude knives hang above a well-worn cuttingboard, and a large pot bubbles over an open fire.')
-                      .append(' There is a pantry on the southern wall, next to a small cage. A doorway leads east.')
+                      .append(' There is a pantry on the southern wall, next to a small cage.')
+                      .append(ifFlagIs('giant', 'well-2'), ' You spot movement through a doorway to the east.', ' A doorway leads east.')
                       .build,
       'exits': {
         'south': 'pantry-2',
@@ -1898,21 +1930,27 @@ const world:World = {
       }, 'knife'), {
         'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron'],
         'verbs': {
+          'take': 'The pot is too heavy to carry',
           'look': `The pot is huge and rusted, and a foul-smelling liquid boils violently inside.`,
           'use': {
             'food': session => ({
               message: 'You drop the mouldy food into the pot',
               update: { inventory: setRemove(session.inventory, 'food') }
-            })
+            }),
+            'any': `You might need it later.`
           }
         }
       }, {
         'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
         'verbs': {
-          'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.'
+          'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.',
+          'use': {
+            'self': `It's too hot to touch.`,
+            'any': `You might need it later.`
+          }
         }
       }, {
-        'keys': ['wood', 'rotten wood', 'log', 'stick', 'logs', 'sticks'],
+        'keys': ['wood', 'rotten wood', 'log', 'stick', 'logs', 'sticks', 'firewood', 'fire wood'],
         'verbs': {
           'look': `It's burning.`,
           'take': `It's too hot to pick up.`
@@ -1955,12 +1993,13 @@ const world:World = {
         'keys': ['cage', 'small cage', 'lock', 'sturdy lock', 'cage door'],
         'name': 'the cage',
         'verbs': {
+          'take': 'The cage is too heavy to carry.',
           'look': 'The cage is empty'
         }
       }, { stateKey: 'cage', keyId: 'keys' })],
       'phrases': [{
         keys: [ 'unlock cage', 'unlock the cage', 'unlock lock', 'unlock the lock', 'unlockcage'],
-        action: 'use:keys:lock'
+        action: 'use:cage:key'
       }]
     },
     //#endregion
@@ -2046,7 +2085,8 @@ const world:World = {
         'use': {
           'bone': session => ({
             message: 'You wrap the cloth tightly around one end of the bone, making an improvised torch',
-            update: { inventory: setMutate(session.inventory, ['torch'], ['cloth', 'bone']) }
+            update: { inventory: setMutate(session.inventory, ['torch'], ['cloth', 'bone']) },
+            context: 'torch'
           })
         }
       }
@@ -2145,6 +2185,7 @@ const world:World = {
       'name': 'a multitool',
       'keys': ['multitool', 'multi tool', 'multi-tool', 'tool'],
       'verbs': {
+        'use': 'You fiddle with the multitool.',
         'look': 'Pliers, a screwdriver, and a very sharp knife in a compact steel sheath.'
       }
     },
@@ -2191,9 +2232,33 @@ const world:World = {
         'use': {
           'rope': session => ({
             message: 'You lash the stone to the end of the rope.',
-            update: { inventory: setMutate(session.inventory, [ 'weighted-rope' ], [ 'rope', 'shale' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'weighted-rope' ], [ 'rope', 'shale' ]) },
+            context: 'rope'
           }),
           'weighted-rope': 'The rope is already weighted.'
+        }
+      }
+    },
+
+    'lighter': {
+      'keys': [ 'lighter' ],
+      'verbs': {
+        'look': 'A small butane lighter in wind-proof shell.',
+        'use': {
+          'self': 'You flick the lighter on and off.',
+          ...makePotpourri(),
+          'valerian-lavender': session => ({
+            message: 'You heat the purple mixture with your lighter.',
+            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender-heat' ], [ 'valerian-lavender' ]) }
+          }),
+          'ginger-mint': session => ({
+            message: 'You heat the green mixture with your lighter.',
+            update: { inventory: setMutate(session.inventory, [ 'ginger-mint-heat' ], [ 'ginger-mint' ]) }
+          }),
+          'garlic-ginger': session => ({
+            message: 'You heat the yellow mixture with your lighter.',
+            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger-heat' ], [ 'garlic-ginger' ]) }
+          })
         }
       }
     },
@@ -2209,7 +2274,8 @@ const world:World = {
           ...makePotpourri('p-valerian'),
           'p-lavender': session => ({
             message: 'You combine the valerian and lavender into a purple paste.',
-            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) },
+            context: 'purple paste'
           })
         }
       }
@@ -2224,11 +2290,13 @@ const world:World = {
           ...makePotpourri('p-lavender'),
           'p-valerian': session => ({
             message: 'You combine the valerian and lavender into a purple paste.',
-            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'valerian-lavender' ], [ 'p-valerian', 'p-lavender' ]) },
+            context: 'purple paste'
           }),
           'ginger-mint-heat': session => ({
             message: 'You add the powdered lavender to the mixture. This should serve as an antinauseant.',
-            update: { inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) },
+            context: 'antinauseant'
           })
         }
       }
@@ -2243,7 +2311,8 @@ const world:World = {
           ...makePotpourri('p-maypop'),
           'valerian-lavender-heat': session => ({
             message: 'You add the powdered maypop to the mixture. This should function as a sedative.',
-            update: { inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) },
+            context: 'sedative'
           })
         }
       }
@@ -2258,11 +2327,13 @@ const world:World = {
           ...makePotpourri('p-ginger'),
           'p-mint': session => ({
             message: 'You combine the ginger and mint into a green paste.',
-            update: { inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) },
+            context: 'green paste'
           }),
           'p-garlic': session => ({
             message: 'You combine the garlic and ginger into a yellow paste.',
-            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) },
+            context: 'yellow paste'
           })
         }
       }
@@ -2277,7 +2348,8 @@ const world:World = {
           ...makePotpourri('p-mint'),
           'p-ginger': session => ({
             message: 'You combine the ginger and mint into a green paste.',
-            update: { inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'ginger-mint' ], [ 'p-ginger', 'p-mint' ]) },
+            context: 'green paste'
           })
         }
       }
@@ -2292,7 +2364,8 @@ const world:World = {
           ...makePotpourri('p-garlic'),
           'p-ginger': session => ({
             message: 'You combine the garlic and ginger into a yellow paste.',
-            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'garlic-ginger' ], [ 'p-ginger', 'p-garlic' ]) },
+            context: 'yellow paste'
           })
         }
       }
@@ -2307,7 +2380,8 @@ const world:World = {
           ...makePotpourri('p-echinacea'),
           'garlic-ginger-heat': session => ({
             message: 'You add the powdered echinacea to the mixture. This should serve to heal an infection.',
-            update: { inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) },
+            context: 'antibiotic'
           })
         }
       }
@@ -2324,7 +2398,7 @@ const world:World = {
     'valerian-lavender': {
       'id': 'valerian-lavender',
       'name': 'a purple paste',
-      'keys': [ 'purple paste', 'purple mixture', 'mixture', 'paste' ],
+      'keys': [ 'purple paste', 'purple mixture', 'purple stuff', 'mixture', 'paste' ],
       'verbs': {
         'look': 'A purple paste of crushed lavender and valerian root.',
         'use': makePotpourri('valerian-lavender')
@@ -2333,14 +2407,15 @@ const world:World = {
     'valerian-lavender-heat': {
       'id': 'valerian-lavender-heat',
       'name': 'a heated mixture of lavendar and valerian',
-      'keys': [ 'purple paste', 'purple mixture', 'mixture', 'paste', 'heated purple paste', 'heated purple mixture', 'heated mixture', 'heated paste' ],
+      'keys': [ 'purple paste', 'purple mixture', 'purple stuff', 'mixture', 'paste', 'heated purple paste', 'heated purple mixture', 'heated mixture', 'heated paste' ],
       'verbs': {
         'look': 'A heated purple paste of crushed lavender and valerian root.',
         'use': {
           ...makePotpourri('valerian-lavender-heat'),
           'p-maypop': session => ({
             message: 'You add the powdered maypop to the mixture. This should function as a sedative.',
-            update: { inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'sedative' ], [ 'valerian-lavender-heat', 'p-maypop' ]) },
+            context: 'sedative'
           })
         }
       }
@@ -2348,7 +2423,7 @@ const world:World = {
     'ginger-mint': {
       'id': 'ginger-mint',
       'name': 'a green paste',
-      'keys': [ 'green paste', 'green mixture', 'mixture', 'paste' ],
+      'keys': [ 'green paste', 'green mixture', 'green stuff', 'mixture', 'paste' ],
       'verbs': {
         'look': 'A green paste of crushed ginger root and mint leaves.',
         'use': makePotpourri('ginger-mint')
@@ -2357,14 +2432,15 @@ const world:World = {
     'ginger-mint-heat': {
       'id': 'ginger-mint-heat',
       'name': 'a heated green paste',
-      'keys': [ 'green paste', 'green mixture', 'mixture', 'paste', 'heated green paste', 'heated green mixture', 'heated mixture', 'heated paste' ],
+      'keys': [ 'green paste', 'green mixture', 'green stuff', 'mixture', 'paste', 'heated green paste', 'heated green mixture', 'heated mixture', 'heated paste' ],
       'verbs': {
         'look': 'A heated green paste of crushed ginger root and mint leaves.',
         'use': {
           ...makePotpourri('ginger-mint-heat'),
           'p-lavender': session => ({
             message: 'You add the powdered lavender to the mixture. This should settle an upset stomach.',
-            update: { inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'antinauseant' ], [ 'ginger-mint-heat', 'p-lavender' ]) },
+            context: 'antinauseant'
           })
         }
       }
@@ -2372,7 +2448,7 @@ const world:World = {
     'garlic-ginger': {
       'id': 'garlic-ginger',
       'name': 'a yellow paste',
-      'keys': [ 'yellow paste', 'yellow mixture', 'mixture', 'paste' ],
+      'keys': [ 'yellow paste', 'yellow mixture', 'yellow stuff', 'mixture', 'paste' ],
       'verbs': {
         'look': 'A yellow paste of crushed garlic and ginger root.',
         'use': makePotpourri('garlic-ginger')
@@ -2381,14 +2457,15 @@ const world:World = {
     'garlic-ginger-heat': {
       'id': 'garlic-ginger-heat',
       'name': 'a heated yellow paste',
-      'keys': [ 'yellow paste', 'yellow mixture', 'mixture', 'paste', 'heated yellow paste', 'heated yellow mixture', 'heated mixture', 'heated paste' ],
+      'keys': [ 'yellow paste', 'yellow mixture', 'yellow stuff', 'mixture', 'paste', 'heated yellow paste', 'heated yellow mixture', 'heated mixture', 'heated paste' ],
       'verbs': {
         'look': 'A heated yellow paste of crushed garlic and ginger root.',
         'use': {
           ...makePotpourri('garlic-ginger-heat'),
           'p-echinacea': session => ({
             message: 'You add the powdered echinacea to the mixture. This should serve to heal an infection.',
-            update: { inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) }
+            update: { inventory: setMutate(session.inventory, [ 'antibiotic' ], [ 'garlic-ginger-heat', 'p-echinacea' ]) },
+            context: 'antibiotic'
           })
         }
       }
@@ -2455,6 +2532,7 @@ const world:World = {
       'name': 'a wooden bucket',
       'keys': [ 'bucket', 'wooden bucket' ],
       'verbs': {
+        'move': `You can't fit in the bucket.`,
         'look': 'The bucket is made from mildewed wood with a handle of thick twine.',
         'use': {
           'self': 'You could fill it with something.',
@@ -2482,7 +2560,8 @@ const world:World = {
         'use': {
           'ore-dust': ss => ({
             message: 'You blend the ore dust into the fat, creating a softly glowing crimson grease.',
-            update: { inventory: setMutate(ss.inventory, [ 'paint' ], [ 'fat', 'ore-dust' ]) }
+            update: { inventory: setMutate(ss.inventory, [ 'paint' ], [ 'fat', 'ore-dust' ]) },
+            context: 'paint'
           })
         }
       }
@@ -2521,9 +2600,12 @@ const world:World = {
     'always': {
       'things': [{
         'id': 'player',
-        'keys': [ 'me', 'self', 'myself', 'body', 'head', 'arm', 'arms', 'leg', 'legs', 'hand', 'hands', 'waist', 'foot', 'feet' ],
+        'keys': [ 'me', 'self', 'myself', 'body', 'head', 'arm', 'arms', 'leg', 'legs', 'hand', 'hands', 'waist', 'foot', 'feet', 'fist', 'fists' ],
         'verbs': {
-          'look': `It's you.`
+          'look': `It's you.`,
+          'attack': {
+            'any': `Please don't hurt yourself.`
+          }
         }
       }]
     },

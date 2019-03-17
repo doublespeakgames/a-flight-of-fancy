@@ -17,7 +17,7 @@ import { resolve } from '../value';
 import type { Conversation } from 'actions-on-google';
 import type { Sentence, Action, ActionType } from '../action-resolver';
 
-const CONFIDENCE_THRESHOLD = 0.6;
+const CONFIDENCE_THRESHOLD = 0.4;
 const LAST_RESPONSE = 'last-response';
 
 const app = Actions.dialogflow();
@@ -42,7 +42,10 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
   const confidence = conv.body.queryResult.intentDetectionConfidence;
   const queryText = conv.body.queryResult.queryText;
   const isFallback = actionType === 'fallback' || confidence < CONFIDENCE_THRESHOLD;
-  const sentence = makeSentence(!isFallback ? params.subject : queryText, params.object, params.verb);
+
+  const context = conv.contexts.get(LAST_RESPONSE);
+
+  const sentence = makeSentence(!isFallback ? params.subject : queryText, params.object, params.verb, context && context.parameters.noun);
 
   const action:Action = {
     sessionId: `goog-${getUserId(conv)}`,
@@ -50,7 +53,10 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
     sentence
   };
   const result = await resolveAction(action, idleHandler);
-  conv.contexts.set(LAST_RESPONSE, 1, { message: result.message });
+  conv.contexts.set(LAST_RESPONSE, 1, { 
+    message: result.message,
+    noun: result.context
+  });
   if (result.close) {
     conv.close(result.message);
   }

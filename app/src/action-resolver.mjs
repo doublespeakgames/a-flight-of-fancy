@@ -4,6 +4,7 @@ import type { Session, SessionDiff } from './model/session';
 import type { World } from './model/world';
 import type { Updater } from './util/updater';
 import type { Value } from './value';
+import type { ThingId } from './model/thing';
 
 import { getSession, writeSession, getWorld } from './store';
 import { lookAt } from './model/room';
@@ -28,7 +29,8 @@ export type Action = {|
 export type ActionResult = {|
   message:string,
   update?:SessionDiff,
-  close?:boolean
+  close?:boolean,
+  context?:ThingId
 |};
 
 export type Sentence = {|
@@ -140,12 +142,19 @@ async function createSession(id:string):Promise<Session> {
   return session;
 }
 
+const pronouns = new Set([ 'it', 'one', 'her', 'him', 'them', 'one of them', 'some of them' ]);
 const determiner = /^(a|the|my) /i;
 function formatThing(thing:?string):string {
   if (!thing) { return ''; }
   return thing.toLowerCase().replace(determiner, '');
 }
-export function makeSentence(subject:string = '', object:string = '', verb:string = '') {
+export function makeSentence(subject:string = '', object:string = '', verb:string = '', context?:string) {
+  if (pronouns.has(subject.toLowerCase()) && context) {
+    subject = context;
+  } 
+  if (object && pronouns.has(object.toLowerCase()) && context) {
+    object = context;
+  }
   return {
     subject: formatThing(subject),
     object: formatThing(object),
@@ -176,7 +185,8 @@ function processOutput(output:ActionResult|ActionOutput, session:Session, verb:s
     workingResult = {
       message: workingResult ? [workingResult.message, result.message].filter(Boolean).join(' ') : result.message,
       update: workingResult ? { ...workingResult.update, ...result.update } : result.update,
-      close: workingResult && workingResult.close || result.close
+      close: workingResult && workingResult.close || result.close,
+      context: result.context || (workingResult ? workingResult.context : undefined)
     };
 
     if (workingResult.close) {

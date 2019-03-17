@@ -37,9 +37,7 @@ export const lookAt = (world:World, preventShort:bool = false):ActionOutput => s
     ...[...ss.effects].map(id => world.effects[id].roomEffect)
   ].filter(Boolean);
 
-  const exits = ss => !preventShort && oldSeen.has(ss.room) ? {
-    message: getExitText(ss, world.rooms[ss.room])
-  } : null;
+  const exits = ss => !preventShort && oldSeen.has(ss.room) ? getExitText(ss, world.rooms[ss.room]) : null;
 
   return [{
     message: !preventShort && ss.seen.has(ss.room) ? `You are ${article} ${resolve(room.name, ss)}.` : resolve(room.description, ss),

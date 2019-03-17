@@ -30,7 +30,10 @@ const move:ActionHandler = (session, world, sentence) => {
 
   const nextRoomId = exits[dir];
   if (!nextRoomId) {
-    return { message: `You can't go ${dir}. ${getExitText(session, room)}` };
+    return [
+      { message: `You can't go ${dir}.` }, 
+      getExitText(session, room)
+    ];
   }
 
   const locks = room.locks;

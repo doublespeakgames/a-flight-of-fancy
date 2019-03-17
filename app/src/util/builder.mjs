@@ -2,6 +2,7 @@
 
 import type { EffectId } from '../model/effect';
 import type { RoomId } from '../model/room';
+import type { ThingId } from '../model/thing';
 import type { Session } from '../model/session';
 import { tryParse } from './number';
 
@@ -12,12 +13,20 @@ export type Builder<T> = {|
 
 /* Predicates */
 
+export function or(a:Predicate, b:Predicate):Predicate {
+  return session => a(session) || b(session);
+}
+
 export function both(a:Predicate, b:Predicate):Predicate {
   return session => a(session) && b(session);
 }
 
 export function not(p:Predicate):Predicate {
   return session => !p(session);
+}
+
+export function ifHas(thing:ThingId):Predicate {
+  return session => session.inventory.has(thing);
 }
 
 export function ifHere(key:string):Predicate {
@@ -29,11 +38,11 @@ export function ifFlag(key:string):Predicate {
 }
 
 export function ifFlagGT(key:string, val:number):Predicate {
-  return session => tryParse(session.flags[key], 0) > val;
+  return session => tryParse(session.flags[key], Number.MIN_SAFE_INTEGER) > val;
 }
 
 export function ifFlagGTE(key:string, val:number):Predicate {
-  return session => tryParse(session.flags[key], 0) >= val;
+  return session => tryParse(session.flags[key], Number.MIN_SAFE_INTEGER) >= val;
 }
 
 export function ifFlagIs(key:string, val:string):Predicate {

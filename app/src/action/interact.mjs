@@ -34,12 +34,14 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       return { message: `You can't do that.` };
     }
     
-    if (!sentence.object) {
-      return simpleHandler(world, verb, sentence.subject, sentence.verb, options);
-    }
-
-    return complexHandler(world, verb, sentence.subject, sentence.object, sentence.verb, options);
-
+    const result = !sentence.object 
+      ? simpleHandler(world, verb, sentence.subject, sentence.verb, options) 
+      : complexHandler(world, verb, sentence.subject, sentence.object, sentence.verb, options);
+    
+    return [
+      { message: '', context: sentence.subject },
+      result
+    ];
   };
 
   export function getThings(session:Session, world:World, subject:ThingId):Array<Thing> {
@@ -91,6 +93,11 @@ export default (verb:string, options:Options = {}):ActionHandler =>
             return inner;
           }
 
+          // ComplexPhrase without 'self' support
+          if (typeof handler === 'object' && !Array.isArray(handler) && handler.message === undefined) {
+            continue;
+          }
+
           // ActionOutput
           return handler;
         }
@@ -122,7 +129,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
       for (let subjectThing of subjectThings) {
         const verbs = subjectThing.verbs;
-        if (!subjectThing.id && (!verbs || typeof verbs.use != 'object')) {
+        if (!subjectThing.id && (!verbs || typeof verbs[verb] != 'object')) {
           // Subject can neither use nor be used, so short-circuit
           continue;
         }
@@ -158,6 +165,15 @@ export default (verb:string, options:Options = {}):ActionHandler =>
     // ComplexPhrase with support for the object
     if (typeof output === 'object' && !Array.isArray(output) && object.id && output[object.id]) {
       const handler:string|ActionOutput = output[object.id];
+      if (typeof handler === 'string') {
+        return { message: handler };
+      }
+      return handler;
+    }
+
+    // ComplexPhrase with wildcard support
+    if (typeof output === 'object' && !Array.isArray(output) && output.any) {
+      const handler:string|ActionOutput = output.any;
       if (typeof handler === 'string') {
         return { message: handler };
       }

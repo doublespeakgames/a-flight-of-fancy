@@ -13,16 +13,21 @@ import type { ActionHandler, ActionResult } from '../action-resolver';
 import { join } from '../util/list';
 import { resolve } from '../value';
 
-export function getExitText(session:Session, room:Room):string {
+export function getExitText(session:Session, room:Room):ActionResult {
   const exits = Object.keys(resolve(room.exits, session));
   const num = exits.length;
   if (num > 1) {
-    return `There are exits to the ${join(exits, ', ', ', and ')}.`;
+    return {
+      message: `There are exits to the ${join(exits, ', ', ', and ')}.`
+    };
   }
   if (num === 1) {
-    return `There is an exit to the ${exits[0]}.`;
+    return { 
+      message: `There is an exit to the ${exits[0]}.`,
+      context: exits[0]
+    };
   }
-  return 'There are no exits.';
+  return { message: 'There are no exits.' };
 }
 
 const exits:ActionHandler = (session, world) => {
