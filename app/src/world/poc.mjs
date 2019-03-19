@@ -416,7 +416,7 @@ const world:World = {
           'take': 'The cage is too heavy to carry.',
           'look': session => {
             if (session.flags.it !== 'freed') {
-              return { message: 'Inside the cage, a strange creature huddles furtively.' };
+              return { message: 'Inside the cage, a strange creature huddles furtively.', context: 'creature' };
             }
 
             const door = session.flags.cage === 'open' ? 'open' : 'closed';
@@ -514,7 +514,7 @@ const world:World = {
         'keys': ['creature', 'strange creature', 'cat', 'kitty' ],
         'verbs': {
           'look': 'The creature is cat-like, but covered in dark shining scales. Its face is unnervingly human, and it watches you with keen eyes.',
-          'use': 'The cage imprisoning it is closed.',
+          'use': { message: 'The cage imprisoning it is closed.', context: 'cage' },
           'untie': new Synonym('use'),
           'take': new Synonym('use'),
           'give': {

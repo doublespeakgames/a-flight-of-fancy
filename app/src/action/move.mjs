@@ -24,7 +24,7 @@ const move:ActionHandler = (session, world, sentence) => {
       dir = dirs[0];
     }
     else {
-      return { message: getExitText(session, room) };
+      return getExitText(session, room);
     }
   }
 

@@ -13,6 +13,7 @@ import uuid from 'uuid/v1';
 import { text } from '../model/mixins';
 import ssml from '../util/ssml';
 import { resolve } from '../value';
+import Config from '../config';
 
 import type { Conversation } from 'actions-on-google';
 import type { Sentence, Action, ActionType } from '../action-resolver';
@@ -21,7 +22,7 @@ const CONFIDENCE_THRESHOLD = 0.4;
 const LAST_RESPONSE = 'last-response';
 const CAME_FROM = 'came-from';
 
-const app = Actions.dialogflow();
+const app = Actions.dialogflow(Config.verification ? { verification: Config.verification } : undefined);
 
 function getUserId(conv:Conversation):string {
   if (!('userId' in conv.user.storage)) {
