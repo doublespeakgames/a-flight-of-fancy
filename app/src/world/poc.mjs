@@ -40,6 +40,8 @@ const goblins = {
       }),
       'knife': 'The goblins easily avoid your attempts at violence.',
       'food': `The goblins chitter disgustedly`,
+      'self': 'The goblins easily avoid you.',
+      'any': 'The goblins easily avoid you.'
     }
   }
 };

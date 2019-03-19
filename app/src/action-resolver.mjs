@@ -20,6 +20,7 @@ import restart from './action/restart';
 import { resolve } from './value';
 import Logger from './util/logger';
 import { text } from './model/mixins';
+import { withSubstitutions } from './pronoun';
 
 export type Action = {|
   sessionId:string,
@@ -144,19 +145,16 @@ async function createSession(id:string):Promise<Session> {
   return session;
 }
 
-const pronouns = new Set([ 'it', 'one', 'her', 'him', 'them', 'one of them', 'some of them' ]);
 const determiner = /^(a|the|my) /i;
 function formatThing(thing:?string):string {
   if (!thing) { return ''; }
   return thing.toLowerCase().replace(determiner, '');
 }
 export function makeSentence(subject:string = '', object:string = '', verb:string = '', context?:string) {
-  if (pronouns.has(subject.toLowerCase()) && context) {
-    subject = context;
+  if (context) {
+    subject = withSubstitutions(subject, context);
+    object = object ? withSubstitutions(object, context) : object;
   } 
-  if (object && pronouns.has(object.toLowerCase()) && context) {
-    object = context;
-  }
   return {
     subject: formatThing(subject),
     object: formatThing(object),
