@@ -5,6 +5,7 @@ import type { World } from './model/world';
 import type { Updater } from './util/updater';
 import type { Value } from './value';
 import type { ThingId } from './model/thing';
+import type { Direction } from './model/room';
 
 import { getSession, writeSession, getWorld } from './store';
 import { lookAt } from './model/room';
@@ -30,7 +31,8 @@ export type ActionResult = {|
   message:string,
   update?:SessionDiff,
   close?:boolean,
-  context?:ThingId
+  context?:ThingId,
+  cameFrom?:Direction
 |};
 
 export type Sentence = {|
@@ -186,7 +188,8 @@ function processOutput(output:ActionResult|ActionOutput, session:Session, verb:s
       message: workingResult ? [workingResult.message, result.message].filter(Boolean).join(' ') : result.message,
       update: workingResult ? { ...workingResult.update, ...result.update } : result.update,
       close: workingResult && workingResult.close || result.close,
-      context: result.context || (workingResult ? workingResult.context : undefined)
+      context: result.context || (workingResult ? workingResult.context : undefined),
+      cameFrom: result.cameFrom || (workingResult ? workingResult.cameFrom : undefined)
     };
 
     if (workingResult.close) {

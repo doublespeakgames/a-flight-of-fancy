@@ -46,9 +46,14 @@ const move:ActionHandler = (session, world, sentence) => {
     }
   }
   const nextRoom = world.rooms[nextRoomId];
+  const cameFrom = Object
+                    .entries(resolve(nextRoom.exits, session))
+                    .find(([dir, r]) => r === session.room);
+                    
   const leave = {
     message: room.leaveMessage ? room.leaveMessage(nextRoomId, dir) : `You go ${dir}.`,
-    update: { room: nextRoomId }
+    update: { room: nextRoomId },
+    cameFrom: cameFrom ? cameFrom[0] : undefined
   };
   const arrive = lookAt(world);
 

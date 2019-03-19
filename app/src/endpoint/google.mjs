@@ -19,6 +19,7 @@ import type { Sentence, Action, ActionType } from '../action-resolver';
 
 const CONFIDENCE_THRESHOLD = 0.4;
 const LAST_RESPONSE = 'last-response';
+const CAME_FROM = 'came-from';
 
 const app = Actions.dialogflow();
 
@@ -57,6 +58,11 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
     message: result.message,
     noun: result.context
   });
+  if (result.cameFrom) {
+    conv.contexts.set(CAME_FROM, 1, {
+      direction: result.cameFrom
+    });
+  }
   if (result.close) {
     conv.close(result.message);
   }
@@ -64,6 +70,11 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
     conv.ask(result.message);
   }
 }
+
+app.intent('GoBack', conv => {
+  const cameFrom = conv.contexts.get(CAME_FROM).parameters.direction;
+  return fulfill('move', conv, { subject: cameFrom });
+});
 
 app.intent('Idle', fulfill.bind(null, 'idle'));
 app.intent('Fallback', fulfill.bind(null, 'fallback'));
