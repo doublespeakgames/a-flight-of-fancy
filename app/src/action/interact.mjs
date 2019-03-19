@@ -38,10 +38,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
       ? simpleHandler(world, verb, sentence.subject, sentence.verb, options) 
       : complexHandler(world, verb, sentence.subject, sentence.object, sentence.verb, options);
     
-    return [
-      { message: '', context: sentence.subject },
-      result
-    ];
+    return result;
   };
 
   export function getThings(session:Session, world:World, subject:ThingId):Array<Thing> {
@@ -81,16 +78,19 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
           // string
           if (typeof handler === 'string') {
-            return { message: handler };
+            return { message: handler, context: subject };
           }
 
           // ComplexPhrase with 'self' support
           if (handler.self) {
             const inner:ActionOutput|string = handler.self;
             if (typeof inner === 'string') {
-              return { message: inner };
+              return { message: inner, context: subject };
             }
-            return inner;
+            return [
+              { message: '', context: subject },
+              inner
+            ];
           }
 
           // ComplexPhrase without 'self' support
@@ -99,7 +99,10 @@ export default (verb:string, options:Options = {}):ActionHandler =>
           }
 
           // ActionOutput
-          return handler;
+          return [
+            { message: '', context: subject }, 
+            handler 
+          ];
         }
         if (options.exits && thing.exit) {
           return move(session, world, { subject: thing.exit });
@@ -138,7 +141,10 @@ export default (verb:string, options:Options = {}):ActionHandler =>
           const result = tryApply(world, verb, subjectThing, objectThing) || 
                         tryApply(world, verb, objectThing, subjectThing);
           if (result) {
-            return result;
+            return [
+              { message: '', context: subject },
+              result
+            ];
           }
         }
       }
