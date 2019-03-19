@@ -32,7 +32,7 @@ export function getExitText(session:Session, room:Room):ActionResult {
 
 const exits:ActionHandler = (session, world) => {
   const room = world.rooms[session.room];
-  return { message: getExitText(session, room) };
+  return getExitText(session, room);
 };
 
 export default exits;

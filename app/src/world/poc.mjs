@@ -1135,8 +1135,8 @@ const world:World = {
                       .build,
       'exits': map({ 'west': 'tent' })
                 .and(ifFlagGTE('explore', 1), 'north', 'bluff')
-                .and(ifFlagGTE('explore', 2), 'east', 'tree')
                 .and(ifFlagGTE('explore', 2), 'south', 'garden')
+                .and(ifFlagGTE('explore', 2), 'east', 'tree')
                 .build,
       'things': [{
         'keys': [ 'tent' ],
@@ -1320,13 +1320,9 @@ const world:World = {
                       .append(ifEffect('drugged'), 
                         'perfectly framing the mouth of a deep cave, descending to the east. ', 
                         'embedded in a rocky outcropping like veins of a strange precious metal. ')
-                      .append('Camp is to the west, and ')
-                      .append(both(ifFlagGTE('explore', 2), not(ifSeen('garden'))), 'the mysterious smoke ')
-                      .append(both(ifFlagGTE('explore', 2), ifSeen('garden')), 'the cabin ')
-                      .append('is roughly to the south')
-                      .append('.')
+                      .append('Camp is to the west.')
                       .build,
-      'exits': map({ 'west': 'camp', 'south': 'garden' })
+      'exits': map({ 'west': 'camp' })
                 .and(ifEffect('drugged'), 'east', 'cave')
                 .build,
       'things': [{
@@ -1364,12 +1360,6 @@ const world:World = {
         'verbs': {
           'look': `It is an hour's hike to the west.`
         }
-      }, {
-        'keys': [ 'smoke', 'mysterious smoke', 'cabin', 'house', 'garden' ],
-        'exit': 'south',
-        'verbs': {
-          'look': `It is somewhere to the south.`
-        }
       }]
     },
     //#endregion
@@ -1377,10 +1367,9 @@ const world:World = {
     //#region Garden
     'garden': {
       'name': 'an overgrown garden',
-      'description': 'This area of the swamp was, at one time, a curated garden. Flowering plants, vegetables, and herbs, once in neat rows, now spill across their bounds, forming a thick fragrant tapestry. Smoke rises from the chimney of an old cabin to the west. Camp is to the north, and the tree is roughly east.',
+      'description': 'This area of the swamp was, at one time, a curated garden. Flowering plants, vegetables, and herbs, once in neat rows, now spill across their bounds, forming a thick fragrant tapestry. Smoke rises from the chimney of an old cabin to the west, and your camp is to the north.',
       'exits': {
         'north': 'camp',
-        'east': 'tree',
         'west': 'cabin'
       },
       'things': [{
@@ -1388,12 +1377,6 @@ const world:World = {
         'verbs': {
           'look': 'Flowers and herbs of all kinds adorn the neglected garden.',
           'take': `You'll need to know what you're looking for.`
-        }
-      }, {
-        'keys': [ 'tree', 'gnarled tree', 'huge tree' ],
-        'exit': 'east',
-        'verbs': {
-          'look': `It's somewhere to the east.`
         }
       }, {
         'keys': [ 'camp', 'camp site', 'campsite' ],
