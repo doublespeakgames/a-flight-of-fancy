@@ -52,7 +52,7 @@ const walls = {
   }
 };
 const floor = {
-  'keys': [ 'floor', 'terrain' ],
+  'keys': [ 'floor', 'terrain', 'ground' ],
   'verbs': {
     'look': 'The floor is unremarkable.'
   }
@@ -77,7 +77,7 @@ const useBinoculars = session => {
 }
 function recipe(ailmentKeys:Array<string>, recipe:string) {
   return {
-    'keys': flatMap(ailmentKeys, ailment => [ `recipe for ${ailment}`, `${ailment} recipe`, ailment]),
+    'keys': flatMap(ailmentKeys, ailment => [ `recipe for ${ailment}`, `${ailment} recipe`, `cure for ${ailment}`, `${ailment} cure`, ailment]),
     'verbs': {
       'look': recipe,
       'take': new Synonym('look'),
@@ -205,7 +205,7 @@ const touchAmber = ss => ({
   }
 });
 const catVoice = text => ({ text, pitch: Pitch.HIGH });
-const childVoice = text => ({ text, pitch: Pitch.MED_HIGH });
+const childVoice = text => ({ text, pitch: Pitch.HIGH });
 const swampRooms = new Set([ 'tent', 'camp', 'bluff', 'bluff-top', 'tree', 'garden', 'cabin' ]);
 //#endregion
 
@@ -294,12 +294,12 @@ const world:World = {
           'look': 'The knives are large and pitted, and not very clean.'
         }
       }, 'knife'), {
-        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron'],
+        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron', 'soup' ],
         'verbs': {
-          'look': session => {
-            const cloth = session.gone.has('cloth') ? '' : ' A greasy cloth is draped over the lip.';
-            return { message: `The pot is huge and rusted, and a foul-smelling liquid boils violently inside.${cloth}` }
-          },
+          'look': [
+            { message: 'The pot is huge and rusted, and a foul-smelling liquid boils violently inside.' },
+            maybeDo(ifHere('cloth'), { message: 'A greasy cloth is draped over the lip.', context: 'cloth' })
+          ],
           'use': {
             'food': session => ({
               message: 'You drop the mouldy food into the pot',
@@ -408,7 +408,8 @@ const world:World = {
                   flags: mapSet(session.flags, 'thread', 'goblin')
                 }
               };
-            }
+            },
+            'knife': 'That would be cruel.'
           }
         }
       }, locked({
@@ -508,7 +509,11 @@ const world:World = {
                 }
               };
             },
-            'any': 'The lock is too sturdy to force.'
+            'any': ss => ({ message: ss.flags.cage === 'open' 
+                        ? `That doesn't need to be caged.` 
+                        : ss.flags.cage === 'unlocked' 
+                        ? 'The cage is closed.'
+                        : 'The lock is too sturdy to force.' })
           }
         }
       }, { stateKey: 'cage', keyId: 'keys', unlockMessage: `You try three keys before one turns in the lock with a loud click. The caged creature's ears perk.`}), {
@@ -1076,7 +1081,7 @@ const world:World = {
         const pack = !session.gone.has('pack') ? 'Your expedition pack sits in one corner, and a' : 'A';
         return `The tent is close and stifling. ${pack} zippered flap opens to the east.`
       },
-      'things': [{
+      'things': [ walls, floor, ceiling, {
         'id': 'pack',
         'keys': ['pack', 'backpack', 'back pack', 'expedition pack', 'equipment', 'useful equipment'],
         'verbs': {
@@ -1154,7 +1159,9 @@ const world:World = {
           'look': [
             text('The jeep is dented, and spattered with mud and algae. Its wheels have sunk completely into the sodden terrain.'),
             maybeDo(ifHere('binoculars'), `A pair of binoculars sit on the driver's seat.`)
-          ]
+          ],
+          'open': `You open the driver's side door.`,
+          'close': 'You shut the door.'
         }
       }, takeable({
         'name': 'the binoculars',
@@ -1212,7 +1219,7 @@ const world:World = {
           'take': `The rope won't come down.`
         }
       }, {
-        'keys': [ 'bluff', 'cliff', 'face', 'cliff face', 'up' ],
+        'keys': [ 'bluff', 'cliff', 'face', 'cliff face', 'up', 'stone face', 'dripping stone', 'rock face' ],
         'verbs': {
           'look': 'The bluff is thirty feet high, composed mainly of shale rock, and crowned with squat trees. Moisture glistens on its surface, making the prospect of a climb quite dangerous.',
           'tie': new Synonym('use'),
@@ -1220,7 +1227,8 @@ const world:World = {
           'use': {
             'self': `Your hands can't find purchase on the slick rock.`,
             'rope': `The rope falls limply at your feet.`,
-            'weighted-rope': `The weighted rope clatters off the rock face, and lands at your feet.`
+            'weighted-rope': `The weighted rope clatters off the rock face, and lands at your feet.`,
+            'multitool': 'You chip a few more fragments off the rock face.'
           }
         }
       }, {
@@ -1237,12 +1245,13 @@ const world:World = {
               update: {
                 inventory: setRemove(session.inventory, 'weighted-rope'),
                 flags: mapSet(session.flags, 'bluff', 'roped')
-              }
+              },
+              context: 'rope'
             })
           }
         }
       }, takeable({
-        'keys': [ 'rock', 'rocks', 'stone', 'stones', 'shale', 'pebble', 'pebbles', 'small rocks', 'small rock'],
+        'keys': [ 'rock', 'rocks', 'stone', 'stones', 'shale', 'pebble', 'pebbles', 'small rocks', 'small rock', 'shale', 'fragment', 'fragments', 'ground' ],
         'name': 'a rock',
         'verbs': {
           'look': 'Flakes of fallen shale litter the ground.',
@@ -1273,7 +1282,7 @@ const world:World = {
       'name': 'the top of a bluff',
       'description': 'At its top, the bluff is rocky and sparse. Below you, the swamp spreads wide across the horizon, thick and dark and alive.',
       'exits': { 'south': 'bluff' },
-      'things': [{
+      'things': [ floor, {
         'keys': [ 'rope', 'down' ],
         'exit': 'south',
         'verbs': {
@@ -1317,7 +1326,7 @@ const world:World = {
     'tree': {
       'article': 'by',
       'name': 'the gnarled tree',
-      'effect': maybeDo(not(ifEffect('drugged')), once('The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind. Desire, tinged with a deep sensation of loss.', 'tree')),
+      'effect': maybeDo(not(ifEffect('drugged')), once('The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind. Desire, tinged with a deep sense of loss.', 'tree')),
       'description': message('You stand at the base of a huge gnarled tree, its roots ')
                       .append(ifEffect('drugged'), 
                         'perfectly framing the mouth of a deep cave, descending to the east. ', 
@@ -1330,15 +1339,20 @@ const world:World = {
       'things': [{
         'keys': [ 'tree', 'gnarled tree', 'huge tree', 'big tree' ],
         'verbs': {
+          'talk': 'You almost expect the tree to respond.',
           'use': {
             'self': 'Something about the way the branches are swaying makes the thought of climbing repulsive.',
-            'multitool': `The tree's bark is unexpectedly resiliant to your efforts.`
+            'multitool': `The tree's bark is unexpectedly resiliant to your efforts.`,
+            'lighter': `The bark is too damp to burn.`
           },
           'look': session => ({
             message: session.effects.has('drugged') 
                       ? drowsyTree 
                       : 'The tree looms over you like the skeleton of a long-dead horror. Its branches are bare and twisted, and coated with a scabrous ashen bark. Nothing grows nearby.'
-          })
+          }),
+          'attack': {
+            'any': 'The tree is unphased.'
+          }
         }
       }, {
         'keys': [ 'cave' ],
@@ -1348,13 +1362,14 @@ const world:World = {
           'look': 'The cave, etched in stone, plunges past the roots of the tree, deep beneath the swamp. It has always been here.'
         }
       }, {
-        'keys': [ 'land', 'ground', 'rock', 'outcropping', 'roots', 'rocky outcropping', 'cave', 'soil' ],
+        'keys': [ 'land', 'ground', 'rock', 'outcropping', 'roots', 'rocky outcropping', 'cave', 'soil', 'dirt' ],
         'verbs': {
           'look': session => ({
             message: session.effects.has('drugged') 
                       ? drowsyTree 
                       : 'The land beneath the tree is unbroken, lacking even a trace of the cave from your dreams. In its place is a peculiar itch in the back of your mind; desire, tinged with a deep sense of loss.'
-          })
+          }),
+          'use': `The soil is dense with roots, and you can't dig far.`
         }
       }, {
         'keys': [ 'camp', 'campsite', 'camp site' ],
@@ -1375,7 +1390,7 @@ const world:World = {
         'west': 'cabin'
       },
       'things': [{
-        'keys': [ 'plants', 'herbs', 'garden', 'flowers', 'flowering plants' ],
+        'keys': [ 'plants', 'herbs', 'garden', 'flowers', 'flowering plants', 'vegetables', 'ground' ],
         'verbs': {
           'look': 'Flowers and herbs of all kinds adorn the neglected garden.',
           'take': `You'll need to know what you're looking for.`
@@ -1409,8 +1424,8 @@ const world:World = {
       'name': 'a small cabin',
       'description': 'The interior of the cabin is warm and dank. A woman sits at a table by the only window, watching you intently. A faded bookshelf rests against one wall, and a door to the east leads outside.',
       'exits': { 'east': 'garden' },
-      'things': [{
-        'keys': [ 'woman', 'lady', 'girl', 'person', 'her', 'them' ],
+      'things': [ walls, floor, ceiling, {
+        'keys': [ 'woman', 'lady', 'girl', 'women', 'person', 'her', 'them' ],
         'verbs': {
           'attack': {
             'any': `Violence isn't justified here.`
@@ -1438,19 +1453,19 @@ const world:World = {
           'look': { message: 'On the table sits a heavy stone mortar.', context: 'mortar' }
         }
       }, {
-        'keys': [ 'bookshelf', 'book shelf', 'books', 'shelf', 'library' ],
+        'keys': [ 'bookshelf', 'book shelf', 'book', 'books', 'shelf', 'library' ],
         'verbs': {
           'look': `The shelves contain a mixture of children's fairytales and treatises on herbalism.`
         }
       }, {
-        'keys': [ 'treatise', 'treatises', 'treatise on herbalism', 'treatises on herbalism', 'herbalism', 'about herbalism', 'book on herbalism', 'books on herbalism', 'recipe', 'recipes', 'medicinal recipe', 'medicinal recipes' ],
+        'keys': [ 'treatise', 'treatises', 'treatise on herbalism', 'treatises on herbalism', 'herbalism', 'about herbalism', 'book on herbalism', 'books on herbalism', 'recipe', 'recipes', 'medicinal recipe', 'medicinal recipes', 'herbalism book', 'herbalism books' ],
         'verbs': {
           'use': new Synonym('look'),
           'take': new Synonym('look'),
-          'look': 'The books describe medicines for curing various ailments. You find recipes for nausea, insomnia, and infection.'
+          'look': 'In the books, you find recipes for curing nausea, insomnia, and infection.'
         }
       }, {
-        'keys': [ 'fairy tales', 'fairytales', 'story', 'stories', `children's book`, `children's books`, 'childrens book', 'childrensbook', 'kids book', 'kids books', `kid's book`, `kid's books` ],
+        'keys': [ 'fairy tail', 'fairy tails', 'fairy tale', 'fairytale', 'fairy tales', 'fairytales', 'story', 'stories', `children's book`, `children's books`, 'childrens book', 'childrensbook', 'kids book', 'kids books', `kid's book`, `kid's books` ],
         'verbs': {
           'use': new Synonym('look'),
           'take': new Synonym('look'),
@@ -1462,6 +1477,7 @@ const world:World = {
           'look': 'The mortar is made from chipped stone, and is stained with the pigment of countless herbs.',
           'take': `You're not a thief.`,
           'use': {
+            'self': 'You need to put something inside first.',
             'valerian': session => ({
               message: 'You grind the valerian root and remove it from the mortar.',
               update: { inventory: setMutate(session.inventory, [ 'p-valerian' ], [ 'valerian' ]) }
@@ -1531,7 +1547,7 @@ const world:World = {
     'sap': {
       'name': 'a glowing chamber',
       'description': 'You stand in a narrow chamber, deep in the earth. Thick, sinewy roots snake in and out of the stone walls, oozing a viscous crimson liquid. At the far end of the chamber, the strange sap has coalesced into a shining mirror of ruddy amber. It glows with an inexplicable inner light.',
-      'things': [{
+      'things': [ floor, ceiling, {
         'keys': [ 'walls', 'wall', 'roots', 'stone', 'rock', 'wood' ],
         'verbs': {
           'look': 'The roots tunneling through the walls are so pervasive that the chamber is as much wood as it is stone.'
@@ -1629,17 +1645,23 @@ const world:World = {
           'take': `You can't reach the bucket.`
         }
       }, {
-        'keys': [ 'pit', 'pitt', 'wide pit', 'wide pitt', 'shadows', 'flickering shadows', 'flickers', 'roiling shadows', 'floor' ],
+        'keys': [ 'pit', 'pitt', 'wide pit', 'wide pitt', 'shadows', 'flickering shadows', 'flickers', 'roiling shadows', 'floor', 'creatures', 'ground' ],
         'verbs': {
           'move': `It's a long way down...`,
+          'use': {
+            'self': `It's a long way down...`,
+            'food': 'You toss the food into the pit, and it disappears in darkness.',
+            'knife': 'You toss the knife into the pit, and it disappears in darkness.',
+            'any': 'You might need it later.'
+          },
           'look': [
             text(`The darkened bottom of the pit churns and flashes, as if brimming with vigorous obsidian fish. Large black scales litter the ground near the pit's edge.`),
-            once('As you stare into the abyss, a small darting shape splits from the throng, effortlessly scaling the pit wall to rest on the ground just beside you.', 'cat')
+            once('As you stare into the abyss, a small darting shape splits from the throng, effortlessly scaling the pit wall to rest on the ground just beside you. Settling quickly, the creature cocks its head and regards you with curiosity.', 'cat')
           ]
         }
       }, {
         'visibility': ifFlag('cat'),
-        'keys': [ 'cat', 'kitty', 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'small dark shape', 'darting shape', 'small darting shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing', 'fish', 'beside me', 'thing beside me' ],
+        'keys': [ 'cat', 'kitty', 'creature', 'shape', 'black shape', 'small shape', 'small black shape', 'small dark shape', 'darting shape', 'small darting shape', 'shadow', 'cat-like creature', 'cat like creature' ,'cat thing', 'beside me', 'thing beside me' ],
         'verbs': {
           'take': new Synonym('use'),
           'look': 'The creature looks vaguely feline, but black and scaled. Its eyes shine with intelligence.',
@@ -1651,7 +1673,8 @@ const world:World = {
                     .build(),
           'use': {
             'self': 'The creature avoids your touch',
-            'paint': `You don't need that to be covered in ore.`
+            'paint': `You don't need that to be covered in ore.`,
+            'scale': 'The creature regards the scale impersonally.'
           }
         }
       }, takeable({
@@ -1668,6 +1691,7 @@ const world:World = {
             maybeDo(ifFlag('pillars'), 'A horde of tiny goblins are quickly reducing them to rubble.', 'They appear structural.')
           ],
           'use': {
+            'self': `The face of the pillar is smooth stone, presenting no obvious hand holds.`,
             'ore-dust': `The dust refuses to cling to the pillars.`,
             'paint': ss => {
               if (ss.flags.pillars) {
@@ -1708,10 +1732,12 @@ const world:World = {
         'north': 'pit',
         'west': 'ledge'
       },
+      'effect': maybeDo(ifHas('paint'), once('The goblins, spotting the glowing residue on your hands, begin circling you greedily.', 'goblin-grease')),
       'things': [ ceiling, floor, {
         'keys': [ 'goblins', 'tiny goblins', 'goblin', 'tiny goblin' ],
         'verbs': {
           'use': {
+            'paint': 'You get some grease on one of the goblins, and the others descend upon it, tearing the tiny creature limb from limb.',
             'self': 'The goblins easily avoid you.',
             'any': 'The goblins easily avoid you.'
           },
@@ -1726,7 +1752,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'earth', 'ore', 'or', 'oar', 'glowing earth', 'luminous earth', 'pile of earth', 'piles of earth', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral' ],
+        'keys': [ 'earth', 'ore', 'or', 'oar', 'glowing earth', 'luminous earth', 'pile of earth', 'piles of earth', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral', 'sliver of mineral', 'red stone', 'redstone' ],
         'verbs': {
           'look': 'Large piles of loose rock are strewn about the chamber. Fine particles of a strange red mineral nestle amongst the stones, glowing faintly.',
           'take': 'The earth is too loose to carry in your hands.',
@@ -1737,7 +1763,10 @@ const world:World = {
               update: { inventory: setMutate(ss.inventory, [ 'full-bucket' ], [ 'bucket' ]) }
             }),
             'paint': 'The rocks are already covered in ore.'
-          }
+          },
+           'attack': {
+             'any': 'You spread one of the piles across the rocky floor.'
+           }
         }
       }, {
         'keys': [ 'walls', 'wall' ], 
@@ -1752,7 +1781,10 @@ const world:World = {
         'exit': 'west',
         'verbs': {
           'take': `It's far too large to carry with you.`,
-          'look': 'The ladder is small and made from crudely lashed sticks. It should support your weight.'
+          'look': 'The ladder is small and made from crudely lashed sticks. It should support your weight.',
+          'attack': {
+            'any': `It's the only way up.`
+          }
         }
       }, {
         'keys': [ 'pit', 'tunnel' ],
@@ -1788,9 +1820,9 @@ const world:World = {
           'look': 'The mine is down the ladder, to the east.'
         }
       }, {
-        'keys': [ 'board', 'boards', 'wooden boards', 'wooden board', 'face', 'wall', 'crack', 'cracks' ],
+        'keys': [ 'board', 'boards', 'wooden boards', 'wooden board', 'face', 'wall', 'crack', 'cracks', 'irregular wooden boards', 'irregular wooden board' ],
         'verbs': {
-          'look': 'The boards are roughly shaped knotted wood, and smell of must and rot.',
+          'look': 'The boards are roughly shaped knotted wood, and smell of must and rot. They fit together tightly, having swollen in the damp air.',
           'take': new Synonym('use'),
           'attack': new Synonym('use'),
           'use': {
@@ -1813,7 +1845,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'ledge', 'earthen ledge', 'small earthen ledge', 'small ledge', 'soil' ],
+        'keys': [ 'ledge', 'earthen ledge', 'small earthen ledge', 'small ledge', 'soil', ...floor.keys ],
         'verbs': {
           'look': 'The ledge is small and dusty, and looks to have been cut hastily out of the soil.'
         }
@@ -1874,7 +1906,8 @@ const world:World = {
           'talk': ssml(childVoice(`"You're here!"`))
                     .append('the child remarks.')
                     .append(childVoice(`"But now we're both trapped... The giant won't let either of us leave."`))
-                    .build()
+                    .build(),
+          'take': 'The child is too afraid to go with you.'
         }
       }, takeable({
         'keys': [ 'bucket', 'wooden bucket' ],
@@ -1906,14 +1939,22 @@ const world:World = {
         'south': 'pantry-2',
         'east': 'well-2'
       },
-      'things': [walls, floor, ceiling, takeable({
+      'things': [ walls, ceiling, {
+        'keys': floor.keys,
+        'verbs': {
+          'look': 'The floor is unremarkable.',
+          'use': {
+            'paint': 'It might have more of an effect if there were goblins around.'
+          }
+        }
+      }, takeable({
         'name': 'a knife',
         'keys': ['knife', 'knives', 'crude knife', 'crude knives'],
         'verbs': {
           'look': 'The knives are large and pitted, and not very clean.'
         }
       }, 'knife'), {
-        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron'],
+        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron', 'soup'],
         'verbs': {
           'take': 'The pot is too heavy to carry',
           'look': `The pot is huge and rusted, and a foul-smelling liquid boils violently inside.`,
@@ -2151,7 +2192,13 @@ const world:World = {
       'keys': [ 'rope' ],
       'verbs': {
         'look': `The rope is made from braided nylon, and is wrapped tightly into a mountaineer's coil.`,
-        'use': `The rope isn't attached to anything.`
+        'use': {
+          'self': `The rope isn't attached to anything.`,
+          'multitool': `You don't need to cut the rope.`
+        },
+        'tie': {
+          'player': `Binding yourself won't help.`
+        }
       }
     },
 
@@ -2243,7 +2290,8 @@ const world:World = {
           'garlic-ginger': session => ({
             message: 'You heat the yellow mixture with your lighter.',
             update: { inventory: setMutate(session.inventory, [ 'garlic-ginger-heat' ], [ 'garlic-ginger' ]) }
-          })
+          }),
+          'any': `You don't want to light that on fire.`
         }
       }
     },
@@ -2521,7 +2569,7 @@ const world:World = {
         'look': 'The bucket is made from mildewed wood with a handle of thick twine.',
         'use': {
           'self': 'You could fill it with something.',
-          'ore-dust': 'There is not nearly enough dust to fill the bucket.',
+          'ore-dust': `You'd rather keep it.`,
           'scale': 'The bucket could hold a lot more than that.'
         }
       }
@@ -2557,12 +2605,13 @@ const world:World = {
       'id': 'ore-dust',
       'name': 'some glowing dust',
       'verbs': {
+        'use': 'On its own, the dust is difficult to handle.',
         'look': 'The dust glows with a soft crimson light.'
       }
     },
 
     'paint': {
-      'keys': [ 'grease', 'red grease', 'glowing grease', 'paint', 'red paint', 'crimson paint', 'glowing paint', 'glowing red paint', 'glowing crimson paint' ],
+      'keys': [ 'grease', 'red grease', 'glowing grease', 'crimson grease', 'glowing crimson grease', 'glowing red grease', 'paint', 'red paint', 'crimson paint', 'glowing paint', 'glowing red paint', 'glowing crimson paint' ],
       'id': 'paint',
       'name': 'some glowing grease',
       'verbs': {
@@ -2585,7 +2634,7 @@ const world:World = {
     'always': {
       'things': [{
         'id': 'player',
-        'keys': [ 'me', 'self', 'myself', 'body', 'head', 'arm', 'arms', 'leg', 'legs', 'hand', 'hands', 'waist', 'foot', 'feet', 'fist', 'fists' ],
+        'keys': [ 'me', 'self', 'myself', 'body', 'head', 'arm', 'arms', 'leg', 'legs', 'hand', 'hands', 'waist', 'foot', 'feet', 'fist', 'fists', 'finger', 'waist', 'mouth' ],
         'verbs': {
           'look': `It's you.`,
           'attack': {
@@ -2640,7 +2689,8 @@ const world:World = {
                 inventory: setRemove(session.inventory, 'stone'),
                 effects: setRemove(session.effects, 'goblin')
               }
-            })
+            }),
+            'any': 'The goblin easily avoids you.'
           }
         }
       }]
@@ -2779,7 +2829,7 @@ function moveGiant(ss):{[string]:?string} {
   }
   if (state >= DONE && loc === 'well-2') {
     // back in the kitchen
-    return { giant: 'kitchen-2', giantState: '0', bucket: 'well' };
+    return { giant: 'kitchen-2', giantState: '-1', bucket: 'well' };
   }
   if (state === DONE - 1 && loc === 'well-2') {
     // take full bucket to the bedroom

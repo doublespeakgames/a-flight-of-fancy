@@ -62,7 +62,12 @@ const INV_LOOK_KEYS = new Set([
   'pocket', 
   'pockets', 
   'my pocket', 
-  'my pockets'
+  'my pockets',
+  'backpack',
+  'pack',
+  'back pack',
+  'equipment',
+  'gear'
 ]);
 
 const EXIT_LOOK_KEYS = new Set([

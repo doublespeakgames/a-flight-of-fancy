@@ -18,7 +18,7 @@ import Config from '../config';
 import type { Conversation } from 'actions-on-google';
 import type { Sentence, Action, ActionType } from '../action-resolver';
 
-const CONFIDENCE_THRESHOLD = 0.4;
+const CONFIDENCE_THRESHOLD = 0.3;
 const LAST_RESPONSE = 'last-response';
 const CAME_FROM = 'came-from';
 
