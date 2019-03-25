@@ -137,6 +137,7 @@ async function createSession(id:string):Promise<Session> {
   const world = await getWorld('poc');
   const session = {
     _id: id,
+    updated: new Date(),
     world: world.id,
     room: world.start,
     flags: {},

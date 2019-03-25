@@ -1752,7 +1752,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'earth', 'ore', 'or', 'oar', 'glowing earth', 'luminous earth', 'pile of earth', 'piles of earth', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral', 'sliver of mineral', 'red stone', 'redstone' ],
+        'keys': [ 'earth', 'ore', 'or', 'oar', 'glowing earth', 'luminous earth', 'pile of earth', 'piles of earth', 'glowing ore', 'luminous or', 'glowing or', 'luminous or', 'glowing oar', 'luminous oar', 'stone', 'rock', 'mineral', 'minerals', 'stones', 'rocks', 'pile', 'piles', 'pile of ore', 'piles of ore', 'pile of or', 'piles of or', 'pile of oar', 'piles of oar', 'pile of stone', 'piles of stone', 'pile of rock', 'piles of rock', 'red mineral', 'strange mineral', 'strange red mineral', 'sliver of mineral', 'red stone', 'redstone', 'dirt' ],
         'verbs': {
           'look': 'Large piles of loose rock are strewn about the chamber. Fine particles of a strange red mineral nestle amongst the stones, glowing faintly.',
           'take': 'The earth is too loose to carry in your hands.',

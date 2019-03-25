@@ -13,6 +13,6 @@ services:
       - mongo
 
   mongo:
-    image: "mongo:4"
+    build: ./mongo
     volumes:
       - data-volume:/data/db

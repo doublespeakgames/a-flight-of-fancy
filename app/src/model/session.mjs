@@ -9,6 +9,7 @@ import { mapSet, setAdd } from '../util/immutable';
 
 export type Session = {|
   _id:string,
+  updated:Date,
   world:WorldId,
   room:RoomId,
   flags:{[string]:string},
@@ -38,6 +39,7 @@ export function deserialize(json:?Object):?Session {
   }
   return {
     _id: json._id,
+    updated: json.updated,
     world: json.world,
     room: json.room,
     flags: json.flags,
@@ -52,6 +54,7 @@ export function deserialize(json:?Object):?Session {
 export function serialize(ss:Session):any {
   return {
     _id: ss._id,
+    updated: ss.updated,
     world: ss.world,
     room: ss.room,
     flags: ss.flags,

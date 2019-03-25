@@ -34,6 +34,7 @@ export async function getSession(id:string):Promise<?Session> {
 
 export async function writeSession(session:Session):Promise<Session> {
   const db = await dbPromise;
+  session.updated = new Date();
   return db.collection('session').save(serialize(session));
 }
 
