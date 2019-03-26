@@ -65,6 +65,7 @@ typings/
 
 # Built javascript
 /app/build
+/admin/dist
 
 # Michael-specific deploy script
 deploy

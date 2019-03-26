@@ -8,11 +8,11 @@
  * Configures endpoints and bootstraps the application
  */
 
+import Config from './config';
 import Logger from './util/logger';
 import Server from './server';
-import { getSessions } from './store';
 import GoogleEndpoint from './endpoint/google';
-import { serialize } from './model/session';
+import JsonEndpoint from './endpoint/json';
 import { delay } from './util/timer';
 
 const PORT = process.env.APP_PORT || 5000;
@@ -28,10 +28,9 @@ const log = (req, res, next) => {
   next();
 }
 
-Server.get('/test', async (req, res) => {
-  const sessions = await getSessions();
-  res.send(sessions.map(serialize));
-});
+if (Config.json) {
+  Server.use('/json/', JsonEndpoint);
+}
 
 Server.post('/google', log, GoogleEndpoint);
 

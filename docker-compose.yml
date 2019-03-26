@@ -16,3 +16,9 @@ services:
     build: ./mongo
     volumes:
       - data-volume:/data/db
+
+  admin:
+    build: ./admin
+    working_dir: /home/app
+    environment:
+      - SERVER_PORT=3000

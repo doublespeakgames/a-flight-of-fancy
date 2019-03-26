@@ -9,6 +9,7 @@ export default {
     'url': 'mongodb://mongo:27017',
     'name': 'voice-adventure'
   },
+  'json': true,
   'teleport': true,
   'verification': null // Voice-Adventure
 };

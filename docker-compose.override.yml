@@ -13,6 +13,10 @@ services:
       - ./app/src:/home/app/src
       - /home/app/node_modules
 
-  mongo:
+  admin:
+    command: yarn dev
     ports:
-      - "27017:27017"
+      - "3000:3000"
+    volumes:
+      - ./admin/src:/home/app/src
+      - ./admin/dev.config.js:/home/app/src/config.js

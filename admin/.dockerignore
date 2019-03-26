@@ -1,0 +1,7 @@
+data
+log
+dist
+node_modules
+.yarn
+.cache
+Dockerfile
