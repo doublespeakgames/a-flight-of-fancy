@@ -4,6 +4,8 @@ import yargs from 'yargs';
 
 const argv = yargs
   .demandOption(['r', 'd'])
+  .describe('r', 'The rate of requests, per second')
+  .describe('d', 'The duration of the test, in seconds')
   .alias('r', 'rate')
   .alias('d', 'duration')
   .argv;
