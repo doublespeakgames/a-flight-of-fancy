@@ -593,7 +593,8 @@ const world:World = {
             'stone': ss => ({
               message: 'You toss the stone down the well, and its light fades from view.',
               update: { inventory: setRemove(ss.inventory, 'stone') }
-            })
+            }),
+            'any': 'You might need it later.'
           },
           'look': 'The well is narrow, and constructed of natural stone with a large wooden crank supporting a coil of thick rope. A sizable bell is secured to the crankshaft.'
         }
@@ -758,7 +759,7 @@ const world:World = {
           'look': 'The hall leads south.'
         }
       }, {
-        'keys': ['sound', 'loud sound', 'rumbling', 'loud rumbling', 'loud rhythmic rumbling', 'rhythmic rumbling', 'rumble', 'loud rumble', 'loud rhythmic rumble', 'rhythmic rumble'],
+        'keys': ['sound', 'loud sound', 'rumbling', 'loud rumbling', 'loud rhythmic rumbling', 'rhythmic rumbling', 'rumble', 'loud rumble', 'loud rhythmic rumble', 'rhythmic rumble', 'noise', 'loud noise'],
         'verbs': {
           'look': 'A loud rumble fills the darkened room, repeating regularly every few seconds.'
         }
