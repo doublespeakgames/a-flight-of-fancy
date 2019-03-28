@@ -12,6 +12,7 @@ import type { Predicate } from '../util/builder';
 import type { Updater } from '../util/updater';
 import type { ActionResult, ActionOutput } from '../action-resolver';
 
+import { Synonym } from '../action-resolver';
 import { mapSet, setAdd } from '../util/immutable';
 import { compose } from '../util/updater';
 
@@ -87,7 +88,8 @@ export function takeable(base:Thing, id:ThingId, limited:boolean = false, takeMe
         message: takeMessage || `You take ${name}.`,
         update
       };
-    }
+    },
+    'use': new Synonym('take')
   }, base.verbs);
 
   if (limited && !base.visibility) {
@@ -128,4 +130,10 @@ export function maybeDo(p:Predicate, action:string|ActionOutput, or?:string|Acti
 
 export function text(t:string):ActionResult {
   return { message: t };
+}
+
+export function without(key:string, object:Object):Object {
+  const ret = { ...object };
+  delete ret[key];
+  return ret;
 }

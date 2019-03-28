@@ -2,6 +2,7 @@
 
 import type { World } from '../model/world';
 import type { ExitMap } from '../model/room';
+import type { Thing } from '../model/thing';
 import type { ActionResult } from '../action-resolver';
 
 import { Synonym } from '../action-resolver';
@@ -35,8 +36,8 @@ const goblins = {
     'use': {
       'thread': 'You could, if only you could catch a goblin first.',
       'stone': session => ({
-        message: `As soon as you produce the stone, it is gone.`,
-        update: { inventory: setRemove(session.inventory, 'stone') }
+        message: `You hold out the stone and it is instantly snatched by greedy fingers, disappearing into the throng of goblins.`,
+        update: { inventory: setRemove(session.inventory, 'stone'), effects: setRemove(session.effects, 'goblin') }
       }),
       'knife': 'The goblins easily avoid your attempts at violence.',
       'food': `The goblins chitter disgustedly`,
@@ -74,6 +75,15 @@ const useBinoculars = session => {
     message: 'You lift the binoculars to your eyes, searching the distance for only a moment before you spot your ambition. The tree from your dream, huge and gnarled, splits the canopy about a mile east of camp. To the south, a thin line of smoke rises from the bush. You update your map.',
     update: { flags: mapSet(session.flags, 'explore', '2') }
   };
+}
+function herb(key:string):Thing {
+  const thing = herbs[key];
+  return takeable({
+    ...thing,
+    verbs: {
+      look: thing.verbs.look
+    }
+  }, key);
 }
 function recipe(ailmentKeys:Array<string>, recipe:string) {
   return {
@@ -245,7 +255,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'door', 'light', 'kitchen', 'door to the north' ],
+        'keys': [ 'door', 'light', 'kitchen', 'door to the north', 'exit' ],
         'exit': 'north',
         'verbs': {
           'look': 'The door hangs slightly off its hinges, letting in a bit of feeble light.',
@@ -300,12 +310,16 @@ const world:World = {
             { message: 'The pot is huge and rusted, and a foul-smelling liquid boils violently inside.' },
             maybeDo(ifHere('cloth'), { message: 'A greasy cloth is draped over the lip.', context: 'cloth' })
           ],
+          'take': 'The pot is too heavy to carry.',
+          'open': 'The pot has no lid.',
+          'close': new Synonym('open'),
           'use': {
             'food': session => ({
               message: 'You drop the mouldy food into the pot',
               update: { inventory: setRemove(session.inventory, 'food') }
             }),
-            'goblin': 'The goblin easily avoids you.'
+            'self': 'Your actions have no effect on the pot.',
+            'any': 'You might need it later.'
           }
         }
       }, {
@@ -339,15 +353,18 @@ const world:World = {
           'close': 'The pantry door swings loosely.'
         }
       }, {
-        'keys': [ 'door', 'doorway', 'well', 'wellhouse', 'well house', 'well-house' ],
+        'keys': [ 'door', 'doorway', 'well', 'wellhouse', 'well house', 'well-house', 'door to the east' ],
         'exit': 'east',
         'verbs': {
+          'close': new Synonym('open'),
+          'open': 'No door is mounted in the stone archway.',
           'look': `It's less a door, and more an absence of wall.`
         }
       }, {
         'keys': ['cutting board', 'cuttingboard', 'board'],
         'verbs': {
           'look': 'The cuttingboard is a thick piece of knotted wood, deeply grooved from years of use.',
+          'take': 'The cuttingboard is too heavy to carry.',
           'use': {
             'knife': 'You cut a few more notches into the board'
           }
@@ -413,7 +430,7 @@ const world:World = {
           }
         }
       }, locked({
-        'keys': ['cage', 'small cage', 'lock', 'sturdy lock', 'cage door'],
+        'keys': ['cage', 'small cage', 'lock', 'sturdy lock', 'cage door', 'door of the cage', 'lock on the cage' ],
         'name': 'the cage',
         'verbs': {
           'take': 'The cage is too heavy to carry.',
@@ -483,6 +500,7 @@ const world:World = {
           },
           'attack': new Synonym('use'),
           'use': {
+            'self': maybeDo(ifFlag('cage'), 'The cage door could be opened or closed.', 'The lock is too sturdy to be forced.'),
             'goblin': 'The goblin remains out of reach. Perhaps with some bait...',
             'stone': session => {
               if (session.flags.cage !== 'open') {
@@ -567,7 +585,7 @@ const world:World = {
         'north': session => session.flags.hound ? null : `The hound snaps at you, and you reconsider.`
       },
       'things': [walls, floor, ceiling, {
-        'keys': [ 'well', 'stone well', 'old well', 'old stone well', 'crank', 'large crank', 'wooden crank', 'large wooden crank', 'crankshaft', 'crank shaft', 'crank on the well' ],
+        'keys': [ 'well', 'stone well', 'old well', 'old stone well', 'crank', 'large crank', 'wooden crank', 'large wooden crank', 'crankshaft', 'crank shaft', 'crank on the well', 'wellhouse', 'well house' ],
         'verbs': {
           'move': 'The well is too narrow to fit inside',
           'use': {
@@ -616,7 +634,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': ['hound', 'beastly hound', 'beast', 'dog', 'wolf'],
+        'keys': [ 'hound', 'beastly hound', 'beast', 'dog', 'wolf', 'puppy' ],
         'verbs': {
           'look': session => {
             if (session.flags.hound === 'dead') {
@@ -738,6 +756,11 @@ const world:World = {
         'exit': 'south',
         'verbs': {
           'look': 'The hall leads south.'
+        }
+      }, {
+        'keys': ['sound', 'loud sound', 'rumbling', 'loud rumbling', 'loud rhythmic rumbling', 'rhythmic rumbling', 'rumble', 'loud rumble', 'loud rhythmic rumble', 'rhythmic rumble'],
+        'verbs': {
+          'look': 'A loud rumble fills the darkened room, repeating regularly every few seconds.'
         }
       }],
       'exits': {
@@ -921,10 +944,19 @@ const world:World = {
           'look': `You don't see much.`
         }
       }, {
-        'keys': [ 'well', 'wellhouse', 'well house', 'well-house' ],
+        'keys': [ 'well', 'wellhouse', 'well house', 'well-house', 'door' ],
         'exit': 'north',
         'verbs': {
+          'use': {
+            'thread': `Finding your way back isn't the problem...`
+          },
           'look': 'The wellhouse is to the north.'
+        }
+      }, {
+        'keys': [ 'tunnel', 'maze' ],
+        'exit': 'south',
+        'verbs': {
+          'look': 'The tunnel heads south, and inclines slightly.'
         }
       }]
     },
@@ -1408,13 +1440,13 @@ const world:World = {
           'look': `The cabin is small, with sun-bleached paint peeling from weathered wood walls. A thin trail of smoke rises from the chimney.`
         }
       },
-      takeable(herbs.valerian, 'valerian'),
-      takeable(herbs.lavender, 'lavender'),
-      takeable(herbs.maypop, 'maypop'),
-      takeable(herbs.ginger, 'ginger'),
-      takeable(herbs.mint, 'mint'),
-      takeable(herbs.garlic, 'garlic'),
-      takeable(herbs.echinacea, 'echinacea')
+      herb('valerian'),
+      herb('lavender'),
+      herb('maypop'),
+      herb('ginger'),
+      herb('mint'),
+      herb('garlic'),
+      herb('echinacea')
       ]
     },
     //#endregion
@@ -1954,11 +1986,12 @@ const world:World = {
           'look': 'The knives are large and pitted, and not very clean.'
         }
       }, 'knife'), {
-        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron', 'soup'],
+        'keys': ['pot', 'large pot', 'bubbling pot', 'boiling pot', 'big pot', 'cauldron', 'soup'],
         'verbs': {
           'take': 'The pot is too heavy to carry',
           'look': `The pot is huge and rusted, and a foul-smelling liquid boils violently inside.`,
           'use': {
+            'self': 'Your actions have no effect on the pot.',
             'food': session => ({
               message: 'You drop the mouldy food into the pot',
               update: { inventory: setRemove(session.inventory, 'food') }
@@ -2081,7 +2114,7 @@ const world:World = {
     },
 
     'food': {
-      'keys': ['food', 'moldy food', 'mouldy food', 'mould', 'mold'],
+      'keys': ['food', 'moldy food', 'mouldy food', 'mould', 'mold', 'foodstuff', 'foodstuffs', 'food stuff', 'food stuffs'],
       'name': 'some mouldy food',
       'id': 'food',
       'verbs': {
@@ -2141,6 +2174,7 @@ const world:World = {
       'keys': ['keys', 'keyring', 'key ring', 'key', `giant's keys`, `giant's keyring`, `giant's key`],
       'name': 'a ring of keys',
       'verbs': {
+        'use': 'You jingle the keys.',
         'look': 'An iron ring holds a handful of misshapen keys.'
       }
     },
@@ -2674,7 +2708,7 @@ const world:World = {
         'keys': [ 'goblin', 'tiny goblin' ],
         'verbs': {
           'look': 'The goblin stays well out of reach, but remains fixated on the stone you are carrying.',
-          'take': 'The goblin easily avoids your attempts at capture.',
+          'take': 'The goblin easily avoids your attempts at capture. If only you had a trap...',
           'attack': new Synonym('use'),
           'talk': 'The goblin chitters unintelligibly.',
           'give': new Synonym('use'),
