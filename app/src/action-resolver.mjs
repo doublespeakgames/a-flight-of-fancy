@@ -10,6 +10,7 @@ import type { Direction } from './model/room';
 import { getSession, writeSession, getWorld } from './store';
 import { lookAt } from './model/room';
 
+import credits from './action/credits';
 import fallback from './action/fallback'
 import move from './action/move';
 import objectTravel from './action/object-travel';
@@ -33,13 +34,21 @@ export type ActionResult = {|
   update?:SessionDiff,
   close?:boolean,
   context?:ThingId,
-  cameFrom?:Direction
+  cameFrom?:Direction,
+  card?:Card
 |};
 
 export type Sentence = {|
   subject?:string,
   object?:string,
   verb?:string
+|};
+
+type Card = {|
+  image:string,
+  title:string,
+  text:string,
+  link:string
 |};
 
 type OneOrMore<T> = T | Array<T>;
@@ -83,6 +92,7 @@ const EXIT_LOOK_KEYS = new Set([
 const defaultIdle:ActionHandler = () => text('Take your time.');
 
 const handlers:{[string]:ActionHandler} = {
+  'credits': credits,
   'fallback': fallback,
   'move': move,
   'object-travel': objectTravel,
@@ -193,7 +203,8 @@ function processOutput(output:ActionResult|ActionOutput, session:Session, verb:s
       update: workingResult ? { ...workingResult.update, ...result.update } : result.update,
       close: workingResult && workingResult.close || result.close,
       context: result.context || (workingResult ? workingResult.context : undefined),
-      cameFrom: result.cameFrom || (workingResult ? workingResult.cameFrom : undefined)
+      cameFrom: result.cameFrom || (workingResult ? workingResult.cameFrom : undefined),
+      card: workingResult && workingResult.card || result.card
     };
 
     if (workingResult.close) {

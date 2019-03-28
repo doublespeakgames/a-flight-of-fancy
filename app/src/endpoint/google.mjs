@@ -64,11 +64,25 @@ async function fulfill(actionType:ActionType, conv:Conversation, params:{[string
       direction: result.cameFrom
     });
   }
-  if (result.close) {
-    conv.close(result.message);
+  conv.ask(result.message);
+
+  if (result.card) {
+    conv.ask(new Actions.BasicCard({
+      title: result.card.title,
+      text: result.card.text,
+      image: new Actions.Image({
+        url: result.card.image,
+        alt: result.card.title
+      }),
+      buttons: new Actions.Button({
+        title: result.card.link,
+        url: result.card.link
+      })
+    }));
   }
-  else {
-    conv.ask(result.message);
+
+  if (result.close) {
+    conv.close();
   }
 }
 
@@ -77,6 +91,7 @@ app.intent('GoBack', conv => {
   return fulfill('move', conv, { subject: cameFrom });
 });
 
+app.intent('Credits', fulfill.bind(null, 'credits'));
 app.intent('Idle', fulfill.bind(null, 'idle'));
 app.intent('Fallback', fulfill.bind(null, 'fallback'));
 app.intent('Welcome', fulfill.bind(null, 'look'));

@@ -2611,7 +2611,7 @@ const world:World = {
     },
 
     'paint': {
-      'keys': [ 'grease', 'red grease', 'glowing grease', 'crimson grease', 'glowing crimson grease', 'glowing red grease', 'paint', 'red paint', 'crimson paint', 'glowing paint', 'glowing red paint', 'glowing crimson paint' ],
+      'keys': [ 'fat', 'grease', 'red grease', 'glowing grease', 'crimson grease', 'glowing crimson grease', 'glowing red grease', 'paint', 'red paint', 'crimson paint', 'glowing paint', 'glowing red paint', 'glowing crimson paint' ],
       'id': 'paint',
       'name': 'some glowing grease',
       'verbs': {
@@ -2779,6 +2779,16 @@ const world:World = {
     }
   },
   //#endregion
+
+  credits: {
+    message: 'Thanks for playing! A Flight of Fancy was made by doublespeak games. Visit us at www.doublespeakgames.com!',
+    card: {
+      title: 'doublespeak games',
+      image: 'https://lh6.googleusercontent.com/M0g90ZayHC6ENWVtFm2_Z6-6b7Ljn371E0cQFS5exp_eUGdz8jjtkfHMgOCGQ9hXFICVQzXEZef2cV2NVCCJ=w1862-h1532-rw',
+      link: 'http://www.doublespeakgames.com',
+      text: 'Doublespeak is a small independent game studio focused on open source, browser based experiences. We made A Dark Room, Gridland, and more.'
+    }
+  }
 };
 
 function fightGiant(giant, player, canWin) {
@@ -2802,8 +2812,11 @@ function fightGiant(giant, player, canWin) {
                 .append(`You become aware of an intense heat on your face, and you open your eyes. You lie sprawled on the damp loam of the swamp, while, before you, a great gnarled tree is consumed by flame. Huge plumes of smoke spew from the blaze, streaking, oily and black, across the sky. You brace to rise to your feet, and you feel something smooth and hard in the soft peat. Just beneath a fresh bed of moss, as if in peaceful slumber, a small skeleton lies perfectly preserved. You stand and watch the flames crest the canopy.`)
                 .pause(1)
                 .append(`Tonight you will dream of home.`)
-                .pause(2)
+                .pause(5)
                 .build(),
+    });
+    ret.push({
+      ...world.credits,
       close: true
     });
   }
