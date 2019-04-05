@@ -2108,7 +2108,7 @@ const world:World = {
       'verbs': {
         'look': 'The knife is large and pitted, and not very clean.',
         'use': {
-          'self': `You don't want to cut yourself.`,
+          'self': `You grip the knife menacingly.`,
           'food': `You cut the food into small pieces.`
         }
       }
