@@ -304,7 +304,7 @@ const world:World = {
           'look': 'The knives are large and pitted, and not very clean.'
         }
       }, 'knife'), {
-        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron', 'soup' ],
+        'keys': ['pot', 'large pot', 'bubbling pot', 'big pot', 'cauldron' ],
         'verbs': {
           'look': [
             { message: 'The pot is huge and rusted, and a foul-smelling liquid boils violently inside.' },
@@ -323,7 +323,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
+        'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames', 'stove'],
         'verbs': {
           'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.',
           'light': new Synonym('use'),
@@ -377,7 +377,7 @@ const world:World = {
           'look': 'The cloth is a rough burlap, smeared with rancid fat.'
         }
       }, 'cloth', true), {
-        'keys': ['liquid', 'boiling liquid' ],
+        'keys': ['liquid', 'boiling liquid', 'soup', 'broth' ],
         'verbs': {
           'look': 'It looks worse than it smells.',
           'eat': 'It tastes worse than it looks.'
@@ -604,7 +604,10 @@ const world:World = {
           'move': `The rope is damp and slippery, and you can't get a good grip.`,
           'use': new Synonym('move'),
           'take': new Synonym('move'),
-          'look': `The rope descends deep into the well.`
+          'look': `The rope descends deep into the well.`,
+          'attack': {
+            'knife': `Surprisingly, your knife slips harmlessly off the thick fibers of the rope.`
+          }
         }
       }, {
         'keys': [ 'bell', 'sizeable bell', 'large bell' ],
@@ -657,6 +660,7 @@ const world:World = {
             }
             return { message: 'The hound snarls in response.' };
           },
+          'untie': ss => ({ message: ss.flags.hound ? 'The chain is securely fastened at both ends.' : 'The hound snaps at you, and you reconsider.' }),
           'use': {
             'self': session => {
               if (session.flags.hound === 'dead') {
@@ -2001,7 +2005,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames'],
+        'keys': ['fire', 'open fire', 'cooking fire', 'flame', 'flames', 'stove'],
         'verbs': {
           'look': 'Rotten wood burns beneath the pot, hissing acrid black smoke.',
           'use': {
@@ -2034,6 +2038,7 @@ const world:World = {
         'verbs': {
           'look': 'The cuttingboard is a thick piece of knotted wood, deeply grooved from years of use. It is covered in large globs of slowly melting fat.',
           'use': {
+            'food': 'You might need it later.',
             'knife': 'You cut a few more notches into the board'
           }
         }
@@ -2044,7 +2049,7 @@ const world:World = {
           'look': 'The fat is gelatinous and pliable, with a pale yellow tinge. It smells awful.'
         }
       }, 'fat'), {
-        'keys': ['liquid', 'boiling liquid' ],
+        'keys': ['liquid', 'boiling liquid', 'broth', 'soup' ],
         'verbs': {
           'look': 'It looks worse than it smells.',
           'eat': 'It tastes worse than it looks.'
@@ -2107,7 +2112,11 @@ const world:World = {
       'id': 'knife',
       'verbs': {
         'look': 'The knife is large and pitted, and not very clean.',
+        'attack': {
+          'cloth': 'You might need it later.'
+        },
         'use': {
+          'cloth': 'The knife might be dirtier now.',
           'self': `You grip the knife menacingly.`,
           'food': `You cut the food into small pieces.`
         }
@@ -2142,7 +2151,11 @@ const world:World = {
       'verbs': {
         'look': 'The cloth is a rough burlap, smeared with rancid fat.',
         'tie': new Synonym('use'),
+        'attack': {
+          'knife': 'You might need it later.'
+        },
         'use': {
+          'knife': 'The knife might be dirtier now.',
           'bone': session => ({
             message: 'You wrap the cloth tightly around one end of the bone, making an improvised torch',
             update: { inventory: setMutate(session.inventory, ['torch'], ['cloth', 'bone']) },
@@ -2569,7 +2582,7 @@ const world:World = {
     'sedative': {
       'id': 'sedative',
       'name': 'an herbal sedative',
-      'keys': [ 'sedative', 'insomnia potion', 'herbal sedative', 'sleeping potion' ],
+      'keys': [ 'sedative', 'insomnia potion', 'herbal sedative', 'sleeping potion', 'anti insomnia', 'anti-insomnia' ],
       'verbs': {
         'look': 'The paste is dark green and smells of flowers',
         'eat': new Synonym('use'),
