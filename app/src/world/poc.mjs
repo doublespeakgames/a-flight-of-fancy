@@ -1765,10 +1765,10 @@ const world:World = {
     'mine': {
       'name': 'a busy mine',
       'description': 'The walls of this room are rough and irregular, and spotted with fragments of a glowing red mineral. Tiny goblins tear frantically at the deposits with their bare hands, leaving large piles of luminous earth strewn about the chamber. A tall ladder is set into an alcove on the western wall, and a tunnel leads north.',
-      'exits': {
+      'exits': ss => ({
         'north': 'pit',
-        'west': 'ledge'
-      },
+        'west': ss.flags['pried'] ? 'pantry-2' : 'ledge'
+      }),
       'effect': maybeDo(ifHas('paint'), once('The goblins, spotting the glowing residue on your hands, begin circling you greedily.', 'goblin-grease')),
       'things': [ ceiling, floor, {
         'keys': [ 'goblins', 'tiny goblins', 'goblin', 'tiny goblin' ],
@@ -1814,7 +1814,7 @@ const world:World = {
           }
         }
       }, {
-        'keys': [ 'ladder', 'small ladder', 'alcove', 'small alcove', 'up' ],
+        'keys': [ 'ladder', 'small ladder', 'alcove', 'small alcove', 'up', 'pantry' ],
         'exit': 'west',
         'verbs': {
           'take': `It's far too large to carry with you.`,
@@ -1903,11 +1903,11 @@ const world:World = {
       'description': message('You are in a cramped, dark space. Shelves line the walls, and a small child huddles in the corner')
                       .append(ifHere('bucket'), ' next to a wooden bucket')
                       .append(ifFlagIs('giant', 'kitchen-2'), '. The sound of chopping meat echoes ', '. Dim light seeps ')
-                      .append('through a door to the north, and there is a hole in the southern wall.')
+                      .append('through a door to the north, and a ladder is visible through a hole in the southern wall.')
                       .build,
       'exits': {
         'north': 'kitchen-2',
-        'south': 'ledge'
+        'south': 'mine'
       },
       'things': [floor, ceiling, {
         'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls', 'pantry'],
@@ -1928,6 +1928,12 @@ const world:World = {
           }),
           'open': 'The door swings loosely',
           'close': 'The door swings loosely'
+        }
+      }, {
+        'keys': [ 'hole', 'ladder', 'mine', 'down' ],
+        'exit': 'south',
+        'verbs': {
+          'look': 'It leads down to the mine.'
         }
       }, takeable({
         'keys': ['food', 'foodstuffs', 'foodstuff', 'food stuff', 'food stuffs', 'stuff'],
