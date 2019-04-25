@@ -345,7 +345,7 @@ const world:World = {
           'take': `It's too hot to pick up.`
         }
       }, {
-        'keys': ['pantry', 'rickety pantry'],
+        'keys': ['pantry', 'rickety pantry', 'dark room', 'dark space'],
         'exit': 'south',
         'verbs': {
           'look': 'The pantry is just large enough for a person to enter.',
@@ -2026,7 +2026,7 @@ const world:World = {
           'take': `It's too hot to pick up.`
         }
       }, {
-        'keys': ['pantry', 'rickety pantry'],
+        'keys': ['pantry', 'rickety pantry', 'dark room', 'dark space'],
         'exit': 'south',
         'verbs': {
           'look': 'The pantry is just large enough for a person to enter.',
