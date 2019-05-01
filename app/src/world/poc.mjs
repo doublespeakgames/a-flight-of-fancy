@@ -1838,11 +1838,11 @@ const world:World = {
       'article': 'on',
       'name': 'an earthen ledge',
       'description': message('At the top of the ladder is a small earthen ledge, barely large enough to accomodate passage. The soil on the opposite wall has been cleared away, exposing a ')
-                      .append(ifFlag('pried'), 'hole leading north.', 'face of irregular wooden boards.')
+                      .append(ifFlag('pried'), 'hole leading west.', 'face of irregular wooden boards.')
                       .append(' The ladder descends to the east.')
                       .build,
       'exits': map({ 'east': 'mine' })
-                .and(ifFlag('pried'), 'north', 'pantry-2')
+                .and(ifFlag('pried'), 'west', 'pantry-2')
                 .build,
       'things': [{
         'keys': [ 'ladder', 'small ladder', 'crude ladder', 'down' ],
@@ -1874,7 +1874,7 @@ const world:World = {
                 return { message: 'The path has already been cleared.' };
               }
               return { 
-                message: `You fit the scale into a space between two boards, and lever them apart. Working quickly, you remove boards until a path is cleared to the north.`,
+                message: `You fit the scale into a space between two boards, and lever them apart. Working quickly, you remove boards until a path is cleared to the west.`,
                 update: { flags: mapSet(ss.flags, 'pried', '1') },
                 context: 'hole'
               }; 
@@ -1889,7 +1889,7 @@ const world:World = {
       }, {
         'keys': [ 'hole' ],
         'visibility': ifFlag('pried'),
-        'exit': 'north',
+        'exit': 'west',
         'verbs': {
           'look': 'The hole is barely large enough to pass through.'
         }
@@ -1903,11 +1903,11 @@ const world:World = {
       'description': message('You are in a cramped, dark space. Shelves line the walls, and a small child huddles in the corner')
                       .append(ifHere('bucket'), ' next to a wooden bucket')
                       .append(ifFlagIs('giant', 'kitchen-2'), '. The sound of chopping meat echoes ', '. Dim light seeps ')
-                      .append('through a door to the north, and a ladder is visible through a hole in the southern wall.')
+                      .append('through a door to the north, and a ladder is visible through a hole in the eastern wall.')
                       .build,
       'exits': {
         'north': 'kitchen-2',
-        'south': 'mine'
+        'east': 'mine'
       },
       'things': [floor, ceiling, {
         'keys': ['shelf', 'shelves', 'shelving', 'wall', 'walls', 'pantry'],
