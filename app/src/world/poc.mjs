@@ -998,7 +998,7 @@ const world:World = {
           }
         }
       } ],
-      'effect': (session, verb) => { 
+      'effect': (session, playerMoved) => { 
         const lost = isNaN(session.flags.lost) ? 0 : parseInt(session.flags.lost);
         return {
           message: lost < 2 ? random([
@@ -1006,7 +1006,7 @@ const world:World = {
             'Are you moving in circles?', 
             'The tunnels all look the same.'
           ]) : 'This tunnel looks familiar.',
-          update: verb === 'move' ? { flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) } : undefined
+          update: playerMoved ? { flags: mapSet(session.flags, 'lost', String(Math.min(3, lost + 1))) } : undefined
         }; 
       },
       'description': 'The tunnels here are twisting and elusive. Tiny goblins skitter purposefully to and fro. Passages extend in all directions.',
@@ -2782,9 +2782,8 @@ const world:World = {
     },
 
     'giant': {
-      'roomEffect': (ss, verb) => {
-
-        if (verb !== 'move') { 
+      'roomEffect': (ss, playerMoved) => {
+        if (!playerMoved) { 
           // Giant only moves when you do
           return null; 
         }

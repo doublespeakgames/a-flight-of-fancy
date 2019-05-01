@@ -34,7 +34,7 @@ function getUserId(conv:Conversation):string {
 function idleHandler(session, world) {
   return {
     message: ssml(`I'll wait.`)
-              .audio(resolve(world.sounds.google.idle, session))
+              .audio(resolve(world.sounds.google.idle, session, false))
               .build()
   };
 }

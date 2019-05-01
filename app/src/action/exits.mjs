@@ -14,7 +14,7 @@ import { join } from '../util/list';
 import { resolve } from '../value';
 
 export function getExitText(session:Session, room:Room):ActionResult {
-  const exits = Object.keys(resolve(room.exits, session));
+  const exits = Object.keys(resolve(room.exits, session, false));
   const num = exits.length;
   if (num > 1) {
     return {

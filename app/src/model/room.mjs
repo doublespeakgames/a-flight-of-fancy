@@ -40,7 +40,7 @@ export const lookAt = (world:World, preventShort:bool = false):ActionOutput => s
   const exits = ss => !preventShort && oldSeen.has(ss.room) ? getExitText(ss, world.rooms[ss.room]) : null;
 
   return [{
-    message: !preventShort && ss.seen.has(ss.room) ? `You are ${article} ${resolve(room.name, ss)}.` : resolve(room.description, ss),
+    message: !preventShort && ss.seen.has(ss.room) ? `You are ${article} ${resolve(room.name, ss, false)}.` : resolve(room.description, ss, false),
     update: !preventShort && ss.seen.has(ss.room) ? undefined : { seen: setAdd(ss.seen, ss.room) }
   }, ...effects, exits ]; 
 };

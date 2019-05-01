@@ -22,7 +22,7 @@ export type Thing = {|
 
 function getThings(session:Session, room:Room):Array<Thing> {
   if (typeof room.things === 'function') {
-    return room.things(session);
+    return room.things(session, false);
   }
   return room.things || [];
 }

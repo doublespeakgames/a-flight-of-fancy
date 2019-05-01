@@ -15,7 +15,7 @@ import { getExitText } from '../action/exits';
 
 const move:ActionHandler = (session, world, sentence) => {
   const room = world.rooms[session.room];
-  const exits = resolve(room.exits, session);
+  const exits = resolve(room.exits, session, false);
 
   let dir = sentence.subject;
   if (!dir) {
@@ -47,7 +47,7 @@ const move:ActionHandler = (session, world, sentence) => {
   }
   const nextRoom = world.rooms[nextRoomId];
   const cameFrom = Object
-                    .entries(resolve(nextRoom.exits, session))
+                    .entries(resolve(nextRoom.exits, session, false))
                     .find(([dir, r]) => r === session.room);
                     
   const leave = {

@@ -128,11 +128,11 @@ const handlers:{[string]:ActionHandler} = {
         return exits;
       }
       const room = world.rooms[session.room];
-      const lookRoomId = resolve(room.exits, session)[subject];
+      const lookRoomId = resolve(room.exits, session, false)[subject];
       if (lookRoomId) {
         // Check an exit
         if (session.seen.has(lookRoomId)) {
-          return () => ({ message: `It leads to ${resolve(world.rooms[lookRoomId].name, session)}` });
+          return () => ({ message: `It leads to ${resolve(world.rooms[lookRoomId].name, session, false)}` });
         }
         return () => ({ message: `You don't know where it leads.` });
       }
@@ -178,7 +178,7 @@ export function makeSentence(subject:string = '', object:string = '', verb:strin
   }
 }
 
-function processOutput(output:ActionResult|ActionOutput, session:Session, verb:string):?ActionResult {
+function processOutput(output:ActionResult|ActionOutput, workingSession:Session, originalSession:Session):?ActionResult {
   if (!output) { return; }
   if (typeof output.message === 'string') {
     // This is an ActionResult, so just return it
@@ -186,16 +186,16 @@ function processOutput(output:ActionResult|ActionOutput, session:Session, verb:s
     return output;
   }
   // Gotta be another ActionOutput, so process it
-  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(output, session, verb);
+  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(output, workingSession, workingSession.room !== originalSession.room);
   if (!o) {
     // Nothing to do
     return;
   }
   const list:Array<ActionOutput|ActionResult> = Array.isArray(o) ? o : [ o ];
-  let workingSession = { ...session };
+  workingSession = { ...workingSession };
   let workingResult:?ActionResult = null;
   for (let unit of list) {
-    const result = processOutput(unit, workingSession, verb);
+    const result = processOutput(unit, workingSession, originalSession);
     if (!result) { continue; }
     // Merge the processed result with the working result and session
     workingResult = {
@@ -233,7 +233,7 @@ export async function resolveAction(action:Action, idleHandler:ActionHandler = d
   const handler = action.type === 'idle' ? idleHandler : handlers[action.type];
 
   const world = await getWorld(session.world);
-  const result:?ActionResult = processOutput(await handler(session, world, action.sentence), session, action.type);
+  const result:?ActionResult = processOutput(await handler(session, world, action.sentence), session, session);
 
   if (!result) {
     return {
