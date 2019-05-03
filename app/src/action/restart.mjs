@@ -4,7 +4,6 @@ import type { ActionHandler, ActionResult } from '../action-resolver';
 import Config from '../config';
 import { deleteSession } from '../store';
 
-
 const restart:ActionHandler = (session, world, { subject }) => {
 
   if (!Config.teleport || !subject || !world.rooms[subject]) {

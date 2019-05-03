@@ -18,10 +18,12 @@ import inventory from './action/inventory';
 import exits from './action/exits';
 import interact from './action/interact';
 import restart from './action/restart';
+import welcome from './action/welcome';
 import { resolve } from './value';
 import Logger from './util/logger';
 import { text } from './model/mixins';
 import { withSubstitutions } from './pronoun';
+import ssml from './util/ssml';
 
 export type Action = {|
   sessionId:string,
@@ -63,6 +65,8 @@ export class Synonym {
   }
 }
 
+const PROMPT = 'https://s3.amazonaws.com/media.doublespeakgames.com/bell.mp3';
+
 const INV_LOOK_KEYS = new Set([
   'inventory', 
   'my inventory', 
@@ -92,6 +96,7 @@ const EXIT_LOOK_KEYS = new Set([
 const defaultIdle:ActionHandler = () => text('Take your time.');
 
 const handlers:{[string]:ActionHandler} = {
+  'welcome': welcome,
   'credits': credits,
   'fallback': fallback,
   'move': move,
@@ -219,8 +224,7 @@ function processOutput(output:ActionResult|ActionOutput, workingSession:Session,
 }
 
 function processSSML(message:string):string {
-  const noSpeak = message.replace(/<speak>/g, '').replace(/<\/speak>/g, '');
-  return `<speak>${noSpeak}</speak>`;
+  return ssml(message).audio(PROMPT).build();
 }
 
 export async function resolveAction(action:Action, idleHandler:ActionHandler = defaultIdle):Promise<ActionResult> {

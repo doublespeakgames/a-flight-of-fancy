@@ -21,7 +21,7 @@ export const Pitch:{[string]:PitchValue} = Object.seal({
 
 function renderBlock(block:DialogueBlock):string {
   if (typeof block === 'string') {
-    return block;
+    return block.replace(/<speak>/g, '').replace(/<\/speak>/g, '');;
   }
   return `<prosody pitch="${block.pitch}">${block.text}</prosody>`;
 }
