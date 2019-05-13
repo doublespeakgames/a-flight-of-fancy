@@ -10,6 +10,6 @@ export default {
     'name': 'voice-adventure'
   },
   'json': true,
-  'teleport': true,
+  'teleport': false,
   'verification': null // Voice-Adventure
 };

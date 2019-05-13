@@ -96,6 +96,7 @@ app.intent('Idle', fulfill.bind(null, 'idle'));
 app.intent('Fallback', fulfill.bind(null, 'fallback'));
 app.intent('Welcome', fulfill.bind(null, 'welcome'));
 app.intent('Restart', fulfill.bind(null, 'restart'));
+app.intent('Restart - yes', fulfill.bind(null, 'restart'));
 app.intent('Move', fulfill.bind(null, 'move'));
 app.intent('Object Travel', fulfill.bind(null, 'object-travel'));
 app.intent('Take', fulfill.bind(null, 'take'));
