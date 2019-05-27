@@ -125,6 +125,12 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
       const objectThings = getThings(session, world, object);
       if (!objectThings.length) {
+
+        if (world.InventoryKeys.has(object)) {
+          // Instead, take the thing
+          return simpleHandler(world, 'take', subject, rawVerb, options);
+        }
+
         return {
           message: `There is no ${object} here.`
         };

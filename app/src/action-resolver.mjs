@@ -67,32 +67,6 @@ export class Synonym {
 
 const PROMPT = 'https://s3.amazonaws.com/media.doublespeakgames.com/bell.mp3';
 
-const INV_LOOK_KEYS = new Set([
-  'inventory', 
-  'my inventory', 
-  'bag', 
-  'my bag', 
-  'pocket', 
-  'pockets', 
-  'my pocket', 
-  'my pockets',
-  'backpack',
-  'pack',
-  'back pack',
-  'equipment',
-  'gear'
-]);
-
-const EXIT_LOOK_KEYS = new Set([
-  'exits', 
-  'exit', 
-  'doors', 
-  'door', 
-  'ways out', 
-  'way out', 
-  'directions'
-]);
-
 const defaultIdle:ActionHandler = () => text('Take your time.');
 
 const handlers:{[string]:ActionHandler} = {
@@ -124,11 +98,11 @@ const handlers:{[string]:ActionHandler} = {
       if (subject === session.room) {
         return () => lookAt(world, true);
       }
-      if (INV_LOOK_KEYS.has(subject)) {
+      if (world.InventoryKeys.has(subject)) {
         // Check your inventory
         return inventory;
       }
-      if (EXIT_LOOK_KEYS.has(subject)) {
+      if (world.ExitKeys.has(subject)) {
         // Enumerate possible exits
         return exits;
       }

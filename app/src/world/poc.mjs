@@ -223,6 +223,32 @@ const world:World = {
   'id': 'poc',
   'start': 'pantry',
 
+  'InventoryKeys': new Set([
+    'inventory', 
+    'my inventory', 
+    'bag', 
+    'my bag', 
+    'pocket', 
+    'pockets', 
+    'my pocket', 
+    'my pockets',
+    'backpack',
+    'pack',
+    'back pack',
+    'equipment',
+    'gear'
+  ]),
+
+  'ExitKeys': new Set([
+    'exits', 
+    'exit', 
+    'doors', 
+    'door', 
+    'ways out', 
+    'way out', 
+    'directions'
+  ]),
+
   //#region Sounds
   'sounds': {
     'google': {

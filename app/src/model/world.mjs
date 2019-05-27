@@ -14,5 +14,7 @@ export type World = {|
   items: { [ThingId]: Thing },
   effects: { [EffectId]: Effect },
   sounds: { [SoundProvider]: { [SoundId]: Value<SoundPath> } },
-  credits: ActionResult
+  credits: ActionResult,
+  InventoryKeys: Set<string>,
+  ExitKeys: Set<string>
 |}
