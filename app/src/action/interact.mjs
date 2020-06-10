@@ -128,7 +128,7 @@ export default (verb:string, options:Options = {}):ActionHandler =>
 
         if (world.InventoryKeys.has(object)) {
           // Instead, take the thing
-          return simpleHandler(world, 'take', subject, rawVerb, options);
+          return simpleHandler(world, 'take', subject, 'take', options);
         }
 
         return {

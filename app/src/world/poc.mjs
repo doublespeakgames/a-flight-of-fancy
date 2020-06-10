@@ -1024,7 +1024,7 @@ const world:World = {
           }
         }
       } ],
-      'effect': (session, playerMoved) => { 
+      'effect': (session, playerMoved) => {
         const lost = isNaN(session.flags.lost) ? 0 : parseInt(session.flags.lost);
         return {
           message: lost < 2 ? random([

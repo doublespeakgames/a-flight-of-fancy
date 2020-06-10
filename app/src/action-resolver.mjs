@@ -157,7 +157,7 @@ export function makeSentence(subject:string = '', object:string = '', verb:strin
   }
 }
 
-function processOutput(output:ActionResult|ActionOutput, workingSession:Session, originalSession:Session):?ActionResult {
+function processOutput(output:ActionResult|ActionOutput, workingSession:Session, originalSession:Session, action:ActionType):?ActionResult {
   if (!output) { return; }
   if (typeof output.message === 'string') {
     // This is an ActionResult, so just return it
@@ -165,7 +165,8 @@ function processOutput(output:ActionResult|ActionOutput, workingSession:Session,
     return output;
   }
   // Gotta be another ActionOutput, so process it
-  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(output, workingSession, workingSession.room !== originalSession.room);
+  const playerMoved = action === 'move' || action === 'object-travel';
+  const o:?(ActionOutput|Array<ActionOutput|ActionResult>) = resolve(output, workingSession, playerMoved);
   if (!o) {
     // Nothing to do
     return;
@@ -174,7 +175,7 @@ function processOutput(output:ActionResult|ActionOutput, workingSession:Session,
   workingSession = { ...workingSession };
   let workingResult:?ActionResult = null;
   for (let unit of list) {
-    const result = processOutput(unit, workingSession, originalSession);
+    const result = processOutput(unit, workingSession, originalSession, action);
     if (!result) { continue; }
     // Merge the processed result with the working result and session
     workingResult = {
@@ -211,7 +212,7 @@ export async function resolveAction(action:Action, idleHandler:ActionHandler = d
   const handler = action.type === 'idle' ? idleHandler : handlers[action.type];
 
   const world = await getWorld(session.world);
-  const result:?ActionResult = processOutput(await handler(session, world, action.sentence), session, session);
+  const result:?ActionResult = processOutput(await handler(session, world, action.sentence), session, session, action.type);
 
   if (!result) {
     return {

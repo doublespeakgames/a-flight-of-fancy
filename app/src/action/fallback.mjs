@@ -25,23 +25,21 @@ function getMessage(phrase:string, tries:number):string {
 
 const fallback:ActionHandler = (session, world, sentence) => {
 
-  const phrases = world.rooms[session.room].phrases;
-  if (phrases) {
-    for (let phrase of phrases) {
-      // subject is the raw instruction, in this handler
-      if (!phrase.keys.includes(sentence.subject)) {
-        continue;
-      }
-      const i = phrase.action.split(':');
-      return resolveAction({
-        sessionId: session._id,
-        type: i[0],
-        sentence: {
-          subject: i[1],
-          object: i[2]
-        }
-      });
+  const phrases = world.rooms[session.room].phrases || [];
+  for (let phrase of phrases) {
+    // subject is the raw instruction, in this handler
+    if (!phrase.keys.includes(sentence.subject)) {
+      continue;
     }
+    const i = phrase.action.split(':');
+    return resolveAction({
+      sessionId: session._id,
+      type: i[0],
+      sentence: {
+        subject: i[1],
+        object: i[2]
+      }
+    });
   }
 
   return { 
